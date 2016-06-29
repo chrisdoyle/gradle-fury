@@ -11,7 +11,7 @@ declare -a arr=("~/.m2/repository/com/chrisdoyle/hello-world-aar/$version/hello-
       "~/.m2/repository/com/chrisdoyle/hello-world-apk/$version/hello-world-apk-$version-fooDebug.apk" \
       "~/.m2/repository/com/chrisdoyle/hello-world-apk/$version/hello-world-apk-$version.pom" \
       )
-
+ 
 
 for i in "${arr[@]}"
 do
