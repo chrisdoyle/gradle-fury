@@ -48,7 +48,7 @@ afterEvaluate { project ->
                 "#     # #   #  #    # #    # #      #         #       #    # #   #    #   \n" +
                 " #####  #    # #    # #####  ###### ######    #        ####  #    #   #   \n";
 
-        println "== Gradle Fury, bringing maven sensibility to gradle";
+        println "== Gradle Fury, bringing maven sensibility to gradle. It's NOT an incubating feature.";
         println "== Gradle Fury: ProTip: Use 'gradle.properties' to set all your version and pom related information.";
         if (isAndroidProject || isAndroidApplication){
             println "== Gradle Fury: ProTip: Use 'gradle install' to publish to mavenLocal, works with AARs and APKs, even with variants";
