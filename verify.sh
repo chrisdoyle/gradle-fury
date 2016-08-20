@@ -107,8 +107,54 @@ do
     fi
 done
 
+
+# check the jar
+declare -a strs=(
+      "commons-lang3" \
+       )
+
+for i in "${strs[@]}"
+do
+    if [ "`eval echo grep -Fxq $i ~/.m2/repository/com/chrisdoyle/hello-world-lib/$version/hello-world-lib-$version.pom`" ];
+    then
+        # code if found
+        echo " PASS - $i found in jar pom"
+    else
+        # code if not found
+        echo " FAIL - $i NOT found in jar pom"
+        exit 1
+    fi
+done
+
+
+
+# check the apk
+declare -a strs=(
+      "hello-world-aar" \
+      "appcompat-v7" \
+      "cardview-v7" \
+      "design" \
+      "recyclerview-v7" \
+      "support-v4" \
+       )
+
+for i in "${strs[@]}"
+do
+    if [ "`eval echo grep -Fxq $i ~/.m2/repository/com/chrisdoyle/hello-world-apk/$version/hello-world-apk-$version.pom`" ];
+    then
+        # code if found
+        echo " PASS - $i found in apk pom"
+    else
+        # code if not found
+        echo " FAIL - $i NOT found in apk pom"
+        exit 1
+    fi
+done
+
+
+
 # END 23 verify that the dependencies within the AAR are declared
 
-echo " Result - PASS"
+echo "     End Result - PASS"
 
 echo "Done."
