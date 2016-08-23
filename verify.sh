@@ -85,14 +85,30 @@ echo " Result - PASS"
 
 # BEGIN 23 verify that the dependencies within the AAR are declared
 # our AAR should have at least two dependencies lists
-echo "     Issue #23 - verify aar pom has dependencies declared"
+echo "     Issue #23 and 27 - verify poms has dependencies declared, name and descriptions"
 
 # strings to search for in our aar pom
 declare -a strs=(
       "com.android.support" \
       "support-annotations" \
       "hello-world-lib" \
+      "\<description\>" \
+      "\<name\>" \
        )
+
+
+for i in "${strs[@]}"
+do
+    if [ "`eval echo grep -Fxq $i ~/.m2/repository/com/chrisdoyle/hello-world-apk/$version/hello-world-apk-$version.pom`" ];
+    then
+        # code if found
+        echo " PASS - $i found in aar pom"
+    else
+        # code if not found
+        echo " FAIL - $i NOT found in aar pom"
+        exit 1
+    fi
+done
 
 for i in "${strs[@]}"
 do
