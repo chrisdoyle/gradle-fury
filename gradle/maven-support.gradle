@@ -390,38 +390,10 @@ def modifyGeneratedPom(pom) {
             println "No pom.packaging defined in gradle.properties"
         }
 
-        if (project.isAndroidProject) {
 
-            // modified from "Gradle not including dependencies in published pom.xml"
-            // http://stackoverflow.com/a/32451846/3093897
-            def dependenciesNode = asNode().appendNode('dependencies')
-            def configurationNames = ['compile'] // FIXME :: Issue #21: POM dependency generation shall support type and scope
-
-            configurationNames.each { configurationName ->
-                configurations[configurationName].allDependencies.each { dependency ->
-                    if (dependency.group != null && dependency.name != null) {
-
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-                        dependencyNode.appendNode('groupId', dependency.group)
-                        dependencyNode.appendNode('artifactId', dependency.name)
-                        dependencyNode.appendNode('version', dependency.version)
-
-// FIXME :: Issue #21: POM dependency generation shall support type and scope
-//                        dependencyNode.appendNode('type', ???)
-//                        dependencyNode.appendNode('scope', configurationName) // ???
-
-                        // if there are any exclusions in dependency
-                        if (dependency.excludeRules.size() > 0) {
-                            def exclusionsNode = dependencyNode.appendNode('exclusions')
-                            it.excludeRules.each { rule ->
-                                def exclusionNode = exclusionsNode.appendNode('exclusion')
-                                exclusionNode.appendNode('groupId', rule.group)
-                                exclusionNode.appendNode('artifactId', rule.module)
-                            }
-                        }
-                    }
-                }
-            }
+        //fix for issue #27 name element missing from pom
+        if ("".equals(project.pom.name)){
+            project.pom.name = project.getName();
         }
 
         if (!project.pom.name.equals("")) {
@@ -435,13 +407,22 @@ def modifyGeneratedPom(pom) {
             }
         }
 
+        //fix for issue #27 description element missing from pom
+        if ("".equals(project.pom.description)){
+            project.pom.description = project.getDescription();
+        }
+        //a description is mandatory for mavenCentral, this injects a placeholder
+        if ("".equals(project.pom.description)){
+            project.pom.description = "A description should be added in the near future, as soon as I hack time.";
+        }
+
         if (!project.pom.description.equals("")) {
             if (!node.description) {
                 node.appendNode('description', project.pom.description)
             }
             else {
                 node.description.replaceNode {
-                    description(project.pom.description)
+                    description( project.pom.description )
                 }
             }
         }
@@ -586,6 +567,39 @@ def modifyGeneratedPom(pom) {
             }
             if (!project.pom.distributionManagement.site.url.equals("")) {
                 siteNode.appendNode('url', project.pom.distributionManagement.site.url)
+            }
+        }
+        if (project.isAndroidProject) {
+
+            // modified from "Gradle not including dependencies in published pom.xml"
+            // http://stackoverflow.com/a/32451846/3093897
+            def dependenciesNode = asNode().appendNode('dependencies')
+            def configurationNames = ['compile'] // FIXME :: Issue #21: POM dependency generation shall support type and scope
+
+            configurationNames.each { configurationName ->
+                configurations[configurationName].allDependencies.each { dependency ->
+                    if (dependency.group != null && dependency.name != null) {
+
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', dependency.group)
+                        dependencyNode.appendNode('artifactId', dependency.name)
+                        dependencyNode.appendNode('version', dependency.version)
+
+// FIXME :: Issue #21: POM dependency generation shall support type and scope
+//                        dependencyNode.appendNode('type', ???)
+//                        dependencyNode.appendNode('scope', configurationName) // ???
+
+                        // if there are any exclusions in dependency
+                        if (dependency.excludeRules.size() > 0) {
+                            def exclusionsNode = dependencyNode.appendNode('exclusions')
+                            it.excludeRules.each { rule ->
+                                def exclusionNode = exclusionsNode.appendNode('exclusion')
+                                exclusionNode.appendNode('groupId', rule.group)
+                                exclusionNode.appendNode('artifactId', rule.module)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
