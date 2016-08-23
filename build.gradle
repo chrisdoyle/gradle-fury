@@ -11,6 +11,7 @@ buildscript {
 }
 
 allprojects  {
+    apply plugin: 'signing'
     // NOTE: project.group and project.version must be defined before including
     // maven-support.gradle since it uses these values...
     project.group = ( project.hasProperty('pom.groupId')
@@ -39,6 +40,10 @@ allprojects  {
 
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
+    }
+
+    signing {
+        sign configurations.archives
     }
 }
 
