@@ -583,7 +583,20 @@ def modifyGeneratedPom(pom) {
                         def dependencyNode = dependenciesNode.appendNode('dependency')
                         dependencyNode.appendNode('groupId', dependency.group)
                         dependencyNode.appendNode('artifactId', dependency.name)
-                        dependencyNode.appendNode('version', dependency.version)
+                        if (dependency.version.endsWith("+")){
+                            //a gradle wildcard
+                            if ("+".equals(dependency.version)) {
+                                dependencyNode.appendNode('version', "LATEST")
+                            } else {
+                                //the version is something.+
+                                dependencyNode.appendNode('version', "[" + dependency.version.replace(".+",",)")  )
+                            }
+                            //TODO there may be other cases here
+
+                        }
+                        else {
+                            dependencyNode.appendNode('version', dependency.version)
+                        }
 
 // FIXME :: Issue #21: POM dependency generation shall support type and scope
 //                        dependencyNode.appendNode('type', ???)
