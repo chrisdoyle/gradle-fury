@@ -41,10 +41,14 @@ allprojects  {
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
     }
-
-    signing {
-        sign configurations.archives
-    }
+    try {
+        if ("${project.property('signing.keyId')}" != null &&
+                !"".equals("${project.property('signing.keyId')}")) {
+            signing {
+                sign configurations.archives
+            }
+        }
+    }catch (Exception ex){}
 }
 
 subprojects {
