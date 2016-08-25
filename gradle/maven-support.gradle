@@ -863,8 +863,8 @@ project.plugins.withType(MavenPublishPlugin) {
                             if (isGPGAvailable()){
                                 artifact("${artifactRoot}/${artifactName}" + ".asc") {
                                     //extension project.pom.packaging
-                                    classifier project.pom.packaging
-                                    extension 'asc'
+                                    classifier c.fileName
+                                    extension project.pom.packaging +'.asc'
                                   }
                             }
 
