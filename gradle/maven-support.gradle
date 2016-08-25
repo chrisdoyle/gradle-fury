@@ -668,7 +668,8 @@ project.plugins.withType(MavenPublishPlugin) {
             new org.gradle.api.internal.ClosureBackedAction( {
 
         publications {
-            if (project.isJavaProject) {
+            //TODO WAR projects
+             if (project.isJavaProject) {
                 def artifactName = project.name + "-" + project.version + "." + project.pom.packaging;
                 def artifactRoot = "${buildDir}/libs/"
 
@@ -681,6 +682,7 @@ project.plugins.withType(MavenPublishPlugin) {
 
                     modifyGeneratedPom(pom)
 
+                    //the jar
                     Container c;
                     c = new Container();
                     c.buildDir ="${buildDir}";
@@ -692,41 +694,34 @@ project.plugins.withType(MavenPublishPlugin) {
 
                     if (isGPGAvailable()){
                         artifact(c.fileNameAndPath + ".asc") {
-                            extension 'asc'
+                            extension 'jar.asc'
+                        }
+                    }
+
+
+                    //the pom
+                    c = new Container();
+                    c.buildDir ="${buildDir}";
+                    c.fileName = artifactName;
+                    c.fileNameAndPath = "$buildDir/publications/javaArtifacts/pom-default.xml";
+                    c.type="jar";
+                    project.ext.artifacts.add(c);
+
+
+                    if (isGPGAvailable()){
+                        artifact(c.fileNameAndPath + ".asc") {
+                            extension 'pom.asc'
                         }
                     }
 
 
 
+
                 }
 
 
 
-/*                if (isGPGAvailable()){
-                    artifact("${artifactRoot}${artifactName}.pom"+ ".asc") {
-                        extension project.pom.packaging
-                        classifier c.fileName + "asc"
-                    }
-                }
-*/
 
-                /*
-
-                if (isGPGAvailable()) {
-
-                    if (signFile("${artifactRoot}/${artifactName}")) {
-                        artifact("${artifactRoot}/${artifactName}.asc") {
-                            extension project.pom.packaging
-                            classifier variant.name + "asc"
-                        }
-                    } else {
-                        System.out.println("WARN  - GPG signing failed, skipping upload")
-                    }
-                } else {
-
-                    System.out.println("WARN  - GPG not available, skipping signatures")
-                }
-*/
                 if (project.javadocProfileEnabled) {
                     javadocArtifacts(MavenPublication) {
                         from components.java
