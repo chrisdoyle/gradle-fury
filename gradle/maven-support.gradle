@@ -1,3 +1,7 @@
+import java.lang.invoke.MethodHandleImpl
+import java.lang.reflect.Method
+import java.util.concurrent.TimeUnit
+
 /**=================================================================================================
  * Common Gradle script configuration for Maven tasks.
  *
@@ -13,6 +17,20 @@ apply plugin: 'maven-publish'
 
 ext.isReleaseBuild = (!project.version.equals("unspecified") &&
         project.version.contains("SNAPSHOT") == false)
+
+
+project.ext.artifacts = new LinkedList<Container>();
+project.ext.pgpSearch =false;
+project.ext.pgpAvailable=false;
+
+
+
+ext.gpgPath = (
+        hasProperty('GPG_PATH')
+                ? GPG_PATH
+                : "/usr/local/bin/gpg"
+);
+
 
 // default to Maven Central if not provided
 ext.releaseRepositoryUrl = (
@@ -271,9 +289,13 @@ afterEvaluate { project ->
                 options.charSet 'UTF-8'
                 options.docEncoding 'UTF-8'
                 options.encoding 'UTF-8'
+                //options.addStringOption('Xdoclint:none', '-quiet')
+                //classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
+                failOnError false
 
                 // FIXME :: @chrisdoyle :: this assumes Java 7...
                 options.links 'http://docs.oracle.com/javase/7/docs/api/'
+                options.links("http://developer.android.com/reference/");
 
                 options {
                     setMemberLevel(JavadocMemberLevel.PACKAGE)
@@ -645,6 +667,9 @@ project.plugins.withType(MavenPublishPlugin) {
 
         publications {
             if (project.isJavaProject) {
+                def artifactName = project.name + "-" + project.version + "." + project.pom.packaging;
+                def artifactRoot = "${buildDir}/libs/"
+
                 javaArtifacts(MavenPublication) {
                     from components.java
 
@@ -653,8 +678,54 @@ project.plugins.withType(MavenPublishPlugin) {
                     version project.version
 
                     modifyGeneratedPom(pom)
+
+                    Container c;
+                    c = new Container();
+                    c.buildDir ="${buildDir}";
+                    c.fileName = artifactName;
+                    c.fileNameAndPath = "${artifactRoot}${artifactName}";
+                    c.type="jar";
+                    project.ext.artifacts.add(c);
+
+
+                    if (isGPGAvailable()){
+                        artifact(c.fileNameAndPath + ".asc") {
+                            extension project.pom.packaging
+                            classifier "asc"
+                        }
+                    }
+
+
+
                 }
 
+
+
+/*                if (isGPGAvailable()){
+                    artifact("${artifactRoot}${artifactName}.pom"+ ".asc") {
+                        extension project.pom.packaging
+                        classifier c.fileName + "asc"
+                    }
+                }
+*/
+
+                /*
+
+                if (isGPGAvailable()) {
+
+                    if (signFile("${artifactRoot}/${artifactName}")) {
+                        artifact("${artifactRoot}/${artifactName}.asc") {
+                            extension project.pom.packaging
+                            classifier variant.name + "asc"
+                        }
+                    } else {
+                        System.out.println("WARN  - GPG signing failed, skipping upload")
+                    }
+                } else {
+
+                    System.out.println("WARN  - GPG not available, skipping signatures")
+                }
+*/
                 if (project.javadocProfileEnabled) {
                     javadocArtifacts(MavenPublication) {
                         from components.java
@@ -666,6 +737,25 @@ project.plugins.withType(MavenPublishPlugin) {
                         modifyGeneratedPom(pom)
 
                         artifact javadocJar
+
+
+                        Container c;
+                        c = new Container();
+                        c.buildDir ="${buildDir}";
+                        c.fileName = artifactName;
+                        c.fileNameAndPath = "${buildDir}" +"/libs/" + project.name + "-" + project.version + "-javadoc.jar";
+                        c.type="jar";
+                        project.ext.artifacts.add(c);
+
+
+                        if (isGPGAvailable()){
+                            artifact(c.fileNameAndPath + ".asc") {
+                                extension project.pom.packaging
+                                classifier "javadoc.asc"
+                            }
+                        }
+
+
                     }
                 }
 
@@ -680,6 +770,22 @@ project.plugins.withType(MavenPublishPlugin) {
                         modifyGeneratedPom(pom)
 
                         artifact sourcesJar
+
+                        Container c;
+                        c = new Container();
+                        c.buildDir ="${buildDir}";
+                        c.fileName = artifactName;
+                        c.fileNameAndPath = "${buildDir}" +"/libs/" + project.name + "-" + project.version + "-sources.jar";
+                        c.type="jar";
+                        project.ext.artifacts.add(c);
+
+
+                        if (isGPGAvailable()){
+                            artifact(c.fileNameAndPath + ".asc") {
+                                extension project.pom.packaging
+                                classifier "sources.asc"
+                            }
+                        }
                     }
                 }
             }
@@ -696,6 +802,7 @@ project.plugins.withType(MavenPublishPlugin) {
                     variants = project.android.libraryVariants;
                 }
 
+
                 androidArtifacts(MavenPublication) {
                     groupId project.group
                     artifactId project.name
@@ -710,24 +817,105 @@ project.plugins.withType(MavenPublishPlugin) {
 
                             def artifactName = project.name + "-" + project.version + "-" +
                                     variant.name + "." + project.pom.packaging;
+                            def artifactPrefix = project.name + "-" + project.version + "-" +
+                                    variant.name;
+
+
+
+
+                            Container c = new Container();
+                            c.fileName = variant.name + ".pom";
+                            c.fileNameAndPath = "${artifactRoot}/${artifactName}.pom";
+                            c.buildDir ="${buildDir}";
+                           // c.artifact=publications;
+                            if (project.isAndroidApplication)
+                                c.type="apk";
+                            else c.type="aar";
+                            project.ext.artifacts.add(c);
+
+                           /*
+                           //leaving this as is failures because the pom is generated multiple times
+                            if (isGPGAvailable()){
+                                artifact("${buildDir}/publications/androidArtifacts/pom-default.xml.asc") {
+                                    extension project.pom.packaging
+                                    classifier project.pom.packaging + "asc"
+                                }
+                            }*/
+
+
+                            c = new Container();
+                            if (project.isAndroidApplication)
+                                c.type="apk";
+                            else c.type="aar";
+                            c.buildDir ="${buildDir}";
+                            c.fileName = variant.name;
+                            c.fileNameAndPath = "${artifactRoot}/${artifactName}";
+                            //c.artifact=publications;
+                            project.ext.artifacts.add(c);
+
 
                             artifact("${artifactRoot}/${artifactName}") {
                                 classifier variant.name
                                 extension project.pom.packaging
                             }
 
+
+                            if (isGPGAvailable()){
+                                artifact("${artifactRoot}/${artifactName}" + ".asc") {
+                                    extension project.pom.packaging
+                                    classifier c.fileName + ".asc"
+                                  }
+                            }
+
+
+
+
+
                             if (project.javadocProfileEnabled) {
                                 artifact tasks["generate${variant.name.capitalize()}JavadocJar"]
+                                c = new Container();
+                                if (project.isAndroidApplication)
+                                    c.type="apk";
+                                else c.type="aar";
+                                c.buildDir ="${buildDir}";
+                                c.fileName = variant.name;
+                                c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-javadoc.jar";
+                                //c.artifact=publications;
+                                project.ext.artifacts.add(c);
+
+                                artifact("${artifactRoot}/${artifactName}" + ".asc") {
+                                    extension project.pom.packaging
+                                    classifier c.fileName + "-javadoc" + ".asc"
+                                }
+
+
                             }
 
                             if (project.sourcesProfileEnabled) {
                                 artifact tasks["generate${variant.name.capitalize()}SourcesJar"]
+                                c = new Container();
+                                if (project.isAndroidApplication)
+                                    c.type="apk";
+                                else c.type="aar";
+                                c.buildDir ="${buildDir}";
+                                c.fileName = variant.name;
+                                c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-sources.jar";
+                                //c.artifact=publications;
+                                project.ext.artifacts.add(c);
+
+                                artifact("${artifactRoot}/${artifactName}" + ".asc") {
+                                    extension project.pom.packaging
+                                    classifier c.fileName + "-sources" + ".asc"
+                                }
                             }
                         }
 
                     }
                 }
             }
+
+
+
         }
 
         repositories {
@@ -743,4 +931,107 @@ project.plugins.withType(MavenPublishPlugin) {
             }
         }
     })
+}
+
+/**
+ * Signs a file via gpg
+ * @param file string path to the file
+ * @return false is signing failed or gpg is not available
+ */
+def signFile(file){
+    System.out.println("attempting to sign " + file)
+    if (!new File(file).exists()){
+        System.out.println("WARN - skipping gpg signature of " + file + ", it probably hasn't been created yet!");
+        return false;
+    }
+    File f = new File(file + ".asc");
+    if (f.exists())
+        f.delete();
+    exec {
+
+        executable ext.gpgPath
+
+        args "-a", "--output", file+".asc","--detach-sig",file
+        \
+    }
+    return true;
+}
+
+/**
+ * a simple container for capturing data about a file that needs to be signed
+ */
+class Container{
+    String fileNameAndPath;
+    String fileName;
+    String type;
+    String buildDir;
+}
+
+publish.dependsOn {
+    if (isGPGAvailable()){
+        Iterator<Container> myiterator = project.ext.artifacts.iterator();
+        while (myiterator.hasNext()){
+
+            Container item = myiterator.next();
+            System.out.println(item.fileNameAndPath + " " + item.fileName + " " + item.type);
+            if (item.fileNameAndPath.endsWith(".pom")) {
+                if ("jar".equals(item.type)) {
+
+                    item.fileNameAndPath = item.buildDir + "/publications/javaArtifacts/pom-default.xml";
+                }
+                if ("aar".equals(item.type)) {
+
+                    item.fileNameAndPath = item.buildDir + "/publications/androidArtifacts/pom-default.xml";
+                }
+                if ("apk".equals(item.type)) {
+
+                    item.fileNameAndPath = item.buildDir + "/publications/androidArtifacts/pom-default.xml";
+                }
+            }
+            if (signFile(item.fileNameAndPath)) {
+/*
+                Method[] bits = item.artifact.class.methods
+                for (int k =0; k < bits.length; k++){
+                    System.out.println(bits[k].name);
+                    for (int x=0; x < bits[k].parameterTypes.length; x++) {
+                        System.out.println("\t" + bits[k].parameterTypes[x].name);
+                    }
+                }
+
+
+                item.add(artifact(item.fileNameAndPath + ".asc") {
+                    extension project.pom.packaging
+                    classifier item.fileName + "asc"
+                })*/
+            }
+        }
+    }
+
+
+}
+
+/**
+ * Attempts to call pgp --help
+ * @return true if gpg is available on the system
+ */
+def isGPGAvailable(){
+    if (project.ext.pgpSearch)
+        return project.ext.pgpAvailable;
+    project.ext.pgpSearch=true;
+    System.out.println("searching for GPG")
+    try {
+        exec {
+            executable ext.gpgPath
+            args "--help"
+        }
+        System.out.println("GPG found at " + gpgPath);
+        project.ext.pgpAvailable=true;
+        return true;
+    }catch (Exception ex){
+        ex.printStackTrace();
+    }
+    //TODO search commons paths for windows?
+    System.out.println("GPG NOT found, signing will not be possible");
+    project.ext.pgpAvailable=false;
+    return false;
 }
