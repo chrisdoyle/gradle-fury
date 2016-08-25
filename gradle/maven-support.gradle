@@ -202,6 +202,7 @@ uploadArchives {
 afterEvaluate { project ->
 
     project.ext.isJavaProject = project.plugins.hasPlugin('java');
+    project.ext.isWarProject = project.plugins.hasPlugin('war');
 
     // FIXME :: @chrisdoyle :: DRY :: these are also defined in android-support.gradle...
     project.ext.isAndroidApplication = project.plugins.hasPlugin("com.android.application");
@@ -690,8 +691,7 @@ project.plugins.withType(MavenPublishPlugin) {
 
                     if (isGPGAvailable()){
                         artifact(c.fileNameAndPath + ".asc") {
-                            extension project.pom.packaging
-                            classifier "asc"
+                            extension 'asc'
                         }
                     }
 
@@ -751,7 +751,8 @@ project.plugins.withType(MavenPublishPlugin) {
                         if (isGPGAvailable()){
                             artifact(c.fileNameAndPath + ".asc") {
                                 extension project.pom.packaging
-                                classifier "javadoc.asc"
+                                classifier "javadoc"
+                                extension 'asc'
                             }
                         }
 
@@ -783,7 +784,8 @@ project.plugins.withType(MavenPublishPlugin) {
                         if (isGPGAvailable()){
                             artifact(c.fileNameAndPath + ".asc") {
                                 extension project.pom.packaging
-                                classifier "sources.asc"
+                                classifier "sources"
+                                extension 'asc'
                             }
                         }
                     }
@@ -827,7 +829,6 @@ project.plugins.withType(MavenPublishPlugin) {
                             c.fileName = variant.name + ".pom";
                             c.fileNameAndPath = "${artifactRoot}/${artifactName}.pom";
                             c.buildDir ="${buildDir}";
-                           // c.artifact=publications;
                             if (project.isAndroidApplication)
                                 c.type="apk";
                             else c.type="aar";
@@ -850,7 +851,6 @@ project.plugins.withType(MavenPublishPlugin) {
                             c.buildDir ="${buildDir}";
                             c.fileName = variant.name;
                             c.fileNameAndPath = "${artifactRoot}/${artifactName}";
-                            //c.artifact=publications;
                             project.ext.artifacts.add(c);
 
 
@@ -862,8 +862,9 @@ project.plugins.withType(MavenPublishPlugin) {
 
                             if (isGPGAvailable()){
                                 artifact("${artifactRoot}/${artifactName}" + ".asc") {
-                                    extension project.pom.packaging
-                                    classifier c.fileName + ".asc"
+                                    //extension project.pom.packaging
+                                    classifier project.pom.packaging
+                                    extension 'asc'
                                   }
                             }
 
@@ -886,7 +887,8 @@ project.plugins.withType(MavenPublishPlugin) {
                                 if (isGPGAvailable()) {
                                     artifact("${artifactRoot}/${artifactName}" + ".asc") {
                                         extension project.pom.packaging
-                                        classifier c.fileName + "-javadoc" + ".asc"
+                                        classifier c.fileName + "-javadoc"
+                                        extension 'asc'
                                     }
                                 }
 
@@ -908,7 +910,8 @@ project.plugins.withType(MavenPublishPlugin) {
                                 if (isGPGAvailable()) {
                                     artifact("${artifactRoot}/${artifactName}" + ".asc") {
                                         extension project.pom.packaging
-                                        classifier c.fileName + "-sources" + ".asc"
+                                        classifier c.fileName + "-sources"
+                                        extension 'asc'
                                     }
                                 }
                             }
