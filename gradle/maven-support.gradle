@@ -713,14 +713,7 @@ project.plugins.withType(MavenPublishPlugin) {
                             extension 'pom.asc'
                         }
                     }
-
-
-
-
                 }
-
-
-
 
                 if (project.javadocProfileEnabled) {
                     javadocArtifacts(MavenPublication) {
@@ -821,6 +814,7 @@ project.plugins.withType(MavenPublishPlugin) {
 
 
 
+                            //signs the pom
                             Container c = new Container();
                             c.fileName = variant.name + ".pom";
                             c.fileNameAndPath = "${artifactRoot}/${artifactName}.pom";
@@ -839,13 +833,13 @@ project.plugins.withType(MavenPublishPlugin) {
 
                                 if (isGPGAvailable()) {
                                     artifact("${buildDir}/publications/androidArtifacts/pom-default.xml.asc") {
-                                        extension "pom.asc"
-                                        classifier project.pom.packaging
+                                        extension "asc"
+                                        classifier "pom"
                                     }
                                 }
                             }
 
-
+                            //signs the actual output
                             c = new Container();
                             if (project.isAndroidApplication)
                                 c.type="apk";
