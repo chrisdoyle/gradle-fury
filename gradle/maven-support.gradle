@@ -883,9 +883,11 @@ project.plugins.withType(MavenPublishPlugin) {
                                 //c.artifact=publications;
                                 project.ext.artifacts.add(c);
 
-                                artifact("${artifactRoot}/${artifactName}" + ".asc") {
-                                    extension project.pom.packaging
-                                    classifier c.fileName + "-javadoc" + ".asc"
+                                if (isGPGAvailable()) {
+                                    artifact("${artifactRoot}/${artifactName}" + ".asc") {
+                                        extension project.pom.packaging
+                                        classifier c.fileName + "-javadoc" + ".asc"
+                                    }
                                 }
 
 
@@ -903,9 +905,11 @@ project.plugins.withType(MavenPublishPlugin) {
                                 //c.artifact=publications;
                                 project.ext.artifacts.add(c);
 
-                                artifact("${artifactRoot}/${artifactName}" + ".asc") {
-                                    extension project.pom.packaging
-                                    classifier c.fileName + "-sources" + ".asc"
+                                if (isGPGAvailable()) {
+                                    artifact("${artifactRoot}/${artifactName}" + ".asc") {
+                                        extension project.pom.packaging
+                                        classifier c.fileName + "-sources" + ".asc"
+                                    }
                                 }
                             }
                         }
