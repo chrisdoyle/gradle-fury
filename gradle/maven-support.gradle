@@ -22,6 +22,7 @@ ext.isReleaseBuild = (!project.version.equals("unspecified") &&
 project.ext.artifacts = new LinkedList<Container>();
 project.ext.pgpSearch =false;
 project.ext.pgpAvailable=false;
+project.ext.pomAdded=false;
 
 
 
@@ -834,14 +835,20 @@ project.plugins.withType(MavenPublishPlugin) {
                             else c.type="aar";
                             project.ext.artifacts.add(c);
 
-                           /*
-                           //leaving this as is failures because the pom is generated multiple times
-                            if (isGPGAvailable()){
-                                artifact("${buildDir}/publications/androidArtifacts/pom-default.xml.asc") {
-                                    extension project.pom.packaging
-                                    classifier project.pom.packaging + "asc"
+
+                           //leaving this as is failures because the pom is generated multiple times,
+                            //mostly because of variants and debug/release
+
+                            if (!project.ext.pomAdded) {
+                                project.ext.pomAdded=true;
+
+                                if (isGPGAvailable()) {
+                                    artifact("${buildDir}/publications/androidArtifacts/pom-default.xml.asc") {
+                                        extension "pom.asc"
+                                        classifier project.pom.packaging
+                                    }
                                 }
-                            }*/
+                            }
 
 
                             c = new Container();
@@ -862,7 +869,6 @@ project.plugins.withType(MavenPublishPlugin) {
 
                             if (isGPGAvailable()){
                                 artifact("${artifactRoot}/${artifactName}" + ".asc") {
-                                    //extension project.pom.packaging
                                     classifier c.fileName
                                     extension project.pom.packaging +'.asc'
                                   }
