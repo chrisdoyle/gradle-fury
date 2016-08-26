@@ -188,6 +188,30 @@ done
 
 
 
+# BEGIN Issue 31 War file support
+
+# strings to search for in our aar pom
+declare -a strs=(
+      "\<packaging\>\"war\"\</packaging\>" \
+      "\<groupId\>org\.apache\.commons\<\/groupId\>" \
+       )
+
+for i in "${strs[@]}"
+do
+    if [ "`eval echo grep -Fxq $i hello-world-war/build/publications/webApp/pom-default.xml`" ];
+    then
+        # code if found
+        echo " PASS - $i found in WAR pom"
+    else
+        # code if not found
+        echo " FAIL - $i NOT found in WAR pom"
+        exit 1
+    fi
+done
+
+
+# END Issue 31
+
 echo "     End Result - PASS"
 
 echo "Done."
