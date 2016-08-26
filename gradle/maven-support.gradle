@@ -18,6 +18,13 @@ apply plugin: 'maven-publish'
 ext.isReleaseBuild = (!project.version.equals("unspecified") &&
         project.version.contains("SNAPSHOT") == false)
 
+project.ext.needToSign=false;
+
+gradle.taskGraph.whenReady { graph ->
+    if (graph.hasTask(publish)) {
+        project.ext.needToSign=true;
+    } else project.ext.needToSign=false;
+}
 
 project.ext.artifacts = new LinkedList<Container>();
 project.ext.pgpSearch =false;
@@ -611,9 +618,15 @@ def modifyGeneratedPom(pom) {
                             //a gradle wildcard
                             if ("+".equals(dependency.version)) {
                                 dependencyNode.appendNode('version', "LATEST")
-                            } else {
+                            } else if (dependency.version.endsWith(".+")){
                                 //the version is something.+
                                 dependencyNode.appendNode('version', "[" + dependency.version.replace(".+",",)")  )
+                            } else if (dependency.version.endsWith("+")) {
+                                dependencyNode.appendNode('version', "[" + dependency.version.replace("+",",)")  )
+                            }
+                            else {
+                                System.out.println("WARN - unhandled case for dependency version mediation for " +
+                                        dependency.group + ":" + dependency.name + ":" + dependency.version);
                             }
                             //TODO there may be other cases here
 
@@ -1030,6 +1043,10 @@ publish.dependsOn {
  * @return true if gpg is available on the system
  */
 def isGPGAvailable(){
+
+    if (!project.ext.needToSign)
+        return false;
+
     if (project.ext.pgpSearch)
         return project.ext.pgpAvailable;
     project.ext.pgpSearch=true;
