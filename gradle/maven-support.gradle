@@ -184,6 +184,7 @@ uploadArchives {
 afterEvaluate { project ->
 
     project.ext.isJavaProject = project.plugins.hasPlugin('java');
+    project.ext.isWarProject = project.plugins.hasPlugin('war');
 
     // FIXME :: @chrisdoyle :: DRY :: these are also defined in android-support.gradle...
     project.ext.isAndroidApplication = project.plugins.hasPlugin("com.android.application");
@@ -390,7 +391,7 @@ def modifyGeneratedPom(pom) {
             println "No pom.packaging defined in gradle.properties"
         }
 
-        if (project.isAndroidProject) {
+        if (project.isAndroidProject || project.isWarProject) {
 
             // modified from "Gradle not including dependencies in published pom.xml"
             // http://stackoverflow.com/a/32451846/3093897
@@ -617,7 +618,54 @@ project.plugins.withType(MavenPublishPlugin) {
             new org.gradle.api.internal.ClosureBackedAction( {
 
         publications {
-            if (project.isJavaProject) {
+            if (project.isWarProject) {
+                project.pom.packaging = 'war'
+
+                webApp(MavenPublication){
+                    from components.web
+
+                    groupId project.group
+                    artifactId project.name
+                    version project.version
+
+                    modifyGeneratedPom(pom)
+                    //TODO #27 pgp signatures on
+                    // ${buildDir}/publications/webApp/pom-default.xml
+                    //primary out
+
+                }
+                if (project.javadocProfileEnabled) {
+                    javadocArtifacts(MavenPublication) {
+                        from components.web
+
+                        groupId project.group
+                        artifactId project.name
+                        version project.version
+
+                        modifyGeneratedPom(pom)
+
+                        artifact javadocJar
+                        //TODO #27 pgp signatures
+                    }
+                }
+
+                if (project.sourcesProfileEnabled) {
+                    sourceJarArtifacts(MavenPublication) {
+                        from components.web
+
+                        groupId project.group
+                        artifactId project.name
+                        version project.version
+
+                        modifyGeneratedPom(pom)
+
+                        artifact sourcesJar
+                        //TODO #27 pgp signatures
+                    }
+                }
+
+            }
+            else if (project.isJavaProject) {
                 javaArtifacts(MavenPublication) {
                     from components.java
 
