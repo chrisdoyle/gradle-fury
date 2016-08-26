@@ -58,3 +58,7 @@ gradle-app.setting
 proguard-mapping.txt
 proguard-seeds.txt
 proguard-usage.txt
+
+*.asc
+*.md5
+*.sha1
