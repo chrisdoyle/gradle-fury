@@ -1,3 +1,7 @@
+import java.lang.invoke.MethodHandleImpl
+import java.lang.reflect.Method
+import java.util.concurrent.TimeUnit
+
 /**=================================================================================================
  * Common Gradle script configuration for Maven tasks.
  *
@@ -13,6 +17,39 @@ apply plugin: 'maven-publish'
 
 ext.isReleaseBuild = (!project.version.equals("unspecified") &&
         project.version.contains("SNAPSHOT") == false)
+
+
+project.ext.artifacts = new LinkedList<Container>();
+project.ext.pgpSearch =false;
+project.ext.pgpAvailable=false;
+project.ext.pomAdded=false;
+
+
+def dumpTasks(TaskExecutionGraph graph){
+    List<Task> allTasks = graph.getAllTasks();
+    for (int i=0; i < allTasks.size(); i++){
+        System.out.println("TASK DUMP " + allTasks.get(i).name);
+    }
+
+}
+
+def furyHasTask(TaskExecutionGraph graph, String task){
+    List<Task> allTasks = graph.getAllTasks();
+    for (int i=0; i < allTasks.size(); i++){
+        if (allTasks.get(i).name.endsWith(task))
+            return true;
+    }
+    return false;
+
+}
+
+ext.gpgPath = (
+        hasProperty('GPG_PATH')
+                ? GPG_PATH
+                : "/usr/local/bin/gpg"
+    //TODO maybe a defaut path for windows?
+);
+
 
 // default to Maven Central if not provided
 ext.releaseRepositoryUrl = (
@@ -171,6 +208,7 @@ uploadArchives.dependsOn publish
 
 uploadArchives {
     doFirst {
+        //execution phase
         println "\n\n========================================================="
         println "==> WARNING: The 'uploadArchives' task is deprecated. <=="
         println "==> Calling the 'publish' task instead...             <=="
@@ -182,6 +220,7 @@ uploadArchives {
 
 
 afterEvaluate { project ->
+
 
     project.ext.isJavaProject = project.plugins.hasPlugin('java');
     project.ext.isWarProject = project.plugins.hasPlugin('war');
@@ -257,11 +296,14 @@ afterEvaluate { project ->
 
         project.ext.set("sourcesProfileEnabled", project.ext.profiles.contains("sources")
                 || project.ciProfileEnabled);
+
+        project.ext.set("sign", project.ext.profiles.contains("sign"));
     }
     else {
         project.ext.set("ciProfileEnabled", false);
         project.ext.set("javadocProfileEnabled", false);
         project.ext.set("sourcesProfileEnabled", false);
+        project.ext.set("sign", false);
     }
 
     if (project.isJavaProject) {
@@ -272,9 +314,13 @@ afterEvaluate { project ->
                 options.charSet 'UTF-8'
                 options.docEncoding 'UTF-8'
                 options.encoding 'UTF-8'
+                //options.addStringOption('Xdoclint:none', '-quiet')
+                //classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
+                failOnError false
 
                 // FIXME :: @chrisdoyle :: this assumes Java 7...
                 options.links 'http://docs.oracle.com/javase/7/docs/api/'
+                options.links("http://developer.android.com/reference/");
 
                 options {
                     setMemberLevel(JavadocMemberLevel.PACKAGE)
@@ -380,214 +426,238 @@ def modifyGeneratedPom(pom) {
         if (!project.pom.packaging.equals("")) {
             if (!node.packaging) {
                 node.appendNode('packaging', project.pom.packaging)
-            }
-            else {
+            } else {
                 node.packaging.replaceNode {
                     packaging(project.pom.packaging)
                 }
             }
-        }
-        else {
+        } else {
             println "No pom.packaging defined in gradle.properties"
         }
 
         if (project.isAndroidProject || project.isWarProject) {
 
-            // modified from "Gradle not including dependencies in published pom.xml"
-            // http://stackoverflow.com/a/32451846/3093897
-            def dependenciesNode = asNode().appendNode('dependencies')
-            def configurationNames = ['compile'] // FIXME :: Issue #21: POM dependency generation shall support type and scope
+            //fix for issue #27 name element missing from pom
+            if ("".equals(project.pom.name)) {
+                project.pom.name = project.getName();
+            }
 
-            configurationNames.each { configurationName ->
-                configurations[configurationName].allDependencies.each { dependency ->
-                    if (dependency.group != null && dependency.name != null) {
+            if (!project.pom.name.equals("")) {
+                if (!node.name) {
+                    node.appendNode('name', project.pom.name)
+                } else {
+                    node.name.replaceNode {
+                        name(project.pom.name)
+                    }
+                }
+            }
 
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-                        dependencyNode.appendNode('groupId', dependency.group)
-                        dependencyNode.appendNode('artifactId', dependency.name)
-                        dependencyNode.appendNode('version', dependency.version)
+            //fix for issue #27 description element missing from pom
+            if ("".equals(project.pom.description)) {
+                project.pom.description = project.getDescription();
+            }
+            //a description is mandatory for mavenCentral, this injects a placeholder
+            if ("".equals(project.pom.description)) {
+                project.pom.description = "A description should be added in the near future, as soon as I hack time.";
+            }
+
+            if (!project.pom.description.equals("")) {
+                if (!node.description) {
+                    node.appendNode('description', project.pom.description)
+                } else {
+                    node.description.replaceNode {
+                        description(project.pom.description)
+                    }
+                }
+            }
+
+            if (!project.pom.url.equals("")) {
+                if (!node.url) {
+                    node.appendNode('url', project.pom.url)
+                } else {
+                    node.url.replaceNode {
+                        url(project.pom.url)
+                    }
+                }
+            }
+
+            if (!project.pom.inceptionYear.equals("")) {
+                if (!node.url) {
+                    node.appendNode('inceptionYear', project.pom.inceptionYear)
+                } else {
+                    node.url.replaceNode {
+                        inceptionYear(project.pom.inceptionYear)
+                    }
+                }
+            }
+
+            def licenses = project.pom.licenses
+
+            if ((licenses != null) && (licenses.size() > 0)) {
+                def licensesNode = node.appendNode('licenses')
+
+                licenses.each {
+                    def licenseNode = licensesNode.appendNode('license')
+
+                    if ((it.name != null) && !it.name.equals("")) {
+                        licenseNode.appendNode('name', it.name)
+                    }
+
+                    if ((it.url != null) && !it.url.equals("")) {
+                        licenseNode.appendNode('url', it.url)
+                    }
+
+                    if ((it.distribution != null) && !it.distribution.equals("")) {
+                        licenseNode.appendNode('distribution', it.distribution)
+                    }
+                }
+            }
+
+            if (!project.pom.organization.name.equals("") || !project.pom.organization.url.equals("")) {
+                def organizationNode = node.appendNode('organization')
+
+                if (!project.pom.organization.name.equals("")) {
+                    organizationNode.appendNode('name', project.pom.organization.name)
+                }
+
+                if (!project.pom.organization.url.equals("")) {
+                    organizationNode.appendNode('url', project.pom.organization.url)
+                }
+            }
+
+
+            def developers = project.pom.developers
+
+            if ((developers != null) && (developers.size() > 0)) {
+                def developersNode = node.appendNode('developers')
+
+                developers.each {
+                    def developerNode = developersNode.appendNode('developer')
+
+                    if ((it.id != null) && !it.id.equals("")) {
+                        developerNode.appendNode('id', it.id)
+                    }
+
+                    if ((it.name != null) && !it.name.equals("")) {
+                        developerNode.appendNode('name', it.name)
+                    }
+
+                    if ((it.email != null) && !it.email.equals("")) {
+                        developerNode.appendNode('email', it.email)
+                    }
+
+                    if ((it.organization != null) && !it.organization.equals("")) {
+                        developerNode.appendNode('organization', it.organization)
+                    }
+
+                    if ((it.roles != null) && (it.roles.size() > 0)) {
+                        def rolesNode = developerNode.appendNode('roles')
+                        it.roles.each {
+                            rolesNode.appendNode('role', it)
+                        }
+                    }
+                }
+            }
+
+            if (!project.pom.issueManagement.system.equals("")
+                    || !project.pom.issueManagement.url.equals("")) {
+
+                def issueManagementNode = node.appendNode('issueManagement')
+
+                if (!project.pom.issueManagement.system.equals("")) {
+                    issueManagementNode.appendNode('system', project.pom.issueManagement.system)
+                }
+                if (!project.pom.issueManagement.url.equals("")) {
+                    issueManagementNode.appendNode('url', project.pom.issueManagement.url)
+                }
+            }
+
+            if (!project.pom.ciManagement.system.equals("")
+                    || !project.pom.ciManagement.url.equals("")) {
+                def ciManagementNode = node.appendNode('ciManagement')
+
+                if (!project.pom.ciManagement.system.equals("")) {
+                    ciManagementNode.appendNode('system', project.pom.ciManagement.system)
+                }
+                if (!project.pom.ciManagement.url.equals("")) {
+                    ciManagementNode.appendNode('url', project.pom.ciManagement.url)
+                }
+            }
+
+            if (!project.pom.scm.url.equals("") || !project.pom.scm.connection.equals("")
+                    || !project.pom.scm.developerConnection.equals("")) {
+                def scmNode = node.appendNode('scm')
+
+                if (!project.pom.scm.url.equals("")) {
+                    scmNode.appendNode('url', project.pom.scm.url)
+                }
+                if (!project.pom.scm.connection.equals("")) {
+                    scmNode.appendNode('connection', project.pom.scm.connection)
+                }
+                if (!project.pom.scm.developerConnection.equals("")) {
+                    scmNode.appendNode('developerConnection', project.pom.scm.developerConnection)
+                }
+            }
+
+            if (!project.pom.distributionManagement.site.id.equals("")
+                    || !project.pom.distributionManagement.site.url.equals("")) {
+                def distributionManagementNode = node.appendNode('distributionManagement')
+                def siteNode = distributionManagementNode.appendNode('site')
+
+                if (!project.pom.distributionManagement.site.id.equals("")) {
+                    siteNode.appendNode('id', project.pom.distributionManagement.site.id)
+                }
+                if (!project.pom.distributionManagement.site.url.equals("")) {
+                    siteNode.appendNode('url', project.pom.distributionManagement.site.url)
+                }
+            }
+            if (project.isAndroidProject || project.isWarProject) {
+
+                // modified from "Gradle not including dependencies in published pom.xml"
+                // http://stackoverflow.com/a/32451846/3093897
+                def dependenciesNode = asNode().appendNode('dependencies')
+                def configurationNames = ['compile']
+                // FIXME :: Issue #21: POM dependency generation shall support type and scope
+
+                configurationNames.each { configurationName ->
+                    configurations[configurationName].allDependencies.each { dependency ->
+                        if (dependency.group != null && dependency.name != null) {
+
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', dependency.group)
+                            dependencyNode.appendNode('artifactId', dependency.name)
+                            if (dependency.version.endsWith("+")) {
+                                //a gradle wildcard
+                                if ("+".equals(dependency.version)) {
+                                    dependencyNode.appendNode('version', "LATEST")
+                                } else {
+                                    //the version is something.+
+                                    dependencyNode.appendNode('version', "[" + dependency.version.replace(".+", ",)"))
+                                }
+                                //TODO there may be other cases here
+
+                            } else {
+                                dependencyNode.appendNode('version', dependency.version)
+                            }
 
 // FIXME :: Issue #21: POM dependency generation shall support type and scope
 //                        dependencyNode.appendNode('type', ???)
 //                        dependencyNode.appendNode('scope', configurationName) // ???
 
-                        // if there are any exclusions in dependency
-                        if (dependency.excludeRules.size() > 0) {
-                            def exclusionsNode = dependencyNode.appendNode('exclusions')
-                            it.excludeRules.each { rule ->
-                                def exclusionNode = exclusionsNode.appendNode('exclusion')
-                                exclusionNode.appendNode('groupId', rule.group)
-                                exclusionNode.appendNode('artifactId', rule.module)
+                            // if there are any exclusions in dependency
+                            if (dependency.excludeRules.size() > 0) {
+                                def exclusionsNode = dependencyNode.appendNode('exclusions')
+                                it.excludeRules.each { rule ->
+                                    def exclusionNode = exclusionsNode.appendNode('exclusion')
+                                    exclusionNode.appendNode('groupId', rule.group)
+                                    exclusionNode.appendNode('artifactId', rule.module)
+                                }
                             }
                         }
                     }
                 }
             }
-        }
-
-        if (!project.pom.name.equals("")) {
-            if (!node.name) {
-                node.appendNode('name', project.pom.name)
-            }
-            else {
-                node.name.replaceNode {
-                    name(project.pom.name)
-                }
-            }
-        }
-
-        if (!project.pom.description.equals("")) {
-            if (!node.description) {
-                node.appendNode('description', project.pom.description)
-            }
-            else {
-                node.description.replaceNode {
-                    description(project.pom.description)
-                }
-            }
-        }
-
-        if (!project.pom.url.equals("")) {
-            if (!node.url) {
-                node.appendNode('url', project.pom.url)
-            }
-            else {
-                node.url.replaceNode {
-                    url(project.pom.url)
-                }
-            }
-        }
-
-        if (!project.pom.inceptionYear.equals("")) {
-            if (!node.url) {
-                node.appendNode('inceptionYear', project.pom.inceptionYear)
-            }
-            else {
-                node.url.replaceNode {
-                    inceptionYear(project.pom.inceptionYear)
-                }
-            }
-        }
-
-        def licenses = project.pom.licenses
-
-        if ((licenses != null) && (licenses.size() > 0)) {
-            def licensesNode = node.appendNode('licenses')
-
-            licenses.each {
-                def licenseNode = licensesNode.appendNode('license')
-
-                if ((it.name != null) && !it.name.equals("")) {
-                    licenseNode.appendNode('name', it.name)
-                }
-
-                if ((it.url != null) && !it.url.equals("")) {
-                    licenseNode.appendNode('url', it.url)
-                }
-
-                if ((it.distribution != null) && !it.distribution.equals("")) {
-                    licenseNode.appendNode('distribution', it.distribution)
-                }
-            }
-        }
-
-        if (!project.pom.organization.name.equals("") || !project.pom.organization.url.equals("")) {
-            def organizationNode = node.appendNode('organization')
-
-            if (!project.pom.organization.name.equals("")) {
-                organizationNode.appendNode('name', project.pom.organization.name)
-            }
-
-            if (!project.pom.organization.url.equals("")) {
-                organizationNode.appendNode('url', project.pom.organization.url)
-            }
-        }
-
-
-        def developers = project.pom.developers
-
-        if ((developers != null) && (developers.size() > 0)) {
-            def developersNode = node.appendNode('developers')
-
-            developers.each {
-                def developerNode = developersNode.appendNode('developer')
-
-                if ((it.id != null) && !it.id.equals("")) {
-                    developerNode.appendNode('id', it.id)
-                }
-
-                if ((it.name != null) && !it.name.equals("")) {
-                    developerNode.appendNode('name', it.name)
-                }
-
-                if ((it.email != null) && !it.email.equals("")) {
-                    developerNode.appendNode('email', it.email)
-                }
-
-                if ((it.organization != null) && !it.organization.equals("")) {
-                    developerNode.appendNode('organization', it.organization)
-                }
-
-                if ((it.roles != null) && (it.roles.size() > 0)) {
-                    def rolesNode = developerNode.appendNode('roles')
-                    it.roles.each {
-                        rolesNode.appendNode('role', it)
-                    }
-                }
-            }
-        }
-
-        if (!project.pom.issueManagement.system.equals("")
-                || !project.pom.issueManagement.url.equals("")) {
-
-            def issueManagementNode = node.appendNode('issueManagement')
-
-            if (!project.pom.issueManagement.system.equals("")) {
-                issueManagementNode.appendNode('system', project.pom.issueManagement.system)
-            }
-            if (!project.pom.issueManagement.url.equals("")) {
-                issueManagementNode.appendNode('url', project.pom.issueManagement.url)
-            }
-        }
-
-        if (!project.pom.ciManagement.system.equals("")
-                || !project.pom.ciManagement.url.equals("")) {
-            def ciManagementNode = node.appendNode('ciManagement')
-
-            if (!project.pom.ciManagement.system.equals("")) {
-                ciManagementNode.appendNode('system', project.pom.ciManagement.system)
-            }
-            if (!project.pom.ciManagement.url.equals("")) {
-                ciManagementNode.appendNode('url', project.pom.ciManagement.url)
-            }
-        }
-
-        if (!project.pom.scm.url.equals("") || !project.pom.scm.connection.equals("")
-                || !project.pom.scm.developerConnection.equals("")) {
-            def scmNode = node.appendNode('scm')
-
-            if (!project.pom.scm.url.equals("")) {
-                scmNode.appendNode('url', project.pom.scm.url)
-            }
-            if (!project.pom.scm.connection.equals("")) {
-                scmNode.appendNode('connection', project.pom.scm.connection)
-            }
-            if (!project.pom.scm.developerConnection.equals("")) {
-                scmNode.appendNode('developerConnection', project.pom.scm.developerConnection)
-            }
-        }
-
-        if (!project.pom.distributionManagement.site.id.equals("")
-                || !project.pom.distributionManagement.site.url.equals("")) {
-            def distributionManagementNode = node.appendNode('distributionManagement')
-            def siteNode = distributionManagementNode.appendNode('site')
-
-            if (!project.pom.distributionManagement.site.id.equals("")) {
-                siteNode.appendNode('id', project.pom.distributionManagement.site.id)
-            }
-            if (!project.pom.distributionManagement.site.url.equals("")) {
-                siteNode.appendNode('url', project.pom.distributionManagement.site.url)
-            }
+            //reflect(pom);
         }
     }
 }
@@ -613,155 +683,482 @@ def modifyGeneratedPom(pom) {
 //
 // --Doyle
 //
-project.plugins.withType(MavenPublishPlugin) {
-    project.extensions.configure PublishingExtension,
-            new org.gradle.api.internal.ClosureBackedAction( {
 
-        publications {
-            if (project.isWarProject) {
-                project.pom.packaging = 'war'
+//Note: this block fires BEFORE the taskGraph is ready :(
+    project.plugins.withType(MavenPublishPlugin) {
+        project.extensions.configure PublishingExtension,
+                new org.gradle.api.internal.ClosureBackedAction({
 
-                webApp(MavenPublication){
-                    from components.web
+                    publications {
+                        if (project.isWarProject) {
+                            def artifactName = project.name + "-" + project.version + "." + project.pom.packaging;
+                            def artifactRoot = "${buildDir}/libs/"
+                            project.pom.packaging = 'war'
 
-                    groupId project.group
-                    artifactId project.name
-                    version project.version
+                            webApp(MavenPublication) {
+                                from components.web
 
-                    modifyGeneratedPom(pom)
-                    //TODO #27 pgp signatures on
-                    // ${buildDir}/publications/webApp/pom-default.xml
-                    //primary out
+                                groupId project.group
+                                artifactId project.name
+                                version project.version
 
-                }
-                if (project.javadocProfileEnabled) {
-                    javadocArtifacts(MavenPublication) {
-                        from components.web
+                                modifyGeneratedPom(pom)
+                                //TODO #27 pgp signatures on
+                                // ${buildDir}/publications/webApp/pom-default.xml
+                                //primary out
 
-                        groupId project.group
-                        artifactId project.name
-                        version project.version
-
-                        modifyGeneratedPom(pom)
-
-                        artifact javadocJar
-                        //TODO #27 pgp signatures
-                    }
-                }
-
-                if (project.sourcesProfileEnabled) {
-                    sourceJarArtifacts(MavenPublication) {
-                        from components.web
-
-                        groupId project.group
-                        artifactId project.name
-                        version project.version
-
-                        modifyGeneratedPom(pom)
-
-                        artifact sourcesJar
-                        //TODO #27 pgp signatures
-                    }
-                }
-
-            }
-            else if (project.isJavaProject) {
-                javaArtifacts(MavenPublication) {
-                    from components.java
-
-                    groupId project.group
-                    artifactId project.name
-                    version project.version
-
-                    modifyGeneratedPom(pom)
-                }
-
-                if (project.javadocProfileEnabled) {
-                    javadocArtifacts(MavenPublication) {
-                        from components.java
-
-                        groupId project.group
-                        artifactId project.name
-                        version project.version
-
-                        modifyGeneratedPom(pom)
-
-                        artifact javadocJar
-                    }
-                }
-
-                if (project.sourcesProfileEnabled) {
-                    sourceJarArtifacts(MavenPublication) {
-                        from components.java
-
-                        groupId project.group
-                        artifactId project.name
-                        version project.version
-
-                        modifyGeneratedPom(pom)
-
-                        artifact sourcesJar
-                    }
-                }
-            }
-            else if (project.isAndroidProject) {
-                def artifactRoot
-                def variants
-
-                if (project.android.hasProperty('applicationVariants')) {
-                    artifactRoot = "${buildDir}/outputs/apk"
-                    variants = project.android.applicationVariants;
-                }
-                else if (project.android.hasProperty('libraryVariants')) {
-                    artifactRoot = "${buildDir}/outputs/aar"
-                    variants = project.android.libraryVariants;
-                }
-
-                androidArtifacts(MavenPublication) {
-                    groupId project.group
-                    artifactId project.name
-                    version project.version
-
-                    modifyGeneratedPom(pom)
-
-                    variants.all { variant ->
-
-                        if (!variant.name.toLowerCase().endsWith("release")
-                                || (variant.name.toLowerCase().endsWith("release") && canSign)) {
-
-                            def artifactName = project.name + "-" + project.version + "-" +
-                                    variant.name + "." + project.pom.packaging;
-
-                            artifact("${artifactRoot}/${artifactName}") {
-                                classifier variant.name
-                                extension project.pom.packaging
                             }
-
                             if (project.javadocProfileEnabled) {
-                                artifact tasks["generate${variant.name.capitalize()}JavadocJar"]
+                                javadocArtifacts(MavenPublication) {
+                                    from components.web
+
+                                    groupId project.group
+                                    artifactId project.name
+                                    version project.version
+
+                                    modifyGeneratedPom(pom)
+
+                                    artifact javadocJar
+                                    //TODO #27 pgp signatures
+                                }
                             }
 
                             if (project.sourcesProfileEnabled) {
-                                artifact tasks["generate${variant.name.capitalize()}SourcesJar"]
+                                sourceJarArtifacts(MavenPublication) {
+                                    from components.web
+
+                                    groupId project.group
+                                    artifactId project.name
+                                    version project.version
+
+                                    modifyGeneratedPom(pom)
+
+                                    artifact sourcesJar
+                                    //TODO #27 pgp signatures
+                                }
+                            }
+
+                        } else if (project.isJavaProject) {
+                            def artifactName = project.name + "-" + project.version + "." + project.pom.packaging;
+                            def artifactRoot = "${buildDir}/libs/"
+                            javaArtifacts(MavenPublication) {
+                                from components.java
+
+                                groupId project.group
+                                artifactId project.name
+                                version project.version
+
+                                modifyGeneratedPom(pom)
+
+                                //the jar
+                                Container c;
+                                c = new Container();
+                                c.buildDir = "${buildDir}";
+                                c.fileName = artifactName;
+                                c.fileNameAndPath = "${artifactRoot}${artifactName}";
+                                c.type = "jar";
+                                project.ext.artifacts.add(c);
+                                logger.debug("Adding " + "${artifactRoot}${artifactName}" + " to artifact list");
+
+
+                                if (isGPGAvailable()) {
+                                    logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
+                                    artifact(c.fileNameAndPath + ".asc") {
+                                        extension 'jar.asc'
+                                    }
+                                }
+
+                                //the pom
+                                c = new Container();
+                                c.buildDir = "${buildDir}";
+                                c.fileName = artifactName;
+                                c.fileNameAndPath = "$buildDir/publications/javaArtifacts/pom-default.xml";
+                                c.type = "jar";
+                                project.ext.artifacts.add(c);
+                                logger.debug("Adding " + "$buildDir/publications/javaArtifacts/pom-default.xml" + " to artifact list");
+
+
+                                if (isGPGAvailable()) {
+                                    logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
+                                    artifact(c.fileNameAndPath + ".asc") {
+                                        extension 'pom.asc'
+                                    }
+                                }
+                            }
+
+                            if (project.javadocProfileEnabled) {
+                                javadocArtifacts(MavenPublication) {
+                                    from components.java
+
+                                    groupId project.group
+                                    artifactId project.name
+                                    version project.version
+
+                                    modifyGeneratedPom(pom)
+
+                                    artifact javadocJar
+
+
+                                    Container c;
+                                    c = new Container();
+                                    c.buildDir = "${buildDir}";
+                                    c.fileName = artifactName;
+                                    c.fileNameAndPath = "${buildDir}" + "/libs/" + project.name + "-" + project.version + "-javadoc.jar";
+                                    c.type = "jar";
+                                    project.ext.artifacts.add(c);
+                                    logger.debug("Adding " + "${buildDir}" + "/libs/" + project.name + "-" + project.version + "-javadoc.jar" + " to artifact list");
+
+
+                                    if (isGPGAvailable()) {
+                                        logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
+                                        artifact(c.fileNameAndPath + ".asc") {
+                                            extension project.pom.packaging
+                                            classifier "javadoc"
+                                            extension 'asc'
+                                        }
+                                    }
+
+
+                                }
+                            }
+
+                            if (project.sourcesProfileEnabled) {
+                                sourceJarArtifacts(MavenPublication) {
+                                    from components.java
+
+                                    groupId project.group
+                                    artifactId project.name
+                                    version project.version
+
+                                    modifyGeneratedPom(pom)
+
+                                    artifact sourcesJar
+
+                                    Container c;
+                                    c = new Container();
+                                    c.buildDir = "${buildDir}";
+                                    c.fileName = artifactName;
+                                    c.fileNameAndPath = "${buildDir}" + "/libs/" + project.name + "-" + project.version + "-sources.jar";
+                                    c.type = "jar";
+                                    project.ext.artifacts.add(c);
+                                    logger.debug("Adding " + "${buildDir}" + "/libs/" + project.name + "-" + project.version + "-sources.jar" + " to artifact list");
+
+
+                                    if (isGPGAvailable()) {
+                                        logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
+                                        artifact(c.fileNameAndPath + ".asc") {
+                                            extension project.pom.packaging
+                                            classifier "sources"
+                                            extension 'asc'
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (project.isAndroidProject) {
+                            def artifactRoot
+                            def variants
+
+                            if (project.android.hasProperty('applicationVariants')) {
+                                artifactRoot = "${buildDir}/outputs/apk"
+                                variants = project.android.applicationVariants;
+                            } else if (project.android.hasProperty('libraryVariants')) {
+                                artifactRoot = "${buildDir}/outputs/aar"
+                                variants = project.android.libraryVariants;
+                            }
+
+
+                            androidArtifacts(MavenPublication) {
+                                groupId project.group
+                                artifactId project.name
+                                version project.version
+
+                                modifyGeneratedPom(pom)
+
+                                variants.all { variant ->
+
+
+                                    if (!variant.name.toLowerCase().endsWith("release")
+                                            || (variant.name.toLowerCase().endsWith("release") && canSign)) {
+
+                                        def artifactName = project.name + "-" + project.version + "-" +
+                                                variant.name + "." + project.pom.packaging;
+                                        def artifactPrefix = project.name + "-" + project.version + "-" +
+                                                variant.name;
+
+                                        //signs the pom
+                                        Container c = new Container();
+                                        c.fileName = variant.name + ".pom";
+                                        c.fileNameAndPath = "${artifactRoot}/${artifactName}.pom";
+                                        c.buildDir = "${buildDir}";
+                                        if (project.isAndroidApplication)
+                                            c.type = "apk";
+                                        else c.type = "aar";
+                                        project.ext.artifacts.add(c);
+
+
+
+                                        if (!project.ext.pomAdded) {
+                                            //this check prevents failures because the pom is generated multiple times,
+                                            //mostly because of variants and debug/release
+                                            project.ext.pomAdded = true;
+
+                                            if (isGPGAvailable()) {
+                                                logger.debug("Adding " + "${buildDir}/publications/androidArtifacts/pom-default.xml.asc" + ".asc" + " to artifact list");
+                                                artifact("${buildDir}/publications/androidArtifacts/pom-default.xml.asc") {
+                                                    extension "asc"
+                                                    classifier "pom"
+                                                }
+                                            }
+                                        }
+
+                                        //signs the actual output
+                                        c = new Container();
+                                        if (project.isAndroidApplication)
+                                            c.type = "apk";
+                                        else c.type = "aar";
+                                        c.buildDir = "${buildDir}";
+                                        c.fileName = variant.name;
+                                        c.fileNameAndPath = "${artifactRoot}/${artifactName}";
+                                        project.ext.artifacts.add(c);
+
+
+                                        logger.debug("Adding " + "${artifactRoot}/${artifactName}" + " to artifact list");
+                                        artifact("${artifactRoot}/${artifactName}") {
+                                            classifier variant.name
+                                            extension project.pom.packaging
+                                        }
+
+
+                                        if (isGPGAvailable()) {
+                                            logger.debug("Adding " + "${artifactRoot}/${artifactName}" + ".asc" + " to artifact list");
+                                            artifact("${artifactRoot}/${artifactName}" + ".asc") {
+                                                classifier c.fileName
+                                                extension project.pom.packaging + '.asc'
+                                            }
+                                        }
+
+
+
+
+
+                                        if (project.javadocProfileEnabled) {
+                                            artifact tasks["generate${variant.name.capitalize()}JavadocJar"]
+                                            logger.debug("Adding " + "${buildDir}/libs/${artifactPrefix}-javadoc.jar" + " to artifact list");
+                                            c = new Container();
+                                            if (project.isAndroidApplication)
+                                                c.type = "apk";
+                                            else c.type = "aar";
+                                            c.buildDir = "${buildDir}";
+                                            c.fileName = variant.name;
+                                            c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-javadoc.jar";
+                                            //c.artifact=publications;
+                                            project.ext.artifacts.add(c);
+
+                                            if (isGPGAvailable()) {
+                                                logger.debug("Adding " + "${artifactRoot}/${artifactName}" + ".asc" + " to artifact list");
+                                                artifact("${artifactRoot}/${artifactName}" + ".asc") {
+                                                    extension project.pom.packaging
+                                                    classifier c.fileName + "-javadoc"
+                                                    extension 'asc'
+                                                }
+                                            }
+
+
+                                        }
+
+                                        if (project.sourcesProfileEnabled) {
+                                            artifact tasks["generate${variant.name.capitalize()}SourcesJar"]
+                                            c = new Container();
+                                            if (project.isAndroidApplication)
+                                                c.type = "apk";
+                                            else c.type = "aar";
+                                            c.buildDir = "${buildDir}";
+                                            c.fileName = variant.name;
+                                            c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-sources.jar";
+                                            project.ext.artifacts.add(c);
+
+                                            logger.debug("Adding " + "${buildDir}/libs/${artifactPrefix}-sources.jar" + " to artifact list");
+
+                                            if (isGPGAvailable()) {
+                                                artifact("${artifactRoot}/${artifactName}" + ".asc") {
+                                                    extension project.pom.packaging
+                                                    classifier c.fileName + "-sources"
+                                                    extension 'asc'
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                }
                             }
                         }
-
                     }
-                }
-            }
-        }
 
-        repositories {
-            maven {
-                url project.targetRepositoryUrl
+                    if (!"".equalsIgnoreCase(project.targetRepositoryUrl)) {
+                        repositories {
+                            maven {
+                                url project.targetRepositoryUrl
 
-                if (!project.nexusUsername.equals("")) {
-                    credentials {
-                        username project.nexusUsername
-                        password project.nexusPassword
+                                if (!project.nexusUsername.equals("")) {
+                                    credentials {
+                                        username project.nexusUsername
+                                        password project.nexusPassword
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
-            }
+                })
+    }
+
+/**
+ * Signs a file via gpg
+ * @param file string path to the file
+ * @return false is signing failed or gpg is not available
+ */
+    ext.signFile = { file ->
+        logger.debug("attempting to sign " + file)
+        if (!new File(file).exists()) {
+            logger.warn("WARN - skipping gpg signature of " + file + ", it probably hasn't been created yet!");
+            return false;
         }
-    })
+        File f = new File(file + ".asc");
+        if (f.exists())
+            f.delete();
+        exec {
+
+            executable ext.gpgPath
+
+            args "-a", "--output", file + ".asc", "--detach-sig", file
+        }
+    return true;
 }
+
+/**
+ * a simple container for capturing data about a file that needs to be signed
+ */
+class Container{
+    String fileNameAndPath;
+    String fileName;
+    /**
+     * only used to diff pom files
+     */
+    String type;
+    String buildDir;
+}
+
+/**
+ * this bit is kind of interesting
+ * when the signing code runs, it tends to run out of order, thiis part will force the signing method
+ * to rerun as the rest of the project is built.
+ *
+ * is it unnecessary work? you bet, however the signer skips
+ */
+    gradle.taskGraph.whenReady { taskGraph ->
+        def tasks = taskGraph.getAllTasks()
+        tasks.each {
+            def taskName = it.getName()
+            if (taskName == 'signArtifacts' || taskName == "signArtifacts2" ||
+                    taskName == "generatePomFileForAndroidArtifactsPublication") {
+                logger.debug("Found $taskName")
+
+                it.setOnlyIf { true }
+                it.outputs.upToDateWhen { false }
+        }
+    }
+}
+
+/**
+ * dev note: this function could possibly be used to completely override gradle's publish mechanism
+ * by injecting an HTTP PUT, effectively solving the rediciously problem of not being able to specify
+ * the name of the artifact when it's uploaded.
+ */
+
+    task signArtifacts() << {
+        // this line just makes gradle angry, left as a warn for future self
+        // outputs.upToDateWhen { false }
+        logger.info("Attempting to sign artifacts "  + project.ext.artifacts.size());
+
+        Iterator<Container> myiterator = project.ext.artifacts.iterator();
+        while (myiterator.hasNext()){
+
+            Container item = myiterator.next();
+            logger.debug(item.fileNameAndPath + " " + item.fileName + " " + item.type);
+            if (item.fileNameAndPath.endsWith(".pom")) {
+                if ("jar".equals(item.type)) {
+
+                    item.fileNameAndPath = item.buildDir + "/publications/javaArtifacts/pom-default.xml";
+            }
+                if ("aar".equals(item.type)) {
+
+                    item.fileNameAndPath = item.buildDir + "/publications/androidArtifacts/pom-default.xml";
+            }
+                if ("apk".equals(item.type)) {
+
+                    item.fileNameAndPath = item.buildDir + "/publications/androidArtifacts/pom-default.xml";
+            }
+        }
+            if (isGPGAvailable()) {
+                if (signFile(item.fileNameAndPath)) {
+                    logger.info(item.fileNameAndPath + " signed!");
+            } else {
+                    logger.warn("WARN - failed to sign artifact at " - item.fileNameAndPath);
+            }
+        } else {
+                logger.warn("GPG not available " - item.fileNameAndPath);
+
+        }
+    }
+}
+
+
+def reflect(object) {
+        Method[] bits = object.class.methods
+        for (int k =0; k < bits.length; k++){
+            System.out.println(bits[k].name);
+            for (int x= 0; x < bits[k].parameterTypes.length; x++) {
+                System.out.println("\t" + bits[k].parameterTypes[x].name);
+        }
+    }
+}
+
+    build.finalizedBy(signArtifacts)
+
+//used to surpress output from pgp's help method
+def dummyOutputStream = new OutputStream() {
+    @Override
+    public void write(int b) {}
+}
+
+
+/**
+ * Attempts to call pgp --help
+ * @return true
+ if gpg is available on the system
+ */
+def isGPGAvailable(){
+    if (!project.sign)
+        return false;
+    if (project.ext.pgpSearch)
+        return project.ext.pgpAvailable;
+    project.ext.pgpSearch=true;
+    logger.debug("searching for GPG")
+    try {
+        exec {
+            executable ext.gpgPath
+            args "--help"
+            standardOutput = new ByteArrayOutputStream()
+            errorOutput = new ByteArrayOutputStream()
+        }
+        logger.debug("GPG found at " + gpgPath);
+        project.ext.pgpAvailable=true;
+        return true;
+    }catch (Exception ex){
+        ex.printStackTrace();
+    }
+    //TODO search commons paths for windows?
+    logger.warn("GPG NOT found, signing will not be possible");
+    project.ext.pgpAvailable=false;
+    return false;
+}
+
