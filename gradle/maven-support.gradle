@@ -838,23 +838,22 @@ project.plugins.withType(MavenPublishPlugin) {
                     variants.all { variant ->
 
 
+                        if (!variant.name.toLowerCase().endsWith("release")
+                                || (variant.name.toLowerCase().endsWith("release") && canSign)) {
 
                             def artifactName = project.name + "-" + project.version + "-" +
                                     variant.name + "." + project.pom.packaging;
                             def artifactPrefix = project.name + "-" + project.version + "-" +
                                     variant.name;
 
-
-
-
                             //signs the pom
                             Container c = new Container();
                             c.fileName = variant.name + ".pom";
                             c.fileNameAndPath = "${artifactRoot}/${artifactName}.pom";
-                            c.buildDir ="${buildDir}";
+                            c.buildDir = "${buildDir}";
                             if (project.isAndroidApplication)
-                                c.type="apk";
-                            else c.type="aar";
+                                c.type = "apk";
+                            else c.type = "aar";
                             project.ext.artifacts.add(c);
 
 
@@ -862,7 +861,7 @@ project.plugins.withType(MavenPublishPlugin) {
                             if (!project.ext.pomAdded) {
                                 //this check prevents failures because the pom is generated multiple times,
                                 //mostly because of variants and debug/release
-                                project.ext.pomAdded=true;
+                                project.ext.pomAdded = true;
 
                                 if (isGPGAvailable()) {
                                     logger.debug("Adding " + "${buildDir}/publications/androidArtifacts/pom-default.xml.asc" + ".asc" + " to artifact list");
@@ -876,9 +875,9 @@ project.plugins.withType(MavenPublishPlugin) {
                             //signs the actual output
                             c = new Container();
                             if (project.isAndroidApplication)
-                                c.type="apk";
-                            else c.type="aar";
-                            c.buildDir ="${buildDir}";
+                                c.type = "apk";
+                            else c.type = "aar";
+                            c.buildDir = "${buildDir}";
                             c.fileName = variant.name;
                             c.fileNameAndPath = "${artifactRoot}/${artifactName}";
                             project.ext.artifacts.add(c);
@@ -891,12 +890,12 @@ project.plugins.withType(MavenPublishPlugin) {
                             }
 
 
-                            if (isGPGAvailable()){
+                            if (isGPGAvailable()) {
                                 logger.debug("Adding " + "${artifactRoot}/${artifactName}" + ".asc" + " to artifact list");
                                 artifact("${artifactRoot}/${artifactName}" + ".asc") {
                                     classifier c.fileName
-                                    extension project.pom.packaging +'.asc'
-                                  }
+                                    extension project.pom.packaging + '.asc'
+                                }
                             }
 
 
@@ -908,9 +907,9 @@ project.plugins.withType(MavenPublishPlugin) {
                                 logger.debug("Adding " + "${buildDir}/libs/${artifactPrefix}-javadoc.jar" + " to artifact list");
                                 c = new Container();
                                 if (project.isAndroidApplication)
-                                    c.type="apk";
-                                else c.type="aar";
-                                c.buildDir ="${buildDir}";
+                                    c.type = "apk";
+                                else c.type = "aar";
+                                c.buildDir = "${buildDir}";
                                 c.fileName = variant.name;
                                 c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-javadoc.jar";
                                 //c.artifact=publications;
@@ -932,9 +931,9 @@ project.plugins.withType(MavenPublishPlugin) {
                                 artifact tasks["generate${variant.name.capitalize()}SourcesJar"]
                                 c = new Container();
                                 if (project.isAndroidApplication)
-                                    c.type="apk";
-                                else c.type="aar";
-                                c.buildDir ="${buildDir}";
+                                    c.type = "apk";
+                                else c.type = "aar";
+                                c.buildDir = "${buildDir}";
                                 c.fileName = variant.name;
                                 c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-sources.jar";
                                 project.ext.artifacts.add(c);
@@ -949,7 +948,7 @@ project.plugins.withType(MavenPublishPlugin) {
                                     }
                                 }
                             }
-
+                        }
 
                     }
                 }
