@@ -1023,7 +1023,7 @@ gradle.taskGraph.whenReady { taskGraph ->
         def taskName = it.getName()
         if (taskName == 'signArtifacts' || taskName == "signArtifacts2" ||
         taskName == "generatePomFileForAndroidArtifactsPublication") {
-            println("Found $taskName")
+            logger.debug("Found $taskName")
 
             it.setOnlyIf { true }
             it.outputs.upToDateWhen { false }
