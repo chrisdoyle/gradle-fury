@@ -1166,7 +1166,7 @@ gradle.taskGraph.whenReady { graph ->
             allTasks.get(i) {
                 System.out.println("===== injected");
                 signArtifacts
-               // throw new Exception("the fuck?");
+               // throw new Exception("wtf");
             };
             System.out.println("===== injected");
         }
@@ -1174,7 +1174,7 @@ gradle.taskGraph.whenReady { graph ->
             allTasks.get(i).mustRunAfter {
                 System.out.println("===== injected");
                 signArtifacts
-                throw new Exception("the fuck?");
+                throw new Exception("wtf?");
             };
         }
 
