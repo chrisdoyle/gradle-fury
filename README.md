@@ -292,15 +292,12 @@ be present in the right locations for the publish steps.
 $ ./gradlew clean
 $ ./gradlew install -Pprofile=sources,javadoc
 $ ./gradlew publish -Pprofile=sources,javadoc,sign
-
 ```
 
 ## Publishing to Nexus like repos without GPG signatures
 
-
 ```bash
 $ ./gradlew clean publish -Pprofile=sources,javadoc,sign
-
 ```
 
 Acknowledgements
