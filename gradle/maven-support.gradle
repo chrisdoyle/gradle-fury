@@ -621,7 +621,7 @@ def modifyGeneratedPom(pom) {
             // modified from "Gradle not including dependencies in published pom.xml"
             // http://stackoverflow.com/a/32451846/3093897
             def dependenciesNode = asNode().appendNode('dependencies')
-            def configurationNames = ['compile'] // FIXME :: Issue #21: POM dependency generation shall support type and scope
+            def configurationNames = ['default','compile','releaseCompile','testCompile','androidTestCompile','provided'] // FIXME :: Issue #21: POM dependency generation shall support type and scope
 
             //https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope
             //maven only supports the following scope identifiers
@@ -630,12 +630,21 @@ def modifyGeneratedPom(pom) {
                 configurations[configurationName].allDependencies.each { dependency ->
                     if (dependency.group != null && dependency.name != null) {
 
-                        System.out.println( dependency.group + ":" +  dependency.name);
-                        reflect(dependency);
                         def dependencyNode = dependenciesNode.appendNode('dependency')
                         dependencyNode.appendNode('groupId', dependency.group)
                         dependencyNode.appendNode('artifactId', dependency.name)
-                        //dependencyNode.appendNode('scope', configurationName)
+                        if ("default".equalsIgnoreCase(configurationName) ||
+                                "compile".equalsIgnoreCase(configurationName) ||
+                                "releaseCompile".equalsIgnoreCase(configurationName))
+                            dependencyNode.appendNode('scope', "compile");
+                        else if ("testCompile".equalsIgnoreCase(configurationName) ||
+                                "androidTestCompile".equalsIgnoreCase(configurationName))
+                            dependencyNode.appendNode('scope', "test");
+                        else if ("provided".equalsIgnoreCase(configurationName))
+                            dependencyNode.appendNode('scope', "provided");
+                        else if ("runtime".equalsIgnoreCase(configurationName))
+                            dependencyNode.appendNode('scope', "runtime");
+
                         if (dependency.version.endsWith("+")){
                             //a gradle wildcard
                             if ("+".equals(dependency.version)) {
