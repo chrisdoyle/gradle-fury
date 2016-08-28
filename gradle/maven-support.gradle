@@ -424,7 +424,7 @@ def modifyGeneratedPom(pom) {
 
     File overrides = new File("${projectDir}/gradle.properties");
     if (overrides.exists()){
-        log.info("${projectDir}/gradle.properties exists, apply overrides");
+        logger.info("${projectDir}/gradle.properties exists, apply overrides");
         Properties props = new Properties();
         props.load(new FileInputStream("${projectDir}/gradle.properties"));
         props.each { prop ->
