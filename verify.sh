@@ -211,6 +211,10 @@ echo "     Issue #27 - verify poms has dependencies declared correctly with wild
 declare -a strs=(
       "\<version\>\[1\.3\,\)\<\/version\>" \
       "\<version\>LATEST\<\/version\>" \
+      "\<version\>\[3\,\)\<\/version\>" \
+      "\<artifactId\>commons\-math3\<\/artifactId\>" \
+      "\<artifactId\>commons\-codec\<\/artifactId\>" \
+      "\<version\>\[1\,\)\<\/version\>" \
        )
 
 for i in "${strs[@]}"
@@ -227,6 +231,40 @@ do
 done
 
 # END 27 verify dependency wildcards are correct
+
+
+
+
+
+# BEGIN 31 verify dependency scope are correct
+# we use sed here because we're searching for multiline strings
+echo "     Issue #31 - verify poms has dependencies declared correctly with scope"
+# check the apk
+
+declare -a strs=(
+    #provided
+      "'/\<dependency\>/,/\<groupId\>com\.chrisdoyle\<\/groupId\>/,/\<artifactId\>hello\-universe\-lib\<\/artifactId\>/,/\<scope\>provided\<\/scope\>/!d'" \
+    #test
+      "'/\<dependency\>/,/\<groupId\>junit\<\/groupId\>/,/\<artifactId\>junit\<\/artifactId\>/,/\<scope\>test\<\/scope\>/'" \
+    #compile
+      "'/\<dependency\>/,/\<groupId\>org.osmdroid\<\/groupId\>/,/\<artifactId\>osmdroid-android\<\/artifactId\>/./\<scope\>compile\<\/scope\>/'" \
+       )
+
+for i in "${strs[@]}"
+do
+    if [ "`eval echo sed -e $i ~/.m2/repository/com/chrisdoyle/hello-world-apk/$version/hello-world-apk-$version.pom`" ];
+    then
+        # code if found
+        echo " PASS - $i found in apk pom"
+    else
+        # code if not found
+        echo " FAIL - $i NOT found in apk pom"
+        exit 1
+    fi
+done
+
+# END 31 verify dependency scope are correct
+
 
 echo "     End Result - PASS"
 
