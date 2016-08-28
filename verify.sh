@@ -211,6 +211,10 @@ echo "     Issue #27 - verify poms has dependencies declared correctly with wild
 declare -a strs=(
       "\<version\>\[1\.3\,\)\<\/version\>" \
       "\<version\>LATEST\<\/version\>" \
+      "\<version\>\[3\,\)\<\/version\>" \
+      "\<artifactId\>commons\-math3\<\/artifactId\>" \
+      "\<artifactId\>commons\-codec\<\/artifactId\>" \
+      "\<version\>\[1\,\)\<\/version\>" \
        )
 
 for i in "${strs[@]}"
@@ -230,10 +234,11 @@ done
 
 # BEGIN Issue 31 War file support
 
-# strings to search for in our aar pom
+# strings to search for in our war pom
 declare -a strs=(
       "\<packaging\>\"war\"\</packaging\>" \
       "\<groupId\>org\.apache\.commons\<\/groupId\>" \
+      "\<artifactId\>hello\-world\-lib\<\/artifactId\>" \
        )
 
 for i in "${strs[@]}"

@@ -623,18 +623,24 @@ def modifyGeneratedPom(pom) {
                     configurations[configurationName].allDependencies.each { dependency ->
                         if (dependency.group != null && dependency.name != null) {
 
-                            def dependencyNode = dependenciesNode.appendNode('dependency')
-                            dependencyNode.appendNode('groupId', dependency.group)
-                            dependencyNode.appendNode('artifactId', dependency.name)
-                            if (dependency.version.endsWith("+")) {
-                                //a gradle wildcard
-                                if ("+".equals(dependency.version)) {
-                                    dependencyNode.appendNode('version', "LATEST")
-                                } else {
-                                    //the version is something.+
-                                    dependencyNode.appendNode('version', "[" + dependency.version.replace(".+", ",)"))
-                                }
-                                //TODO there may be other cases here
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', dependency.group)
+                        dependencyNode.appendNode('artifactId', dependency.name)
+                        if (dependency.version.endsWith("+")){
+                            //a gradle wildcard
+                            if ("+".equals(dependency.version)) {
+                                dependencyNode.appendNode('version', "LATEST")
+                            } else if (dependency.version.endsWith(".+")){
+                                //the version is something.+
+                                dependencyNode.appendNode('version', "[" + dependency.version.replace(".+",",)")  )
+                            } else if (dependency.version.endsWith("+")) {
+                                dependencyNode.appendNode('version', "[" + dependency.version.replace("+",",)")  )
+                            }
+                            else {
+                                System.out.println("WARN - unhandled case for dependency version mediation for " +
+                                        dependency.group + ":" + dependency.name + ":" + dependency.version);
+                            }
+                            //TODO there may be other cases here
 
                             } else {
                                 dependencyNode.appendNode('version', dependency.version)
