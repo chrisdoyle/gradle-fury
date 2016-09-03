@@ -42,7 +42,7 @@ public class Test_Issue46 {
 
                 String str = FileUtils.readFileToString(f, "utf-8");
                 for (int k = 0; k < search.length; k++) {
-                    Pattern p = Pattern.compile(search[i]);
+                    Pattern p = Pattern.compile(search[k]);
                     Matcher matcher = p.matcher(str);
                     Assert.assertTrue(search[k] + " not found in " + f.getAbsolutePath(), matcher.find());
                 }

@@ -45,6 +45,7 @@ dependencies {
     compile "com.android.support:design:${project.property('android-support.version')}"
     compile "com.android.support:recyclerview-v7:${project.property('android-support.version')}"
     compile "com.android.support:support-v4:${project.property('android-support.version')}"
+    compile "com.android.support:support-annotations:${project.property('android-support.version')}"
 
     testCompile "junit:junit:${project.property('junit.version')}"
     //included just to test wildcard pom generation
