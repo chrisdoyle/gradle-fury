@@ -14,6 +14,7 @@ import com.chrisdoyle.validation.tests.Test_Issues_23_27;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.PrintStream;
 import java.util.Properties;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -255,79 +256,65 @@ public class Main {
 
         result = junit.run(classesToRun);
 
-        String filename = "tck-results-" + new SimpleDateFormat("yyyyMMddhhmm").format(new Date()) + ".txt";
-        FileWriter fw = new FileWriter(filename);
+        //String filename = "tck-results-" + new SimpleDateFormat("yyyyMMddhhmm").format(new Date()) + ".txt";
+        //FileWriter fw = new FileWriter(filename);
 
-        BufferedWriter bw = new BufferedWriter(fw);
-        bw.write("Technical Conformance Kit (TCK) Test Results generated " + new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()));
-        bw.newLine();
-        bw.write("____________________________________________");
-        bw.newLine();
-        bw.write("Summary");
-        bw.newLine();
-        bw.write("Failed Test Cases: " + result.getFailureCount());
-        bw.newLine();
-        bw.write("Skipped Test Cases: " + result.getIgnoreCount());
-        bw.newLine();
-        bw.write("Ran Test Cases: " + result.getRunCount());
-        bw.newLine();
-        bw.write("Time: " + result.getRunTime());
-        bw.newLine();
-        bw.write("____________________________________________");
-
-        bw.newLine();
-        bw.write("Tests Ran");
-        bw.newLine();
+        PrintStream bw = System.out;
+        bw.println("Technical Conformance Kit (TCK) Test Results generated " + new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()));
+        bw.println("____________________________________________");
+        bw.println("Summary");
+        bw.println("Failed Test Cases: " + result.getFailureCount());
+        bw.println("Skipped Test Cases: " + result.getIgnoreCount());
+        bw.println("Ran Test Cases: " + result.getRunCount());
+        bw.println("Time: " + result.getRunTime());
+        bw.println("____________________________________________");
+        bw.println("Tests Ran");
+        
         for (int i = 0; i < normalTests.length; i++) {
-            bw.write(normalTests[i].getCanonicalName());
-            bw.newLine();
+            bw.println(normalTests[i].getCanonicalName());
         }
-        bw.write("____________________________________________");
-        bw.newLine();
-        bw.write("Failed Test cases");
-        bw.newLine();
-        bw.write("____________________________________________");
-        bw.newLine();
+        bw.println("____________________________________________");
+        bw.println("Failed Test cases");
+        bw.println("____________________________________________");
+        
         for (int i = 0; i < result.getFailures().size(); i++) {
             try {
                 try {
-                    bw.write(result.getFailures().get(i).getTestHeader());
+                    bw.println(result.getFailures().get(i).getTestHeader());
                 } catch (Exception ex) {
-                    bw.write(ex.getMessage());
+                    bw.println(ex.getMessage());
                 }
-                bw.newLine();
+                
                 try {
-                    bw.write(result.getFailures().get(i).getDescription().getClassName());
+                    bw.println(result.getFailures().get(i).getDescription().getClassName());
                 }
                 catch (Exception ex) {
-                    bw.write(ex.getMessage());
+                    bw.println(ex.getMessage());
                 }
 
-                bw.newLine();
+                
                 try {
-                    bw.write(result.getFailures().get(i).getDescription().getMethodName() == null ? "null method!" : result.getFailures().get(i).getDescription().getMethodName());
+                    bw.println(result.getFailures().get(i).getDescription().getMethodName() == null ? "null method!" : result.getFailures().get(i).getDescription().getMethodName());
                 } catch (Exception ex) {
-                    bw.write(ex.getMessage());
+                    bw.println(ex.getMessage());
                 }
                 try{
                     System.out.println("[FAIL] " + result.getFailures().get(i).getDescription().getClassName()+":" + result.getFailures().get(i).getDescription().getMethodName());
                 }catch (Exception ex){}
-                bw.newLine();
+                
                 try {
-                    bw.write(result.getFailures().get(i).getMessage() == null ? "no message" : result.getFailures().get(i).getMessage());
+                    bw.println(result.getFailures().get(i).getMessage() == null ? "no message" : result.getFailures().get(i).getMessage());
                 } catch (Exception ex) {
-                    bw.write(ex.getMessage());
+                    bw.println(ex.getMessage());
                 }
-                bw.newLine();
-                //result.getFailures().get(i).getException().printStackTrace();
                 try {
-                    bw.write(result.getFailures().get(i).getTrace());
+                    bw.println(result.getFailures().get(i).getTrace());
                 } catch (Exception ex) {
-                    bw.write(ex.getMessage());
+                    bw.println(ex.getMessage());
                 }
-                bw.newLine();
-                bw.write("____________________________________________");
-                bw.newLine();
+                
+                bw.println("____________________________________________");
+                
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -340,10 +327,7 @@ public class Main {
         System.out.println("Time: " + result.getRunTime() + "ms which is " +
                 org.apache.commons.lang3.time.DurationFormatUtils.formatDurationHMS(result.getRunTime()));
         System.out.println("-------------------------------------");
-        System.out.println("Results written to " + filename);
-
-        bw.close();
-        fw.close();
+        
         junit = null;
         System.out.println("Exit code: " + result.getFailureCount());
         System.exit(result.getFailureCount());
