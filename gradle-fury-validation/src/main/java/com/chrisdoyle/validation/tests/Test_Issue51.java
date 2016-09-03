@@ -20,7 +20,10 @@ public class Test_Issue51 {
     public void testPomProjectUrls() throws Exception {
 
         String[] search = new String[]{
-                "<url>http://chrisdoyle.github.io/gradle-fury/</url>"
+                "<repositories>",
+                "<repository>\\s*<id>BintrayJCenter</id>\\s*<name>BintrayJCenter</name>\\s*<url>https://jcenter.bintray.com/</url>\\s*</repository>",
+                "<repository>\\s*<id>MavenRepo</id>\\s*<name>MavenRepo</name>\\s*<url>https://repo1.maven.org/maven2/</url>\\s*</repository>",
+                "</repositories>",
         };
 
 
