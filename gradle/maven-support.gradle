@@ -485,20 +485,20 @@ def modifyGeneratedPom(pom) {
 
             //fix for issue #51 url element missing from pom
             //a URL is mandatory for mavenCentral, this injects a placeholder
-            System.out.println("POM URL should be " + project.pom.url);
+            logger.debug("POM URL should be " + project.pom.url);
             if ("".equals(project.pom.url)) {
                 project.pom.url = "http://TBD";
             }
             if (!node.url) {
-                System.out.println("POM URL APPENDED");
+                logger.debug("POM URL APPENDED");
                 node.appendNode('url', project.pom.url)
             } else {
-                System.out.println("POM URL REPLACE");
+                logger.debug("POM URL REPLACE");
                 node.url.replaceNode {
                     url(project.pom.url)
                 }
             }
-            System.out.println("POM URL IS NOW " + node.url);
+            logger.debug("POM URL IS NOW " + node.url);
 
             if (!project.pom.inceptionYear.equals("")) {
                 if (!node.inceptionYear) {
