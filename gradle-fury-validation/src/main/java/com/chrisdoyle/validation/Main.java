@@ -9,6 +9,7 @@ import com.chrisdoyle.validation.tests.Test_Issue31;
 import com.chrisdoyle.validation.tests.Test_Issue38;
 import com.chrisdoyle.validation.tests.Test_Issue46;
 import com.chrisdoyle.validation.tests.Test_Issue51;
+import com.chrisdoyle.validation.tests.Test_Issue59;
 import com.chrisdoyle.validation.tests.Test_Issues_23_27;
 
 import java.io.File;
@@ -41,6 +42,7 @@ public class Main {
             Test_Issue38.class,
             Test_Issue46.class,
             Test_Issue51.class,
+            Test_Issue59.class,
     };
 
     static final Class[] signatureTests = new Class[]{
