@@ -1,6 +1,6 @@
 rootProject.name = 'gradle-fury'
 
-include ':hello-world-aar'
+include ':hello-world-aar', ':gradle-fury-validation'
 include ':hello-world-apk'
 include ':hello-world-apk-overrides'
 include ':hello-world-lib'

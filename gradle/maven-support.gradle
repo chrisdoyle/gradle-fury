@@ -447,7 +447,7 @@ def modifyGeneratedPom(pom) {
             println "No pom.packaging defined in gradle.properties"
         }
 
-        if (project.isAndroidProject || project.isWarProject) {
+        if (project.isAndroidProject || project.isWarProject || project.isJavaProject) {
 
             //fix for issue #27 name element missing from pom
             if ("".equals(project.pom.name)) {
@@ -623,65 +623,84 @@ def modifyGeneratedPom(pom) {
                     siteNode.appendNode('url', project.pom.distributionManagement.site.url)
                 }
             }
-            if (project.isAndroidProject || project.isWarProject) {
+            if (project.isAndroidProject || project.isWarProject  || project.isJavaProject) {
 
-            // modified from "Gradle not including dependencies in published pom.xml"
-            // http://stackoverflow.com/a/32451846/3093897
-            def dependenciesNode = asNode().appendNode('dependencies')
-            def configurationNames;
-            if (project.isAndroidProject)
-                configurationNames = ['default','compile','testCompile','androidTestCompile','provided'] // FIXME :: Issue #21: POM dependency generation shall support type and scope
-            else{
-                configurationNames = ['default','compile','testCompile'] // FIXME :: Issue #21: POM dependency generation shall support type and scope
-            }
+                //note to self. sticking || project.isJavaProject in this above if statement breaks
+                //because it adds a SECOND dependencies node on the pom. why? no clue
+                // modified from "Gradle not including dependencies in published pom.xml"
+                // http://stackoverflow.com/a/32451846/3093897
 
-            configurations.findAll { set ->
-                set.each { config ->
-                    // Note to future self
-                    // this apparently dumps all every jar/aar/war/etc file name of the dependency
-                    //useful for #21 and getting the type. This was initially written to get a list
-                    //of all configurationNames since they vary from android/jar/war projects
-                    // System.out.println("CONFIG " +config.name);
+
+                //fix for jar projects with multiple dependencies nodes
+                //https://discuss.gradle.org/t/maven-publish-doesnt-include-dependencies-in-the-project-pom-file/8544/3?u=spy99
+                def dependenciesNode = asNode().getAt("dependencies")[0]
+
+                if (dependenciesNode==null) {
+                    //no dependency node exists, add it
+                    dependenciesNode = asNode().appendNode("dependencies")
+                } else {
+                    //probably a jar project, which gradle insists on adding a dependencies node
+                    //purge the stuff gradle adds, since the scope is usually wrong anyhow
+                    //http://docs.groovy-lang.org/latest/html/api/groovy/util/Node.html
+                    dependenciesNode.children().clear()
                 }
-            }
+                def configurationNames;
+                if (project.isAndroidProject)
+                    configurationNames = ['default', 'compile', 'testCompile', 'androidTestCompile', 'provided'] // FIXME :: Issue #21: POM dependency generation shall support type and scope
+                else {
+                    configurationNames = ['compile', 'testCompile','compileOnly']
+                    // FIXME :: Issue #21: POM dependency generation shall support type and scope
+                }
 
-            //https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope
-            //maven only supports the following scope identifiers
-            //test, compile, provided, runtime, system,
-            configurationNames.each { configurationName ->
-                configurations[configurationName].allDependencies.each { dependency ->
-                    if (dependency.group != null && dependency.name != null) {
+                configurations.findAll { set ->
+                    set.each { config ->
+                        // Note to future self
+                        // this apparently dumps all every jar/aar/war/etc file name of the dependency
+                        //useful for #21 and getting the type. This was initially written to get a list
+                        //of all configurationNames since they vary from android/jar/war projects
+                        // System.out.println("CONFIG " +config.name);
+                    }
+                }
+                int addedDependencies=0;
 
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-                        dependencyNode.appendNode('groupId', dependency.group)
-                        dependencyNode.appendNode('artifactId', dependency.name)
-                        if ("default".equalsIgnoreCase(configurationName) ||
-                                "compile".equalsIgnoreCase(configurationName) ||
-                                "releaseCompile".equalsIgnoreCase(configurationName))
-                            dependencyNode.appendNode('scope', "compile");
-                        else if ("testCompile".equalsIgnoreCase(configurationName) ||
-                                "androidTestCompile".equalsIgnoreCase(configurationName))
-                            dependencyNode.appendNode('scope', "test");
-                        else if ("provided".equalsIgnoreCase(configurationName))
-                            dependencyNode.appendNode('scope', "provided");
-                        else if ("runtime".equalsIgnoreCase(configurationName))
-                            dependencyNode.appendNode('scope', "runtime");
+                //https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope
+                //maven only supports the following scope identifiers
+                //test, compile, provided, runtime, system,
+                configurationNames.each { configurationName ->
+                    configurations[configurationName].allDependencies.each { dependency ->
+                        if (dependency.group != null && dependency.name != null) {
 
-                        if (dependency.version.endsWith("+")){
-                            //a gradle wildcard
-                            if ("+".equals(dependency.version)) {
-                                dependencyNode.appendNode('version', "LATEST")
-                            } else if (dependency.version.endsWith(".+")){
-                                //the version is something.+
-                                dependencyNode.appendNode('version', "[" + dependency.version.replace(".+",",)")  )
-                            } else if (dependency.version.endsWith("+")) {
-                                dependencyNode.appendNode('version', "[" + dependency.version.replace("+",",)")  )
-                            }
-                            else {
-                                System.out.println("WARN - unhandled case for dependency version mediation for " +
-                                        dependency.group + ":" + dependency.name + ":" + dependency.version);
-                            }
-                            //TODO there may be other cases here
+                            addedDependencies++;
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', dependency.group)
+                            dependencyNode.appendNode('artifactId', dependency.name)
+                            if ("default".equalsIgnoreCase(configurationName) ||
+                                    "compile".equalsIgnoreCase(configurationName) ||
+                                    "releaseCompile".equalsIgnoreCase(configurationName))
+                                dependencyNode.appendNode('scope', "compile");
+                            else if ("testCompile".equalsIgnoreCase(configurationName) ||
+                                    "androidTestCompile".equalsIgnoreCase(configurationName))
+                                dependencyNode.appendNode('scope', "test");
+                            else if ("compileOnly".equalsIgnoreCase(configurationName) ||
+                                    "provided".equalsIgnoreCase(configurationName))
+                                dependencyNode.appendNode('scope', "provided");
+                            else if ("runtime".equalsIgnoreCase(configurationName))
+                                dependencyNode.appendNode('scope', "runtime");
+
+                            if (dependency.version.endsWith("+")) {
+                                //a gradle wildcard
+                                if ("+".equals(dependency.version)) {
+                                    dependencyNode.appendNode('version', "LATEST")
+                                } else if (dependency.version.endsWith(".+")) {
+                                    //the version is something.+
+                                    dependencyNode.appendNode('version', "[" + dependency.version.replace(".+", ",)"))
+                                } else if (dependency.version.endsWith("+")) {
+                                    dependencyNode.appendNode('version', "[" + dependency.version.replace("+", ",)"))
+                                } else {
+                                    System.out.println("WARN - unhandled case for dependency version mediation for " +
+                                            dependency.group + ":" + dependency.name + ":" + dependency.version);
+                                }
+                                //TODO there may be other cases here
 
                             } else {
                                 dependencyNode.appendNode('version', dependency.version)
@@ -703,6 +722,7 @@ def modifyGeneratedPom(pom) {
                         }
                     }
                 }
+                //System.out.println("added " + addedDependencies + " dependencies")
             }
             //reflect(pom);
         }

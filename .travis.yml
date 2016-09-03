@@ -34,7 +34,7 @@ script:
   - ./gradlew -version
   - ./gradlew clean install -Pprofile=sources,javadoc
   #verify publish
-  - ./verify.sh
+  - java -cp gradle-fury-validation/libs/* com.chrisdoyle.validation.Main
 
   # ok let's blow up the local maven repo
   - rm -rf ~/.m2/
@@ -42,5 +42,5 @@ script:
   - ./gradlew clean
   - ./gradlew install -Pprofile=sources,javadoc
   - ./gradlew signArtifacts -Pprofile=sources,javadoc,sign
-  - ./verifySignatures.sh
+  - java -cp gradle-fury-validation/libs/* com.chrisdoyle.validation.Main -withSigs
 
