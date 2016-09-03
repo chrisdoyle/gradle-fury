@@ -37,5 +37,14 @@ version=`eval getProp $PROPERTIES_FILE pom.version`
 echo " ======== Validation script for gradle fury ======== "
 echo " "
 
+gpglocation=$(which gpg)
+if [[ -z "${param// }" ]]; then
+    echo "WARN GPG not available"
+    exit 0
+if
 
-java -jar gradle-fury-validation/build/libs/gradle-fury-validation-$version.jar -withSigs
+cat "\nGPG_PATH=$gpglocation" >> local.properties
+
+cat local.properties
+
+java -jar gradle-fury-validation/build/libs/gradle-fury-validation-$version.jar -withSig
