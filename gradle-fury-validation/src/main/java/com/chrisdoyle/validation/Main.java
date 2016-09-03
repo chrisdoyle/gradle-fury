@@ -29,9 +29,22 @@ import org.apache.commons.cli.Options;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 
-
+/**
+ * Command line junit test runner for Gradle-Fury validation
+ *
+ * borrowed from Apache jUDDI's TCK Test Runner
+ * @author alex
+ */
 public class Main {
 
+    /**
+     * used for string replacement
+     */
+    static final String VERSION = "\\$version";
+
+    /**
+     * run these tests after 'gradlew install -Pprofile=sources,javadoc
+     */
     static final Class[] normalTests = new Class[]{
 
             Test_Issue12.class,
@@ -46,10 +59,20 @@ public class Main {
             Test_Issue59.class,
     };
 
+    /**
+     * run these tests after
+     * 'gradlew install -Pprofile=sources,javadoc'
+     * 'gradlew publish -Pprofile=sources,javadoc,sign'
+     *
+     */
     static final Class[] signatureTests = new Class[]{
             Test_Issue12Sigs.class
     };
 
+
+    /**
+     * all artifacts that are expected to be signed, in the gradle build folders
+     */
 
     public final static String[] allSignedArtifacts = new String[]{
             "./hello-world-aar/build/outputs/aar/hello-world-aar-$version-debug.aar" ,
@@ -128,6 +151,10 @@ public class Main {
             "./hello-world-war/build/libs/hello-world-war-$version-sources.jar" ,
             "./hello-world-war/build/publications/webApp/pom-default.xml" ,
     };
+
+    /**
+     * all artifacts that are expected to be published to maven local
+     */
     public final static String[] allArtifacts = new String[]{
             "~/.m2/repository/com/chrisdoyle/hello-world-aar/$version/hello-world-aar-$version-debug.aar",
             "~/.m2/repository/com/chrisdoyle/hello-world-aar/$version/hello-world-aar-$version-debug-sources.jar",
@@ -175,6 +202,9 @@ public class Main {
 
     };
 
+    /**
+     * all POMs
+     */
     public final static String[] allPoms = new String[]{
             "~/.m2/repository/com/chrisdoyle/hello-world-aar/$version/hello-world-aar-$version.pom",
             "~/.m2/repository/com/chrisdoyle/hello-world-lib/$version/hello-world-lib-$version.pom",
@@ -185,9 +215,24 @@ public class Main {
 
     };
 
+    /**
+     * from gradle.properties, pom.version
+     */
     public static String version;
+    /**
+     * the folder you're running this jar from. it should be the $rootDir of gradle-fury
+     */
     public static String cwdDir;
+    /**
+     * some location to gpg, loaded from gradle.properties
+     */
     public static String gpg = "/usr/bin/gpg";
+
+    /**
+     * main entry point
+     * @param args
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception {
 
         //init
@@ -196,20 +241,21 @@ public class Main {
         System.out.println("CWD is " + cwd.getAbsolutePath());
         cwdDir = cwd.getAbsolutePath();
 
+        //this part does some basic string replacements for home dir, versioning etc
         version = getVersion(cwd);
         String homeDir = System.getProperty("user.home");
         for (int i=0; i < allArtifacts.length; i++){
-            allArtifacts[i] = replaceAll(allArtifacts[i], VERSION, version);
-            allArtifacts[i] = replaceAll(allArtifacts[i], "~", homeDir);
+            allArtifacts[i] = allArtifacts[i].replaceAll(VERSION, version);
+            allArtifacts[i] = allArtifacts[i].replaceAll( "~", homeDir);
         }
 
         for (int i=0; i < allPoms.length; i++){
-            allPoms[i] = replaceAll(allPoms[i], VERSION, version);
-            allPoms[i] = replaceAll(allPoms[i], "~", homeDir);
+            allPoms[i] = allPoms[i].replaceAll(VERSION, version);
+            allPoms[i] = allPoms[i].replaceAll("~", homeDir);
         }
 
         for (int i=0; i < allSignedArtifacts.length; i++){
-            allSignedArtifacts[i] = replaceAll(allSignedArtifacts[i], VERSION, version);
+            allSignedArtifacts[i] = allSignedArtifacts[i].replaceAll(VERSION, version);
             allSignedArtifacts[i]=allSignedArtifacts[i].replaceFirst("\\,", cwdDir);
         }
 
@@ -334,7 +380,7 @@ public class Main {
 
     }
 
-    public static String getVersion(File cwd) throws Exception {
+    static String getVersion(File cwd) throws Exception {
         File prop = new File(cwd.getAbsolutePath() + File.separator + "gradle.properties");
         if (!prop.exists()) {
             throw new Exception("can't find gradle.properties");
@@ -348,9 +394,4 @@ public class Main {
 
     }
 
-    public static final String VERSION = "\\$version";
-
-    public static String replaceAll(String source, String token, String replacement){
-        return source.replaceAll(token, replacement);
-    }
 }
