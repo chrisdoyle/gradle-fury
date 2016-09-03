@@ -41,7 +41,7 @@ gpglocation=$(which gpg)
 if [[ -z "${param// }" ]]; then
     echo "WARN GPG not available"
     exit 0
-if
+fi
 
 cat "\nGPG_PATH=$gpglocation" >> local.properties
 
