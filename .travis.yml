@@ -48,12 +48,12 @@ script:
   #setup nexus
   - wget http://download.sonatype.com/nexus/oss/nexus-2.13.0-01-bundle.zip
   - unzip nexus-2.13.0-01-bundle.zip
-  - cd nexus-2.13.0-01/bin
-  - chmod 755 nexus
-  - nexus start &
+  - cd nexus-2.13.0-01/bin ; chmod 755 nexus ; nexus start &
+  - pwd
   - cd ..
   - cd ..
   - cd ..
+  - pwd
 
   - ./gradlew publishArtifacts -Pprofile=sources,javadoc,sign
   - chmod 755 verifySignatures.sh
