@@ -1151,6 +1151,8 @@ project.plugins.withType(MavenPublishPlugin) {
                                             }
                                         }
                                     }
+                                } else if ((variant.name.toLowerCase().endsWith("release") && !canSign)){
+                                    logger.warn("WARN You're perform a release build with android artifacts but have not specified signing certificate (JKS). Check gradle.properties");
                                 }
 
                             }
@@ -1183,13 +1185,14 @@ project.plugins.withType(MavenPublishPlugin) {
 ext.signFile = { file ->
     logger.debug("attempting to sign " + file)
     if (!new File(file).exists()) {
-        logger.warn("WARN - skipping gpg signature of " + file + ", it probably hasn't been created yet!");
+        logger.warn("\n\nWARN - skipping gpg signature of " + file + ", it probably hasn't been created yet!\n\n");
         return false;
     }
     File f = new File(file + ".asc");
     if (f.exists())
         f.delete();
 
+    logger.info("\n\nSigning file " + file);
     if ("".equalsIgnoreCase(ext.gpgPassphrase)) {
         exec {
             executable ext.gpgPath
@@ -1273,7 +1276,7 @@ task signArtifacts() << {
             if (signFile(item.fileNameAndPath)) {
                 logger.info(item.fileNameAndPath + " signed!");
             } else {
-                logger.warn("WARN - failed to sign artifact at " - item.fileNameAndPath);
+                logger.warn("\n\nWARN - failed to sign artifact at " - item.fileNameAndPath + " \n\n");
             }
         } else {
             logger.warn("GPG not available " - item.fileNameAndPath);
