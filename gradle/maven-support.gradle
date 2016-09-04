@@ -814,7 +814,7 @@ project.plugins.withType(MavenPublishPlugin) {
                             if (isGPGAvailable()) {
                                 logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
                                 artifact(c.fileNameAndPath + ".asc") {
-                                    extension 'jar.asc'
+                                    extension 'war.asc'
                                 }
                             }
 
