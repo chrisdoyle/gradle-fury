@@ -370,8 +370,15 @@ afterEvaluate { project ->
 
                     source = variant.javaCompile.source
 
+                    String csdk = "${project.android.compileSdkVersion}";
+                    if (csdk.contains("Google")){
+                        try {
+                            csdk = csdk.split(":")[2];
+                        }catch (Exception ex){}
+                    }
+
                     ext.androidJar =
-                            "${project.android.sdkDirectory}/platforms/${project.android.compileSdkVersion}/android.jar"
+                            "${project.android.sdkDirectory}/platforms/" + csdk + "/android.jar"
 
                     classpath = project.files(variant.javaCompile.classpath.files)
                     classpath += project.files(ext.androidJar)
