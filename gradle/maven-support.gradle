@@ -1106,6 +1106,12 @@ project.plugins.withType(MavenPublishPlugin) {
                                     project.ext.artifacts.add(c);
 
                                     logger.debug("Adding " + "${artifactRoot}/${artifactName}" + ".asc" + " to artifact list");
+                                    //our actual artifact
+                                    logger.debug("Adding " + "${artifactRoot}/${artifactName}" + " to artifact list");
+                                    artifact("${artifactRoot}/${artifactName}") {
+                                        classifier variant.name
+                                        extension project.pom.packaging
+                                    }
 
 
 
@@ -1463,7 +1469,7 @@ task publishArtifacts << {
             // .addHeader("Authorization", header)
                     .build();
 
-                    Response response = client.newCall(request).execute();
+            Response response = client.newCall(request).execute();
             if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
 
             System.out.println(response.body().string());
