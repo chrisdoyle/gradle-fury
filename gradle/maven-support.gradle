@@ -382,6 +382,7 @@ afterEvaluate { project ->
 
                     classpath = project.files(variant.javaCompile.classpath.files)
                     classpath += project.files(ext.androidJar)
+                    //-bootclasspath /path/to/sdk/platforms/android-##/android.jar
                     // other lame attempts to overcome the 3-headed monster...
 //                      classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
 //                      classpath += variants.toList().first().javaCompile.classpath
@@ -532,7 +533,6 @@ def modifyGeneratedPom(pom) {
                     repoNode.appendNode("id", it.name);
                     repoNode.appendNode("name", it.name);
                     repoNode.appendNode("url", it.url);
-                    println "Name: " + it.name + "; url: " + it.url
                 }
 
             }
@@ -1049,6 +1049,7 @@ project.plugins.withType(MavenPublishPlugin) {
 
                             variants.all { variant ->
 
+                                logger.info("Processing " + project.name + ":" + variant.name)
 
                                 if (!variant.name.toLowerCase().endsWith("release")
                                         || (variant.name.toLowerCase().endsWith("release") && canSign)) {
@@ -1059,15 +1060,7 @@ project.plugins.withType(MavenPublishPlugin) {
                                             variant.name;
 
                                     //signs the pom
-                                    Container c = new Container();
-                                    c.fileName = variant.name + ".pom";
-                                    c.fileNameAndPath = "${artifactRoot}/${artifactName}.pom";
-                                    c.buildDir = "${buildDir}";
-                                    if (project.isAndroidApplication)
-                                        c.type = "apk";
-                                    else c.type = "aar";
-                                    project.ext.artifacts.add(c);
-
+                                    Container c;
 
 
                                     if (!project.ext.pomAdded) {
@@ -1076,25 +1069,32 @@ project.plugins.withType(MavenPublishPlugin) {
                                         project.ext.pomAdded = true;
 
                                         if (isGPGAvailable()) {
-                                            logger.debug("Adding " + "${buildDir}/publications/androidArtifacts/pom-default.xml.asc" + ".asc" + " to artifact list");
+                                            c = new Container();
+                                            c.fileName = variant.name + ".pom";
+                                            c.fileNameAndPath = "${artifactRoot}/${artifactName}.pom";
+                                            c.buildDir = "${buildDir}";
+                                            if (project.isAndroidApplication)
+                                                c.type = "apk";
+                                            else c.type = "aar";
+                                            project.ext.artifacts.add(c);
+
+
+                                            logger.info("Adding " + "${buildDir}/publications/androidArtifacts/pom-default.xml.asc" + " to artifact list");
                                             artifact("${buildDir}/publications/androidArtifacts/pom-default.xml.asc") {
-                                                extension "pom.asc"
-                                                //classifier "pom"
+                                                extension "asc"
+                                                classifier "pom"
                                             }
+                                        } else {
+                                            logger.info("Skipping pom signing " + "${buildDir}/publications/androidArtifacts/pom-default.xml.asc" + " GPG not available");
                                         }
+                                    } else {
+                                        logger.info("Skipping pom signing " + "${buildDir}/publications/androidArtifacts/pom-default.xml.asc" + " POM already added");
                                     }
 
-                                    //signs the actual output
-                                    c = new Container();
-                                    if (project.isAndroidApplication)
-                                        c.type = "apk";
-                                    else c.type = "aar";
-                                    c.buildDir = "${buildDir}";
-                                    c.fileName = variant.name;
-                                    c.fileNameAndPath = "${artifactRoot}/${artifactName}";
-                                    project.ext.artifacts.add(c);
 
 
+
+                                    //our actual artifact
                                     logger.debug("Adding " + "${artifactRoot}/${artifactName}" + " to artifact list");
                                     artifact("${artifactRoot}/${artifactName}") {
                                         classifier variant.name
@@ -1103,6 +1103,16 @@ project.plugins.withType(MavenPublishPlugin) {
 
 
                                     if (isGPGAvailable()) {
+                                        //signs the actual output
+                                        c = new Container();
+                                        if (project.isAndroidApplication)
+                                            c.type = "apk";
+                                        else c.type = "aar";
+                                        c.buildDir = "${buildDir}";
+                                        c.fileName = variant.name;
+                                        c.fileNameAndPath = "${artifactRoot}/${artifactName}";
+                                        project.ext.artifacts.add(c);
+
                                         logger.debug("Adding " + "${artifactRoot}/${artifactName}" + ".asc" + " to artifact list");
                                         artifact("${artifactRoot}/${artifactName}" + ".asc") {
                                             classifier c.fileName
@@ -1117,17 +1127,18 @@ project.plugins.withType(MavenPublishPlugin) {
                                     if (project.javadocProfileEnabled) {
                                         artifact tasks["generate${variant.name.capitalize()}JavadocJar"]
                                         logger.debug("Adding " + "${buildDir}/libs/${artifactPrefix}-javadoc.jar" + " to artifact list");
-                                        c = new Container();
-                                        if (project.isAndroidApplication)
-                                            c.type = "apk";
-                                        else c.type = "aar";
-                                        c.buildDir = "${buildDir}";
-                                        c.fileName = variant.name;
-                                        c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-javadoc.jar";
-                                        //c.artifact=publications;
-                                        project.ext.artifacts.add(c);
+
 
                                         if (isGPGAvailable()) {
+                                            c = new Container();
+                                            if (project.isAndroidApplication)
+                                                c.type = "apk";
+                                            else c.type = "aar";
+                                            c.buildDir = "${buildDir}";
+                                            c.fileName = variant.name;
+                                            c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-javadoc.jar";
+                                            project.ext.artifacts.add(c);
+
                                             logger.debug("Adding " + "${artifactRoot}/${artifactName}" + ".asc" + " to artifact list");
                                             artifact("${artifactRoot}/${artifactName}" + ".asc") {
                                                 classifier c.fileName + "-javadoc"
@@ -1140,18 +1151,19 @@ project.plugins.withType(MavenPublishPlugin) {
 
                                     if (project.sourcesProfileEnabled) {
                                         artifact tasks["generate${variant.name.capitalize()}SourcesJar"]
-                                        c = new Container();
-                                        if (project.isAndroidApplication)
-                                            c.type = "apk";
-                                        else c.type = "aar";
-                                        c.buildDir = "${buildDir}";
-                                        c.fileName = variant.name;
-                                        c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-sources.jar";
-                                        project.ext.artifacts.add(c);
-
                                         logger.debug("Adding " + "${buildDir}/libs/${artifactPrefix}-sources.jar" + " to artifact list");
 
+
                                         if (isGPGAvailable()) {
+                                            c = new Container();
+                                            if (project.isAndroidApplication)
+                                                c.type = "apk";
+                                            else c.type = "aar";
+                                            c.buildDir = "${buildDir}";
+                                            c.fileName = variant.name;
+                                            c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-sources.jar";
+                                            project.ext.artifacts.add(c);
+
                                             artifact("${artifactRoot}/${artifactName}" + ".asc") {
                                                 classifier c.fileName + "-sources"
                                                 extension 'jar.asc'
@@ -1159,7 +1171,11 @@ project.plugins.withType(MavenPublishPlugin) {
                                         }
                                     }
                                 } else if ((variant.name.toLowerCase().endsWith("release") && !canSign)){
-                                    logger.warn("WARN You're perform a release build with android artifacts but have not specified signing certificate (JKS). Check gradle.properties");
+                                    logger.warn("====================\n\n" +
+                                            "WARN You're perform a release build with android artifacts but have not specified signing certificate (JKS). Check gradle.properties\n\n" +
+                                            "====================");
+                                } else {
+                                    //logger.warn("Not a release and I can't sign, most things are skipped");
                                 }
 
                             }
