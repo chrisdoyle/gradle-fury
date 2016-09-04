@@ -219,6 +219,11 @@ public class Main {
      * from gradle.properties, pom.version
      */
     public static String version;
+
+    /**
+     * raw access to everything in gradle.properties
+     */
+    public static Properties gradleProperties = new Properties();
     /**
      * the folder you're running this jar from. it should be the $rootDir of gradle-fury
      */
@@ -240,9 +245,9 @@ public class Main {
         System.out.println("============ Gradle Fury Validation ============");
         System.out.println("CWD is " + cwd.getAbsolutePath());
         cwdDir = cwd.getAbsolutePath();
+        init(cwd);
 
         //this part does some basic string replacements for home dir, versioning etc
-        version = getVersion(cwd);
         String homeDir = System.getProperty("user.home");
         for (int i=0; i < allArtifacts.length; i++){
             allArtifacts[i] = allArtifacts[i].replaceAll(VERSION, version);
@@ -380,7 +385,12 @@ public class Main {
 
     }
 
-    static String getVersion(File cwd) throws Exception {
+    /**
+     * loads the gradle.properties file
+     * @param cwd
+     * @throws Exception
+     */
+    static void init(File cwd) throws Exception {
         File prop = new File(cwd.getAbsolutePath() + File.separator + "gradle.properties");
         if (!prop.exists()) {
             throw new Exception("can't find gradle.properties");
@@ -389,7 +399,8 @@ public class Main {
         p.load(new FileInputStream(prop));
         if (p.containsKey("GPG_PATH"))
             gpg = p.getProperty("GPG_PATH");
-        return (String)p.getProperty("pom.version");
+        version = p.getProperty("pom.version");
+        gradleProperties=p;
 
 
     }
