@@ -1088,12 +1088,6 @@ project.plugins.withType(MavenPublishPlugin) {
                                             project.ext.artifacts.add(c);
 
 
-                                            logger.info("Adding " + "${buildDir}/publications/androidArtifacts/pom-default.xml.asc" + " to artifact list");
-                                            artifact("${buildDir}/publications/androidArtifacts/pom-default.xml.asc") {
-                                                extension "pom.asc"
-                                                classifier "pom"
-                                                //note to self, gradle automaticaly adds the pom to the artifact list
-                                            }
                                         } else {
                                             logger.warn("Skipping pom signing " + "${buildDir}/publications/androidArtifacts/pom-default.xml.asc" + " GPG not available");
                                         }
@@ -1101,34 +1095,19 @@ project.plugins.withType(MavenPublishPlugin) {
                                         logger.info("Skipping pom signing " + "${buildDir}/publications/androidArtifacts/pom-default.xml.asc" + " POM already added");
                                     }
 
+                                    //signs the actual output
+                                    c = new Container();
+                                    if (project.isAndroidApplication)
+                                        c.type = "apk";
+                                    else c.type = "aar";
+                                    c.buildDir = "${buildDir}";
+                                    c.fileName = variant.name;
+                                    c.fileNameAndPath = "${artifactRoot}/${artifactName}";
+                                    project.ext.artifacts.add(c);
+
+                                    logger.debug("Adding " + "${artifactRoot}/${artifactName}" + ".asc" + " to artifact list");
 
 
-
-                                    //our actual artifact
-                                    logger.debug("Adding " + "${artifactRoot}/${artifactName}" + " to artifact list");
-                                    artifact("${artifactRoot}/${artifactName}") {
-                                        classifier variant.name
-                                        extension project.pom.packaging
-                                    }
-
-
-                                    if (isGPGAvailable()) {
-                                        //signs the actual output
-                                        c = new Container();
-                                        if (project.isAndroidApplication)
-                                            c.type = "apk";
-                                        else c.type = "aar";
-                                        c.buildDir = "${buildDir}";
-                                        c.fileName = variant.name;
-                                        c.fileNameAndPath = "${artifactRoot}/${artifactName}";
-                                        project.ext.artifacts.add(c);
-
-                                        logger.debug("Adding " + "${artifactRoot}/${artifactName}" + ".asc" + " to artifact list");
-                                        artifact("${artifactRoot}/${artifactName}" + ".asc") {
-                                            classifier c.fileName
-                                            extension project.pom.packaging + '.asc'
-                                        }
-                                    }
 
 
 
@@ -1150,10 +1129,7 @@ project.plugins.withType(MavenPublishPlugin) {
                                             project.ext.artifacts.add(c);
 
                                             logger.debug("Adding " + "${artifactRoot}/${artifactName}" + ".asc" + " to artifact list");
-                                            artifact("${artifactRoot}/${artifactName}" + ".asc") {
-                                                classifier c.fileName + "-javadoc"
-                                                extension  'jar.asc'
-                                            }
+
                                         }
 
 
@@ -1174,20 +1150,16 @@ project.plugins.withType(MavenPublishPlugin) {
                                             c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-sources.jar";
                                             project.ext.artifacts.add(c);
 
-                                            artifact("${artifactRoot}/${artifactName}" + ".asc") {
-                                                classifier c.fileName + "-sources"
-                                                extension 'jar.asc'
-                                            }
+
                                         }
                                     }
-                                } else if ((variant.name.toLowerCase().endsWith("release") && !canSign)){
+                                } else if ((variant.name.toLowerCase().endsWith("release") && !canSign)) {
                                     logger.warn("====================\n\n" +
                                             "WARN You're perform a release build with android artifacts but have not specified signing certificate (JKS). Check gradle.properties\n\n" +
                                             "====================");
                                 } else {
                                     //logger.warn("Not a release and I can't sign, most things are skipped");
                                 }
-
                             }
                         }
                     }
@@ -1390,13 +1362,23 @@ def generateChecksumForFile(File file, String algorithm, int length) {
     BigInteger bigInt = new BigInteger(1, md5sum)
     def md5Sum = bigInt.toString(16).padLeft(length, '0')
     //project.logger.debug "Calculated MD5 sum '${md5Sum}' for file '${file}'"
-    new File(file.absolutePath + '.' + algorithm.toLowerCase()).write "${md5Sum}\t*${file.name}"
+    new File(file.absolutePath + '.' + algorithm.toLowerCase()).write "${md5Sum}"
 }
 
 //so why did we have to write this? because gradle....
 //android artifact poms would sign but not upload using the standard naming convention
 //all of this was just to fix it
 task publishArtifacts << {
+
+    if ("".equalsIgnoreCase(targetRepositoryUrl) || targetRepositoryUrl==null){
+        throw new Exception("Cannot publish without a repository url defined");
+    }
+    if ("".equalsIgnoreCase(project.nexusUsername) || project.nexusUsername==null){
+        throw new Exception("Cannot publish without a repository username");
+    }
+    if ("".equalsIgnoreCase(project.nexusPassword) || project.nexusPassword==null){
+        throw new Exception("Cannot publish without a repository password");
+    }
 
     OkHttpClient client = new OkHttpClient.Builder()
             .authenticator(new Authenticator() {
