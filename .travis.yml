@@ -51,7 +51,7 @@ script:
   - cd nexus-2.13.0-01/bin ;
   - pwd
   - chmod 755 nexus
-  - nexus start &
+  - ./nexus start &
   - pwd
   - cd ..
   - cd ..
