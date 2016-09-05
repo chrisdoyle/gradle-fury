@@ -29,7 +29,7 @@ env:
 before_script:
  - sudo apt-get install gnupg2
  - sudo apt-get install rng-tools gnupg-agent pinentry-curses
- - cat EXTRAOPTIONS="-r /dev/random" >> /etc/conf.d/rngd
+ - sudo echo EXTRAOPTIONS="-r /dev/random" >> /etc/conf.d/rngd
  - service rngd start
  #setup gpg first
  - which gpg2
