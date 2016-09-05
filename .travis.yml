@@ -96,6 +96,6 @@ script:
   - ci/verifySignatures.sh
 
   #stop nexus
-  - cd nexus-2.13.0-01-bundle/nexus-2.13.0-01/bin
+  - cd nexus-2.13.0-01/bin
   - nexus stop
 
