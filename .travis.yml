@@ -31,8 +31,8 @@ before_script:
  - sudo apt-get install rng-tools gnupg-agent pinentry-curses
  #- sudo echo EXTRAOPTIONS=\"-r /dev/random\" >> /etc/conf.d/rngd
  - export RNGD_OPTS="-o /dev/random -r /dev/urandom"
- - rngd -f
- - service rngd start
+ - sudo rngd -f
+ - sudo service rngd start
  #setup gpg first
  - which gpg2
  - gpg2 --version
