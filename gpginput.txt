@@ -1,5 +1,5 @@
 %echo Generating a default key
-Key-Type: default
+Key-Type: RSA
 Subkey-Type: default
 Name-Real: Joe Tester
 Name-Comment: with stupid passphrase
