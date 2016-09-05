@@ -28,12 +28,6 @@ env:
 
 sudo: required
 
-# fun fact, travis doesn't really support multiple AVDs running currently for a single build (tried it, build timed out constantly while starting up the AVDs)
-# thus we're using a build matrix (which makes more sense anyhow)
-env:
-    global:
-    #minutes (2 minutes by default), prevents CommandShellUnresponsiveExceptions
-    #- ADB_INSTALL_TIMEOUT=14
 
 before_script:
  - sudo apt-get install gnupg2
