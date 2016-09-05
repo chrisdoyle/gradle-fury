@@ -27,6 +27,7 @@ env:
     #- ADB_INSTALL_TIMEOUT=14
 
 before_script:
+ - sudo apg-get install gnupg
 
 #build
 script:
@@ -44,6 +45,9 @@ script:
   - ./gradlew install -Pprofile=sources,javadoc
   - chmod 755 verify.sh
   - ./verify.sh
+
+  #generate a bonus gpg key
+  - gpg2 --verbose --batch --gen-key gpginput.txt
 
   #setup nexus
   - wget http://download.sonatype.com/nexus/oss/nexus-2.13.0-01-bundle.zip
