@@ -78,7 +78,7 @@ script:
   #setup nexus, should this be moved to before script?
   - wget http://download.sonatype.com/nexus/oss/nexus-2.13.0-01-bundle.zip
   - unzip nexus-2.13.0-01-bundle.zip
-  - cd nexus-2.13.0-01/bin ;
+  - cd nexus-2.13.0-01/bin
   - pwd
   - chmod 755 nexus
   - ./nexus start &
@@ -97,5 +97,5 @@ script:
 
   #stop nexus
   - cd nexus-2.13.0-01/bin
-  - nexus stop
+  - ./nexus stop
 
