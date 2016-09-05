@@ -31,6 +31,8 @@ before_script:
  - sudo apt-get install rng-tools gnupg-agent pinentry-curses
  #- sudo echo EXTRAOPTIONS=\"-r /dev/random\" >> /etc/conf.d/rngd
  - export RNGD_OPTS="-o /dev/random -r /dev/urandom"
+ - sudo mknod /dev/hwrng c 10 183
+ - ls /dev | grep hwrng
  - sudo rngd -f
  - sudo service rngd start
  #setup gpg first
