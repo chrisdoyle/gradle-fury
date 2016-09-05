@@ -47,7 +47,7 @@ script:
   - ./verify.sh
 
   #generate a bonus gpg key
-  - gpg2 --verbose --batch --gen-key gpginput.txt
+  - gpg --verbose --batch --gen-key gpginput.txt
 
   #setup nexus
   - wget http://download.sonatype.com/nexus/oss/nexus-2.13.0-01-bundle.zip
@@ -60,7 +60,8 @@ script:
   - cd ..
   - cd ..
   - pwd
-
+  
+  - which gpg
   - echo GPG_PATH=$(which gpg) >> gradle.properties
   # build with signatures and publish
   - ./gradlew publishArtifacts -Pprofile=sources,javadoc,sign
