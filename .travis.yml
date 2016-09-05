@@ -27,19 +27,19 @@ env:
     #- ADB_INSTALL_TIMEOUT=14
 
 before_script:
- - sudo apt-get install gnupg
+ - sudo apt-get install gnupg2
 
 #build
 script:
   #setup gpg first
-  - which gpg
-  - gpg --version
-  - gpg --help
+  - which gpg2
+  - gpg2 --version
+  - gpg2 --help
   #generate a bonus gpg key for signing
-  - gpg --verbose --batch --gen-key gpginput.txt
-  - gpg --list-keys
+  - gpg2 --verbose --batch --gen-key gpginput.txt
+  - gpg2 --list-keys
   #set the location of gpg in our gradle.properties file
-  - echo GPG_PATH=$(which gpg) >> gradle.properties
+  - echo GPG_PATH=$(which gpg2) >> gradle.properties
 
   #build using gradle
   - ./gradlew -version
