@@ -69,7 +69,7 @@ script:
   - chmod 755 waitForNexus.sh
   - ./waitForNexus.sh
   # build with signatures and publish
-  - ./gradlew publishArtifacts -Pprofile=sources,javadoc,sign
+  - ./gradlew publishArtifacts -Pprofile=sources,javadoc,sign -i
   - chmod 755 verifySignatures.sh
   # verify correctness
   - ./verifySignatures.sh
