@@ -27,7 +27,7 @@ env:
     #- ADB_INSTALL_TIMEOUT=14
 
 before_script:
- - sudo apg-get install gnupg
+ - sudo apt-get install gnupg
 
 #build
 script:
