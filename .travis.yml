@@ -60,9 +60,12 @@ script:
   - cd ..
   - cd ..
   - pwd
-  
+  -
   - which gpg
   - echo GPG_PATH=$(which gpg) >> gradle.properties
+  # wait for nexus
+  - chmod 755 waitForNexus.sh
+  - ./waitForNexus.sh
   # build with signatures and publish
   - ./gradlew publishArtifacts -Pprofile=sources,javadoc,sign
   - chmod 755 verifySignatures.sh
