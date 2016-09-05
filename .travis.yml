@@ -72,7 +72,7 @@ script:
   #build using gradle
   - ./gradlew -version
   - ./gradlew clean install -Pprofile=sources,javadoc
-  #verify publish
+  #verify publish to maven local
   - ci/verify.sh
 
   # ok let's blow up the local maven repo
@@ -99,6 +99,11 @@ script:
 
   # wait for nexus
   - ci//waitForNexus.sh
+
+  #publish outwith signatures
+  - ./gradlew publishArtifacts -Pprofile=sources,javadoc
+  - ci/verifyNoSignatures.sh
+
   # build with signatures and publish
   - ./gradlew publishArtifacts -Pprofile=sources,javadoc,sign -i
   # verify correctness
