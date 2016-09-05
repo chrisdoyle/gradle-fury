@@ -31,10 +31,10 @@ before_script:
  - sudo apt-get install rng-tools gnupg-agent pinentry-curses
  #- sudo echo EXTRAOPTIONS=\"-r /dev/random\" >> /etc/conf.d/rngd
  - export RNGD_OPTS="-o /dev/random -r /dev/urandom"
- - sudo mknod /dev/hwrng c 10 183
- - ls /dev | grep hwrng
- - sudo rngd -f
- - sudo service rngd start
+ #- sudo mknod /dev/hwrng c 10 183
+ #- ls /dev | grep hwrng
+ #- sudo rngd -f
+ #- sudo service rngd start
  #setup gpg first
  - which gpg2
  - gpg2 --version
@@ -44,6 +44,7 @@ before_script:
  - gpg2 --list-keys
  #set the location of gpg in our gradle.properties file
  - echo GPG_PATH=$(which gpg2) >> gradle.properties
+ - chmod 755 ci/*.sh
 
 #build
 script:
@@ -53,7 +54,6 @@ script:
   - ./gradlew -version
   - ./gradlew clean install -Pprofile=sources,javadoc
   #verify publish
-  - chmod 755 ci/verify.sh
   - ci/verify.sh
 
   # ok let's blow up the local maven repo
@@ -61,7 +61,6 @@ script:
   # build again with signatures, then verify the signatures
   - ./gradlew clean
   - ./gradlew install -Pprofile=sources,javadoc
-  - chmod 755 verify.sh
   - ci/verify.sh
 
 
@@ -80,11 +79,9 @@ script:
   -
 
   # wait for nexus
-  - chmod 755 ci/waitForNexus.sh
   - ci//waitForNexus.sh
   # build with signatures and publish
   - ./gradlew publishArtifacts -Pprofile=sources,javadoc,sign -i
-  - chmod 755 ci/verifySignatures.sh
   # verify correctness
   - ci/verifySignatures.sh
 
