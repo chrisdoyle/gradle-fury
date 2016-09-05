@@ -36,11 +36,11 @@ before_script:
  #- sudo rngd -f
  #- sudo service rngd start
  #setup gpg first
- - which gpg2
+ - which gpg
  - gpg --version
  - gpg --help
  #generate a bonus gpg key for signing
- - gpg --verbose --batch --gen-key ci/gpginput.txt
+ - gpg --verbose --batch --gen-key ci/gpginput.txt &
  - gpg --list-keys
  #set the location of gpg in our gradle.properties file
  - echo GPG_PATH=$(which gpg) >> gradle.properties
