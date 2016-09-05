@@ -62,6 +62,8 @@ script:
   - pwd
   -
   - which gpg
+  - gpg --version
+  - gpg --help
   - echo GPG_PATH=$(which gpg) >> gradle.properties
   # wait for nexus
   - chmod 755 waitForNexus.sh
