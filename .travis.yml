@@ -60,8 +60,12 @@ script:
   - cd ..
   - cd ..
   - pwd
+
+  - echo GPG_PATH=$(which gpg) >> gradle.properties
+  # build with signatures and publish
   - ./gradlew publishArtifacts -Pprofile=sources,javadoc,sign
   - chmod 755 verifySignatures.sh
+  # verify correctness
   - ./verifySignatures.sh
 
   #stop nexus
