@@ -68,6 +68,8 @@ before_script:
 #build
 script:
 
+  #setup the username/passwords for nexus defaults
+  - ci/configure.sh
 
   #build using gradle
   - ./gradlew -version
