@@ -1,5 +1,7 @@
 import okhttp3.*
 
+import javax.crypto.Cipher
+import javax.crypto.spec.SecretKeySpec
 import java.lang.reflect.Method
 import java.security.MessageDigest
 
@@ -66,6 +68,11 @@ ext.gpgPassphrase = (
                 ? GPG_PASSPHRASE
                 : ""
 );
+if (mightBeEncrypted(ext.gpgPassphrase)){
+    ext.gpgPassphrase=tryDecrypt(ext.gpgPassphrase);
+}
+
+
 
 // default to Maven Central if not provided
 ext.releaseRepositoryUrl = (
@@ -85,6 +92,25 @@ ext.targetRepositoryUrl = ( isReleaseBuild ? releaseRepositoryUrl : snapshotRepo
 
 ext.nexusUsername = ( hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : "" )
 ext.nexusPassword = ( hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : "" )
+
+if (mightBeEncrypted(ext.nexusPassword)){
+    ext.nexusPassword=tryDecrypt(ext.nexusPassword);
+}
+
+if (hasProperty("android.signingConfigs.release.storePassword")){
+    try {
+        if (mightBeEncrypted(android.signingConfigs.release.storePassword)) {
+            android.signingConfigs.release.storePassword = tryDecrypt(android.signingConfigs.release.storePassword)
+        }
+    }catch (Exception ex){}
+}
+if (hasProperty("android.signingConfigs.release.keyPassword")){
+    try{
+    if (mightBeEncrypted(android.signingConfigs.release.keyPassword)){
+        android.signingConfigs.release.keyPassword=tryDecrypt(android.signingConfigs.release.keyPassword)
+    }
+    }catch (Exception ex){}
+}
 
 
 // Maven POM Properties ----------------------------------------------------------------------------
@@ -1547,3 +1573,79 @@ task publishArtifacts << {
 
 build.finalizedBy(signArtifacts)
 publishArtifacts.mustRunAfter(signArtifacts)
+
+
+
+// crypto support
+
+
+def  hexToBytes(String s) {
+    //return s.getBytes();
+    return hexToBytes(s.toCharArray());
+}
+
+def loadKey(){
+    //defined in the project gradle.properties file
+    if (hasProperty('FURY_MASTER_PASSWORD')){
+        return FURY_MASTER_PASSWORD
+    }
+    //defined in rooDir/local.properties file
+    Properties properties = new Properties()
+    File file = project.rootProject.file('local.properties');
+    if (file.exists()) {
+        properties.load(file.newDataInputStream())
+        if (properties.containsKey("FURY_MASTER_PASSWORD"))
+            return properties.getProperty("FURY_MASTER_PASSWORD");
+    }
+    //TODO other options?
+
+    return "";
+}
+
+
+def tryDecrypt(String ciphertext){
+    //we're using {cipher} so trim off the first and last char
+    String textToDecrypt = ciphertext.substring(1, ciphertext.length()-1);
+    try {
+        String text= decrypt(textToDecrypt, loadKey());
+        return text;
+    }catch (Exception ex){
+        logger.warn("Descryption failure - input text was not encrypted or encrypted with a different key," , ex)
+        throw ex;
+    }
+    return ciphertext
+}
+
+def decrypt(String ciphertext, String key){
+    byte[] raw = hexToBytes(key); //
+    SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
+    Cipher cipher = Cipher.getInstance("AES");
+    cipher.init(Cipher.DECRYPT_MODE, skeySpec);
+    byte[] original = cipher.doFinal(hexToBytes(ciphertext));
+    return new String(original);
+}
+
+def  hexToBytes(char[] hex) {
+    int length = hex.length / 2;
+    byte[] raw = new byte[length];
+    for (int i = 0; i < length; i++) {
+        int high = Character.digit(hex[i * 2], 16);
+        int low = Character.digit(hex[i * 2 + 1], 16);
+        int value = (high << 4) | low;
+        if (value > 127) {
+            value -= 256;
+        }
+        raw[i] = (byte) value;
+    }
+    return raw;
+}
+
+def mightBeEncrypted(String text){
+    if (text==null)
+        return false;
+    if (text.length()==null)
+        return false;
+    if (text.startsWith("{") && text.endsWith("}"))
+        return true;
+    return false;
+}
