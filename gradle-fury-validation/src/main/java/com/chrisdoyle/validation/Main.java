@@ -65,7 +65,6 @@ public class Main {
      *
      */
     static final Class[] noSignatureTests = new Class[]{
-            Test_Issue12Sigs.class,
             TestPostPublicationNoSig.class,
     };
 

@@ -62,17 +62,12 @@ public class TestPostPublication {
                         !artifacts.get(k).endsWith(".md5") &&
                         !artifacts.get(k).endsWith(".sha1")){
 
-                    if (artifacts.get(k).contains("pom") ||
-                            artifacts.get(k).contains("release") ||
-                            artifacts.get(k).contains("debug") ) {
-
-                        Assert.assertTrue(artifacts.get(k) + " no md5 hash", artifacts.contains(artifacts.get(k) + ".md5"));
-                        Assert.assertTrue(artifacts.get(k) + " no sha1 hash", artifacts.contains(artifacts.get(k) + ".sha1"));
-                        if (requireSignatures) {
-                            Assert.assertTrue(artifacts.get(k) + " wasn't signed", artifacts.contains(artifacts.get(k) + ".asc"));
-                            Assert.assertTrue(artifacts.get(k) + " sig no hash", artifacts.contains(artifacts.get(k) + ".asc.md5"));
-                            Assert.assertTrue(artifacts.get(k) + " sig no md5", artifacts.contains(artifacts.get(k) + ".asc.sha1"));
-                        }
+                    Assert.assertTrue(artifacts.get(k) + " no md5 hash", artifacts.contains(artifacts.get(k) + ".md5"));
+                    Assert.assertTrue(artifacts.get(k) + " no sha1 hash", artifacts.contains(artifacts.get(k) + ".sha1"));
+                    if (requireSignatures) {
+                        Assert.assertTrue(artifacts.get(k) + " wasn't signed", artifacts.contains(artifacts.get(k) + ".asc"));
+                        Assert.assertTrue(artifacts.get(k) + " sig no hash", artifacts.contains(artifacts.get(k) + ".asc.md5"));
+                        Assert.assertTrue(artifacts.get(k) + " sig no md5", artifacts.contains(artifacts.get(k) + ".asc.sha1"));
                     }
                 }
             }
