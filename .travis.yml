@@ -37,7 +37,7 @@ before_script:
   # -B batch mode
   # -fn fail never
   # -U force repo updates
-  - mvn clean install -fn -B -U -q
+  - mvn clean install -fn -B -U
   - cd ..
   - cd ..
 
@@ -82,6 +82,6 @@ script:
   #build using maven with integration tests
   #we build 3 times due to issues with the maven-android-plugin. root cause is unknown but seems to be related to how artifacts are resolved for android projects
   #in case you're wondering -fn means fail never, which loosely means, if the build fails, the exit code is always 0, which is basically all CI engines look for.
-  - mvn install -fn
-  - mvn install -fn
-  - mvn install
+  - mvn install -fn -U
+  - mvn install -fn -U
+  - mvn install -U
