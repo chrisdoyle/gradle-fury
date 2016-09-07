@@ -29,17 +29,17 @@ env:
 before_script:
 
   - chmod 755 ci/*.sh
-  - mkdir temp
-  - cd temp
-  - git clone https://github.com/simpligility/maven-android-sdk-deployer
-  - cd maven-android-sdk-deployer
+  #- mkdir temp
+  #- cd temp
+  #- git clone https://github.com/simpligility/maven-android-sdk-deployer
+  #- cd maven-android-sdk-deployer
   # -q quite, log level to warn
   # -B batch mode
   # -fn fail never
   # -U force repo updates
-  - mvn clean install -fn -B -U
-  - cd ..
-  - cd ..
+  #- mvn clean install -fn -B -U
+  #- cd ..
+  #- cd ..
 
 #build
 script:
@@ -82,6 +82,8 @@ script:
   #build using maven with integration tests
   #we build 3 times due to issues with the maven-android-plugin. root cause is unknown but seems to be related to how artifacts are resolved for android projects
   #in case you're wondering -fn means fail never, which loosely means, if the build fails, the exit code is always 0, which is basically all CI engines look for.
-  - mvn install -fn -U
-  - mvn install -fn -U
-  - mvn install -U
+
+  #commented out because of maven-android issues on travis, but it does work on my local machine
+  #- mvn install -fn -U
+  #- mvn install -fn -U
+  #- mvn install -U
