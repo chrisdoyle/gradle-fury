@@ -19,7 +19,7 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 
-// Maven Repository (i.e. Sonatype Nexus Repository Manager) Configuration -------------------------
+// Maven Repository (i.e. Sonatype Nexus RepositorypassPhrase Manager) Configuration -------------------------
 
 ext.isReleaseBuild = (!project.version.equals("unspecified") &&
         project.version.contains("SNAPSHOT") == false)
@@ -64,51 +64,51 @@ ext.gpgPassphrase = (
 );
 ext.gpgPassphrase = (
         hasProperty('signing.passPhrase')
-                ? signing.passPhrase
+                ? project.property("signing.passPhrase")
                 : ""
 );
 
 ext.gpgisInteractive = (
         hasProperty('signing.isInteractive')
-                ? Boolean.parseBoolean(signing.isInteractive)
+                ? Boolean.parseBoolean(project.property("signing.isInteractive"))
                 : true
 );
 ext.gpgdefaultKeyring = (
         hasProperty('signing.defaultKeyring')
-                ? Boolean.parseBoolean(signing.defaultKeyring)
+                ? Boolean.parseBoolean(project.property("signing.defaultKeyring"))
                 : true
 );
 
 ext.gpgKeyName = (
         hasProperty('signing.keyId')
-                ? signing.keyId
+                ? project.property("signing.keyId")
                 : ""
 );
 ext.gpgKeyName = (
         hasProperty('signing.keyname')
-                ? signing.keyname
+                ? project.property("signing.keyname")
                 : ""
 );
 
 ext.gpgHomeDir = (
         hasProperty('signing.homeDir')
-                ? signing.homeDir
+                ? project.property("signing.homeDir")
                 : ""
 );
 ext.gpgUseAgent  = (
         hasProperty('signing.useAgent')
-                ? Boolean.parseBoolean(signing.useAgent)
+                ? Boolean.parseBoolean(project.property("signing.useAgent"))
                 : true
 );
 
 ext.gpgSecretKeyRingFile  = (
         hasProperty('signing.secretKeyRingFile')
-                ? signing.secretKeyRingFile
+                ? project.property("signing.secretKeyRingFile")
                 : ""
 );
 ext.gpgPublicKeyring  = (
         hasProperty('signing.publicKeyring')
-                ? signing.publicKeyring
+                ? project.property("signing.publicKeyring")
                 : ""
 );
 
