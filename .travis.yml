@@ -124,6 +124,8 @@ script:
   #stop nexus
   - cd nexus-2.13.0-01/bin
   - ./nexus stop
+  - cd ..
+  - cd ..
 
 
 
