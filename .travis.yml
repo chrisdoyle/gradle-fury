@@ -67,18 +67,18 @@ before_script:
  - echo GPG_PASSPHRASE=abc >> gradle.properties
  - chmod 755 ci/*.sh
 
-  - chmod 755 ci/*.sh
-  #- mkdir temp
-  #- cd temp
-  #- git clone https://github.com/simpligility/maven-android-sdk-deployer
-  #- cd maven-android-sdk-deployer
-  # -q quite, log level to warn
-  # -B batch mode
-  # -fn fail never
-  # -U force repo updates
-  #- mvn clean install -fn -B -U
-  #- cd ..
-  #- cd ..
+ #setup the maven android sdk stuff
+ #- mkdir temp
+ #- cd temp
+ #- git clone https://github.com/simpligility/maven-android-sdk-deployer
+ #- cd maven-android-sdk-deployer
+ # -q quite, log level to warn
+ # -B batch mode
+ # -fn fail never
+ # -U force repo updates
+ #- mvn clean install -fn -B -U
+ #- cd ..
+ #- cd ..
 
 #build
 script:
