@@ -33,7 +33,11 @@ before_script:
   - cd temp
   - git clone https://github.com/simpligility/maven-android-sdk-deployer
   - cd maven-android-sdk-deployer
-  - mvn clean install -fn -B -U
+  # -q quite, log level to warn
+  # -B batch mode
+  # -fn fail never
+  # -U force repo updates
+  - mvn clean install -fn -B -U -q
   - cd ..
   - cd ..
 
