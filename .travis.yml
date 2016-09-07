@@ -28,6 +28,15 @@ env:
 
 before_script:
 
+  - chmod 755 ci/*.sh
+  - mkdir temp
+  - cd temp
+  - git clone https://github.com/simpligility/maven-android-sdk-deployer
+  - cd maven-android-sdk-deployer
+  - mvn clean install -fn -B -U
+  - cd ..
+  - cd ..
+
 #build
 script:
   #build using gradle
@@ -57,3 +66,18 @@ script:
   #- chmod 755 verifySignatures.sh
   #- ./verifySignatures.sh
 
+
+
+  # by this point, we've verified everything gradle related is working
+  # now let's build some it projects to confirm stuff is working and dependencies are resolved
+  - cd it
+  - cd GradleConsumers
+  - ./gradlew build
+  - cd ..
+  - cd MavenConsumers
+  #build using maven with integration tests
+  #we build 3 times due to issues with the maven-android-plugin. root cause is unknown but seems to be related to how artifacts are resolved for android projects
+  #in case you're wondering -fn means fail never, which loosely means, if the build fails, the exit code is always 0, which is basically all CI engines look for.
+  - mvn install -fn
+  - mvn install -fn
+  - mvn install
