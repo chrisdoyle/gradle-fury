@@ -1199,8 +1199,8 @@ ext.signFile = { file ->
     if (f.exists())
         f.delete();
 
-    logger.info("\n\nSigning file " + file);
-    if ("".equalsIgnoreCase(ext.gpgPassphrase)) {
+    logger.info("\n\nSigning file " + file + " gpg is at " + ext.gpgPath);
+    if (ext.gpgPassphrase==null || "".equalsIgnoreCase(ext.gpgPassphrase)) {
         exec {
             executable ext.gpgPath
             args "-a", "--output", file + ".asc", "--detach-sig", file
