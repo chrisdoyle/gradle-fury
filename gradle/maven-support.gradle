@@ -1268,7 +1268,7 @@ ext.signFile = { file ->
         arguments.add(ext.gpgKeyName);
     }
     if (ext.gpgPassphrase!=null && !"".equalsIgnoreCase(ext.gpgPassphrase)){
-        argumnets.add("--batch");
+        arguments.add("--batch");
         arguments.add("--passphrase");
         arguments.add(ext.gpgPassphrase);
     }
