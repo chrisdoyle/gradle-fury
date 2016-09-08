@@ -95,12 +95,14 @@ ext.gpgHomeDir = (
                 ? project.property("signing.homeDir")
                 : ""
 );
+/*
+not used in gpg2
 ext.gpgUseAgent  = (
         hasProperty('signing.useAgent')
                 ? project.property("signing.useAgent")
                 : "true"
 );
-
+*/
 ext.gpgSecretKeyRingFile  = (
         hasProperty('signing.secretKeyRingFile')
                 ? project.property("signing.secretKeyRingFile")
@@ -1257,8 +1259,7 @@ ext.signFile = { file ->
     arguments.add("-a");    //armor output (ascii encoding)
     arguments.add("--output");
     arguments.add(file + ".asc");
-    arguments.add("--detach-sig");
-    arguments.add(file);
+
     if (ext.gpgHomeDir!=null && !"".equalsIgnoreCase(ext.gpgHomeDir)){
         arguments.add("--homedir");
         arguments.add(ext.gpgHomeDir);
@@ -1276,17 +1277,19 @@ ext.signFile = { file ->
         arguments.add("--secret-keyring");
         arguments.add(ext.gpgSecretKeyRingFile);
     }
-    if (ext.gpgUseAgent){
+    /*if (ext.gpgUseAgent){
         arguments.add("--use-agent");
     } else {
         arguments.add("--no-use-agent");
-    }
+    }*/
     if (!ext.gpgdefaultKeyring){
         arguments.add("--no-default-keyring");
     }
     if (!ext.gpgisInteractive){
         arguments.add("--no-tty");
     }
+    arguments.add("--detach-sig");
+    arguments.add(file);
     String[] bits = arguments.toArray(new String[arguments.size()]);
 
 
