@@ -1584,23 +1584,36 @@ def  hexToBytes(String s) {
     return hexToBytes(s.toCharArray());
 }
 
+/**
+ * gets the master key
+ * @return
+ */
 def loadKey(){
+    String users_home = System.getProperty("user.home");
+    users_home = users_home.replace("\\", "/"); // to support all platforms.
+    users_home = users_home + "/.gradle/";
+    System.out.println("User home dir is " + users_home);
+    File gradlehome = new File(users_home);
+    //check for existing master key
+    File keys = new File(gradlehome.getAbsolutePath() + "/fury-keys.properties");
+
+    if (keys.exists()){
+        //defined in rooDir/local.properties file
+        Properties properties = new Properties()
+
+            properties.load(keys.newDataInputStream())
+            if (properties.containsKey("FURY_MASTER_PASSWORD"))
+                return properties.getProperty("FURY_MASTER_PASSWORD");
+    }
     //defined in the project gradle.properties file
     if (hasProperty('FURY_MASTER_PASSWORD')){
         return FURY_MASTER_PASSWORD
     }
-    //defined in rooDir/local.properties file
-    Properties properties = new Properties()
-    File file = project.rootProject.file('local.properties');
-    if (file.exists()) {
-        properties.load(file.newDataInputStream())
-        if (properties.containsKey("FURY_MASTER_PASSWORD"))
-            return properties.getProperty("FURY_MASTER_PASSWORD");
-    }
-    //TODO other options?
 
     return "";
 }
+
+
 
 
 def tryDecrypt(String ciphertext){

@@ -22,6 +22,26 @@ import groovy.swing.SwingBuilder;
 
 task generateMasterKey << {
 
+    String users_home = System.getProperty("user.home");
+    users_home = users_home.replace("\\", "/"); // to support all platforms.
+    users_home = users_home + "/.gradle/";
+    System.out.println("User home dir is " + users_home);
+    File gradlehome = new File(users_home);
+    if (! gradlehome.exists()){
+        gradlehome.mkdirs();
+    }
+
+    //check for existing master key
+    File keys = new File(gradlehome.getAbsolutePath() + "/fury-keys.properties");
+
+    Properties properties = new Properties()
+    if (keys.exists()){
+        properties.load(new FileInputStream(keys));
+    }
+    if (properties.containsKey("FURY_MASTER_PASSWORD")){
+        throw new Exception("Master key already exists! If you overwrite it, all previously encrypted passwords will not be usable")
+    }
+
     int keysize=256;
     KeyGenerator kgen;
     String masterKey=null;
@@ -32,7 +52,7 @@ task generateMasterKey << {
         SecretKey skey = kgen.generateKey();
         byte[] raw = skey.getEncoded();
         masterKey = asHex(raw);
-        System.out.println("Master Key (AES256) generated, put this in one of your local.properties file:\n" +
+        System.out.println("Master Key (AES256) generated\n" +
                 "FURY_MASTER_PASSWORD=" + masterKey);
         success=true;
     }catch (Exception ex){
@@ -46,22 +66,18 @@ task generateMasterKey << {
             SecretKey skey = kgen.generateKey();
             byte[] raw = skey.getEncoded();
             masterKey = asHex(raw);
-            System.out.println("Master Key (AES128) generated, put this in one of your local.properties file:\n" +
+            System.out.println("Master Key (AES128) generated\n" +
                     "FURY_MASTER_PASSWORD=" + masterKey);
             System.out.println("I couldn't do AES256, you probably need to install the Java JCE, good luck!");
         } catch (Exception ex) {
-            logger.info("Error generating 128bit key", ex);
+            logger.warn("Error generating 128bit key", ex);
         }
     }
     if (success) {
-        //TODO write to userDir/.gradle/
-        Properties properties = new Properties()
-        properties.load(project.rootProject.file('local.properties').newDataInputStream())
         properties.setProperty("FURY_MASTER_PASSWORD", masterKey);
-        properties.store(project.rootProject.file('local.properties'), "");
-
+        properties.store(new FileOutputStream(keys), "");
     } else {
-        System.out.println("failed to generate a master key, run again with -i for more information")
+        throw new Exception("failed to generate a master key, run again with -i for more information")
     }
 }
 
@@ -125,19 +141,28 @@ def  hexToBytes(String s) {
 }
 
 def loadKey(){
+    String users_home = System.getProperty("user.home");
+    users_home = users_home.replace("\\", "/"); // to support all platforms.
+    users_home = users_home + "/.gradle/";
+    System.out.println("User home dir is " + users_home);
+    File gradlehome = new File(users_home);
+    //check for existing master key
+    File keys = new File(gradlehome.getAbsolutePath() + "/fury-keys.properties");
+
+    if (keys.exists()){
+        //defined in rooDir/local.properties file
+        Properties properties = new Properties()
+
+        properties.load(keys.newDataInputStream())
+        if (properties.containsKey("FURY_MASTER_PASSWORD"))
+            return properties.getProperty("FURY_MASTER_PASSWORD");
+
+    }
+
     //defined in the project gradle.properties file
     if (hasProperty('FURY_MASTER_PASSWORD')){
         return FURY_MASTER_PASSWORD
     }
-    //defined in rooDir/local.properties file
-    Properties properties = new Properties()
-    File file = project.rootProject.file('local.properties');
-    if (file.exists()) {
-        properties.load(file.newDataInputStream())
-        if (properties.containsKey("FURY_MASTER_PASSWORD"))
-            return properties.getProperty("FURY_MASTER_PASSWORD");
-    }
-    //TODO other options?
 
     return "";
 }
