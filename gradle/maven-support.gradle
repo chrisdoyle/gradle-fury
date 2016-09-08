@@ -70,13 +70,13 @@ ext.gpgPassphrase = (
 
 ext.gpgisInteractive = (
         hasProperty('signing.isInteractive')
-                ? Boolean.parseBoolean(project.property("signing.isInteractive"))
-                : true
+                ? project.property("signing.isInteractive")
+                : "true"
 );
 ext.gpgdefaultKeyring = (
         hasProperty('signing.defaultKeyring')
-                ? Boolean.parseBoolean(project.property("signing.defaultKeyring"))
-                : true
+                ? project.property("signing.defaultKeyring")
+                : "true"
 );
 
 ext.gpgKeyName = (
@@ -97,8 +97,8 @@ ext.gpgHomeDir = (
 );
 ext.gpgUseAgent  = (
         hasProperty('signing.useAgent')
-                ? Boolean.parseBoolean(project.property("signing.useAgent"))
-                : true
+                ? project.property("signing.useAgent")
+                : "true"
 );
 
 ext.gpgSecretKeyRingFile  = (
