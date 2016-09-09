@@ -285,7 +285,9 @@ afterEvaluate { project ->
 
 
     project.ext.isJavaProject = project.plugins.hasPlugin('java');
+    project.ext.isDistribution = project.plugins.hasPlugin('distribution');
     project.ext.isWarProject = project.plugins.hasPlugin('war');
+
 
     // FIXME :: @chrisdoyle :: DRY :: these are also defined in android-support.gradle...
     project.ext.isAndroidApplication = project.plugins.hasPlugin("com.android.application");
@@ -847,6 +849,57 @@ project.plugins.withType(MavenPublishPlugin) {
             new org.gradle.api.internal.ClosureBackedAction({
 
                 publications {
+                    if (project.isDistribution){
+                        project.pom.packaging = 'zip'
+
+                        def artifactName = project.name + "-" + project.version + "." + project.pom.packaging;
+                        def artifactRoot = "${buildDir}/distributions/"
+
+
+                        //fun fact, gradle does not generate poms for dist packages. thanks for that.
+                       // createPom("$buildDir/publications/dist/", "pom-default.xml",)//modifyGeneratedPom(pom)
+
+
+                        //primary out
+                        Container c;
+                        c = new Container();
+                        c.buildDir = "${buildDir}";
+                        c.fileName = artifactName;
+                        c.fileNameAndPath = "${artifactRoot}${artifactName}";
+                        c.type = "zip";
+                        project.ext.artifacts.add(c);
+                        logger.debug("Adding " + "${artifactRoot}${artifactName}" + " to artifact list");
+
+
+                        if (isGPGAvailable()) {
+                            logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
+                            artifact(c.fileNameAndPath + ".asc") {
+                                extension 'zip.asc'
+                            }
+                        }
+
+
+/*
+                        //the pom
+                        c = new Container();
+                        c.buildDir = "${buildDir}";
+                        c.fileName = artifactName;
+                        c.fileNameAndPath = "$buildDir/publications/dist/pom-default.xml";
+                        c.type = "pom";
+                        project.ext.artifacts.add(c);
+                        logger.debug("Adding " + "$buildDir/publications/dist/pom-default.xml" + " to artifact list");
+
+
+                        if (isGPGAvailable()) {
+                            logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
+                            artifact(c.fileNameAndPath + ".asc") {
+                                extension 'pom.asc'
+                            }
+                        }
+*/
+
+
+                    }
                     if (project.isWarProject) {
                         project.pom.packaging = 'war'
 
@@ -968,8 +1021,11 @@ project.plugins.withType(MavenPublishPlugin) {
                         }
 
                     } else if (project.isJavaProject) {
+
+                        project.pom.packaging = 'jar'
                         def artifactName = project.name + "-" + project.version + "." + project.pom.packaging;
                         def artifactRoot = "${buildDir}/libs/"
+
                         javaArtifacts(MavenPublication) {
                             from components.java
 

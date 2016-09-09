@@ -1,0 +1,16 @@
+apply plugin: 'distribution'
+
+
+distributions {
+    main {
+        contents {
+            into('bin') {
+
+                from { project(':hello-world-lib').jar }
+            }
+            into('gradle') {
+                from "$rootDir/gradle/*.gradle"
+            }
+        }
+    }
+}
