@@ -85,35 +85,50 @@ task generateMasterKey << {
  * mvn --encrypt-password
  */
 task encryptPassword << {
+
+    System.out.println("== Gradle Fury: ProTip: add '-PstoreField=xyz' to automatically write the cipher text to 'local.properties' as" +
+            " xyz={cipher text}");
+    System.out.println("== Gradle Fury: ProTip: add '-Ppassword=xyz' to use xyz as the text to encrypt instead of prompting");
     String key=loadKey();
-    String password="";
+    String password_input="";
     if (key==null || key.length()==0){
         throw new Exception("You must run 'gradlew generateMasterKey to create a master key first!")
     }
     def console = System.console()
-    System.out.println("using master key " + key);
-    if (console) {
-        password = console.readPassword('> Enter Password: ')
-        String cipher=encrypt(password, key);
-        System.out.println("Cipher Text is\n\t {" + cipher + "}");
-    } else {
 
-        new SwingBuilder().edt {
-            dialog(modal: true, title: 'Enter password', alwaysOnTop: true, resizable: false, locationRelativeTo: null, pack: true, show: true) {
-                vbox { // Put everything below each other
-                    label(text: "Please enter password:")
-                    def input1 = passwordField()
-                    button(defaultButton: true, text: 'OK', actionPerformed: {
-                        password = new String(input1.getPassword());    //getPassword doesn't return a string
-                        dispose();
-                    })
+    String cipher;
+    if (project.hasProperty('password')){
+        password_input = password;
+    } else {
+        //need to ask for it
+        if (console) {
+            password_input = console.readPassword('> Enter Password: ')
+        } else {
+            new SwingBuilder().edt {
+                dialog(modal: true, title: 'Enter password_input', alwaysOnTop: true, resizable: false, locationRelativeTo: null, pack: true, show: true) {
+                    vbox { // Put everything below each other
+                        label(text: "Please enter password_input:")
+                        def input1 = passwordField()
+                        button(defaultButton: true, text: 'OK', actionPerformed: {
+                            password_input = new String(input1.getPassword());
+                            //getPassword doesn't return a string
+                            dispose();
+                        })
+                    }
                 }
             }
         }
-        String cipher=encrypt(password, key);
-        System.out.println("Cipher Text is\n\t {" + cipher + "}");
+    }
+    cipher = encrypt(password_input, key);
+    System.out.println("Cipher Text is\n\t {" + cipher + "}");
 
-        //throw new Exception("Cannot get console. Try again with --no-daemon")
+    if (project.hasProperty('storeField')){
+        Properties p = new Properties();
+        p.load(new FileInputStream("local.properties"));
+        p.setProperty(storeField, "{"+cipher+"}");
+        p.store(new FileOutputStream("local.properties"),"");
+        System.out.println("Cipher text stored to local.properties");
+
     }
 }
 

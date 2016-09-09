@@ -51,6 +51,27 @@ def furyHasTask(TaskExecutionGraph graph, String task){
 
 }
 
+
+
+
+// another hack, import local.properties into the current context
+// used for crypto settings
+File local = new File("$rootDir/local.properties");
+if (local.exists()){
+
+    Properties properties = new Properties();
+    properties.load(local.newDataInputStream());
+    def iterator = properties.entrySet().iterator();
+    while (iterator.hasNext()){
+
+        def next = iterator.next();
+        ext.set(next.getKey(), next.value);
+    }
+
+}
+
+
+
 ext.gpgPath = (
         hasProperty('GPG_PATH')
                 ? GPG_PATH
@@ -64,10 +85,15 @@ ext.gpgPassphrase = (
                 ? GPG_PASSPHRASE
                 : ""
 );
-if (mightBeEncrypted(ext.gpgPassphrase)){
-    ext.gpgPassphrase=tryDecrypt(ext.gpgPassphrase);
-}
+ext.gpgPassphrase = (
+        hasProperty('signing.passPhrase')
+                ? project.property("signing.passPhrase")
+                : ""
+);
 
+if (mightBeEncrypted(ext.gpgPassphrase)){
+    ext.gpgPassphrase=tryDecrypt(ext.nexusPassword);
+}
 
 
 // default to Maven Central if not provided
@@ -95,15 +121,15 @@ if (mightBeEncrypted(ext.nexusPassword)){
 
 if (hasProperty("android.signingConfigs.release.storePassword")){
     try {
-        if (mightBeEncrypted(android.signingConfigs.release.storePassword)) {
-            android.signingConfigs.release.storePassword = tryDecrypt(android.signingConfigs.release.storePassword)
+        if (mightBeEncrypted(project.property("android.signingConfigs.release.storePassword"))) {
+            project.setProperty("android.signingConfigs.release.storePassword", tryDecrypt(project.property("android.signingConfigs.release.storePassword")))
         }
     }catch (Exception ex){}
 }
 if (hasProperty("android.signingConfigs.release.keyPassword")){
     try{
-    if (mightBeEncrypted(android.signingConfigs.release.keyPassword)){
-        android.signingConfigs.release.keyPassword=tryDecrypt(android.signingConfigs.release.keyPassword)
+    if (mightBeEncrypted(project.property("android.signingConfigs.release.keyPassword"))){
+        project.setProperty("android.signingConfigs.release.keyPassword", tryDecrypt(project.property("android.signingConfigs.release.keyPassword")))
     }
     }catch (Exception ex){}
 }
@@ -329,9 +355,11 @@ afterEvaluate { project ->
         project.ext.set("ciProfileEnabled", project.ext.profiles.contains("ci"));
 
         project.ext.set("javadocProfileEnabled", project.ext.profiles.contains("javadoc")
+                || project.ext.profiles.contains("javadocs") //for typos
                 || project.ciProfileEnabled);
 
         project.ext.set("sourcesProfileEnabled", project.ext.profiles.contains("sources")
+                || project.ext.profiles.contains("source")  //for typos
                 || project.ciProfileEnabled);
 
         project.ext.set("sign", project.ext.profiles.contains("sign"));
