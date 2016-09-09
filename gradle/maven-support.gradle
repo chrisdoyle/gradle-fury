@@ -91,7 +91,7 @@ ext.gpgPassphrase = (
                 : ""
 );
 
-if (mightBeEncrpted(ext.gpgPassphrase)){
+if (mightBeEncrypted(ext.gpgPassphrase)){
     ext.gpgPassphrase=tryDecrypt(ext.gpgPassphrase);
 }
 
