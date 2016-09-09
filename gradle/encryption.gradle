@@ -122,9 +122,12 @@ task encryptPassword << {
     cipher = encrypt(password_input, key);
     System.out.println("Cipher Text is\n\t {" + cipher + "}");
 
-    if (project.hasProperty('storeField')){
+    if (project.hasProperty('storeField')) {
         Properties p = new Properties();
+        File localProps = new File("local.properties");
+        if (localProps.exists()) {
         p.load(new FileInputStream("local.properties"));
+        }
         p.setProperty(storeField, "{"+cipher+"}");
         p.store(new FileOutputStream("local.properties"),"");
         System.out.println("Cipher text stored to local.properties");
