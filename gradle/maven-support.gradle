@@ -103,6 +103,11 @@ ext.gpgUseAgent  = (
                 : "true"
 );
 */
+project.ext.skipPublish = (
+        hasProperty('skipPublish')
+                ? project.property("skipPublish")
+                : false
+)
 ext.gpgSecretKeyRingFile  = (
         hasProperty('signing.secretKeyRingFile')
                 ? project.property("signing.secretKeyRingFile")
@@ -1468,6 +1473,11 @@ task publishArtifacts << {
             'gradlew install -Pprofile=sources,javadocs\n' +
             'gradlew publishArtifacts -Pprofile=sources,javadocs,sign\n'
 
+
+    if ((project.ext.skipPublish)) {
+        System.out.println("publication of " + project.name + " has been skipped due to configuration");
+        return;
+    }
     if ("".equalsIgnoreCase(targetRepositoryUrl) || targetRepositoryUrl==null){
         throw new Exception("Cannot publish without a repository url defined");
     }
