@@ -168,9 +168,7 @@ def loadKey(){
     File keys = new File(gradlehome.getAbsolutePath() + "/fury-keys.properties");
 
     if (keys.exists()){
-        //defined in rooDir/local.properties file
         Properties properties = new Properties()
-
         properties.load(keys.newDataInputStream())
         if (properties.containsKey("FURY_MASTER_PASSWORD"))
             return properties.getProperty("FURY_MASTER_PASSWORD");
