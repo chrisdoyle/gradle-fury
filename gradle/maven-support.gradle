@@ -373,6 +373,10 @@ afterEvaluate { project ->
         project.ext.set("sign", false);
     }
 
+    System.out.println(project.name +": Javadocs enabled [" + project.javadocProfileEnabled + "]")
+    System.out.println(project.name +": Sources enabled [" + project.sourcesProfileEnabled + "]")
+    System.out.println(project.name +": CI enabled [" + project.ciProfileEnabled + "]")
+
     if (project.isJavaProject) {
         if (project.javadocProfileEnabled) {
             javadoc {
@@ -879,12 +883,7 @@ project.plugins.withType(MavenPublishPlugin) {
                             logger.debug("Adding " + "${artifactRoot}${artifactName}" + " to artifact list");
 
 
-                            if (isGPGAvailable()) {
-                                logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
-                                artifact(c.fileNameAndPath + ".asc") {
-                                    extension 'war.asc'
-                                }
-                            }
+
 
                             //the pom
                             c = new Container();
@@ -896,12 +895,6 @@ project.plugins.withType(MavenPublishPlugin) {
                             logger.debug("Adding " + "$buildDir/publications/webApp/pom-default.xml" + " to artifact list");
 
 
-                            if (isGPGAvailable()) {
-                                logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
-                                artifact(c.fileNameAndPath + ".asc") {
-                                    extension 'pom.asc'
-                                }
-                            }
 
                         }
                         if (project.javadocProfileEnabled) {
@@ -926,15 +919,6 @@ project.plugins.withType(MavenPublishPlugin) {
                                 project.ext.artifacts.add(c);
                                 logger.debug("Adding " + "${buildDir}" + "/libs/" + project.name + "-" + project.version + "-javadoc.jar" + " to artifact list");
 
-
-                                if (isGPGAvailable()) {
-                                    logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
-                                    artifact(c.fileNameAndPath + ".asc") {
-                                        //extension project.pom.packaging
-                                        classifier "javadoc"
-                                        extension 'jar.asc'
-                                    }
-                                }
                             }
                         }
 
@@ -961,14 +945,6 @@ project.plugins.withType(MavenPublishPlugin) {
                                 logger.debug("Adding " + "${buildDir}" + "/libs/" + project.name + "-" + project.version + "-sources.jar" + " to artifact list");
 
 
-                                if (isGPGAvailable()) {
-                                    logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
-                                    artifact(c.fileNameAndPath + ".asc") {
-                                        //extension project.pom.packaging
-                                        classifier "sources"
-                                        extension 'jar.asc'
-                                    }
-                                }
                             }
                         }
 
@@ -995,13 +971,6 @@ project.plugins.withType(MavenPublishPlugin) {
                             logger.debug("Adding " + "${artifactRoot}${artifactName}" + " to artifact list");
 
 
-                            if (isGPGAvailable()) {
-                                logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
-                                artifact(c.fileNameAndPath + ".asc") {
-                                    extension 'jar.asc'
-                                }
-                            }
-
                             //the pom
                             c = new Container();
                             c.buildDir = "${buildDir}";
@@ -1011,13 +980,6 @@ project.plugins.withType(MavenPublishPlugin) {
                             project.ext.artifacts.add(c);
                             logger.debug("Adding " + "$buildDir/publications/javaArtifacts/pom-default.xml" + " to artifact list");
 
-
-                            if (isGPGAvailable()) {
-                                logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
-                                artifact(c.fileNameAndPath + ".asc") {
-                                    extension 'pom.asc'
-                                }
-                            }
                         }
 
                         if (project.javadocProfileEnabled) {
@@ -1041,17 +1003,6 @@ project.plugins.withType(MavenPublishPlugin) {
                                 c.type = "jar";
                                 project.ext.artifacts.add(c);
                                 logger.debug("Adding " + "${buildDir}" + "/libs/" + project.name + "-" + project.version + "-javadoc.jar" + " to artifact list");
-
-
-                                if (isGPGAvailable()) {
-                                    logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
-                                    artifact(c.fileNameAndPath + ".asc") {
-                                        //extension project.pom.packaging
-                                        classifier "javadoc"
-                                        extension 'jar.asc'
-                                    }
-                                }
-
 
                             }
                         }
@@ -1077,15 +1028,6 @@ project.plugins.withType(MavenPublishPlugin) {
                                 project.ext.artifacts.add(c);
                                 logger.debug("Adding " + "${buildDir}" + "/libs/" + project.name + "-" + project.version + "-sources.jar" + " to artifact list");
 
-
-                                if (isGPGAvailable()) {
-                                    logger.debug("Adding " + c.fileNameAndPath + ".asc" + " to artifact list");
-                                    artifact(c.fileNameAndPath + ".asc") {
-                                        //extension project.pom.packaging
-                                        classifier "sources"
-                                        extension 'jar.asc'
-                                    }
-                                }
                             }
                         }
                     } else if (project.isAndroidProject) {
@@ -1129,22 +1071,19 @@ project.plugins.withType(MavenPublishPlugin) {
                                         //mostly because of variants and debug/release
                                         project.ext.pomAdded = true;
 
-                                        if (isGPGAvailable()) {
-                                            c = new Container();
-                                            c.fileName = variant.name + ".pom";
-                                            c.fileNameAndPath = "${buildDir}/publications/androidArtifacts/pom-default.xml"
-                                            c.buildDir = "${buildDir}";
-                                            if (project.isAndroidApplication)
-                                                c.type = "apk";
-                                            else c.type = "aar";
-                                            project.ext.artifacts.add(c);
+
+                                        c = new Container();
+                                        c.fileName = variant.name + ".pom";
+                                        c.fileNameAndPath = "${buildDir}/publications/androidArtifacts/pom-default.xml"
+                                        c.buildDir = "${buildDir}";
+                                        if (project.isAndroidApplication)
+                                            c.type = "apk";
+                                        else c.type = "aar";
+                                        project.ext.artifacts.add(c);
 
 
-                                        } else {
-                                            logger.warn("Skipping pom signing " + "${buildDir}/publications/androidArtifacts/pom-default.xml.asc" + " GPG not available");
-                                        }
                                     } else {
-                                        logger.info("Skipping pom signing " + "${buildDir}/publications/androidArtifacts/pom-default.xml.asc" + " POM already added");
+                                        logger.info("Skipping pom " + "${buildDir}/publications/androidArtifacts/pom-default.xml.asc" + " POM already added");
                                     }
 
                                     //signs the actual output
@@ -1157,7 +1096,7 @@ project.plugins.withType(MavenPublishPlugin) {
                                     c.fileNameAndPath = "${artifactRoot}/${artifactName}";
                                     project.ext.artifacts.add(c);
 
-                                    logger.debug("Adding " + "${artifactRoot}/${artifactName}" + ".asc" + " to artifact list");
+
                                     //our actual artifact
                                     logger.debug("Adding " + "${artifactRoot}/${artifactName}" + " to artifact list");
                                     artifact("${artifactRoot}/${artifactName}") {
@@ -1175,20 +1114,15 @@ project.plugins.withType(MavenPublishPlugin) {
                                         artifact tasks["generate${variant.name.capitalize()}JavadocJar"]
                                         logger.debug("Adding " + "${buildDir}/libs/${artifactPrefix}-javadoc.jar" + " to artifact list");
 
+                                        c = new Container();
+                                        if (project.isAndroidApplication)
+                                            c.type = "apk";
+                                        else c.type = "aar";
+                                        c.buildDir = "${buildDir}";
+                                        c.fileName = variant.name;
+                                        c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-javadoc.jar";
+                                        project.ext.artifacts.add(c);
 
-                                        if (isGPGAvailable()) {
-                                            c = new Container();
-                                            if (project.isAndroidApplication)
-                                                c.type = "apk";
-                                            else c.type = "aar";
-                                            c.buildDir = "${buildDir}";
-                                            c.fileName = variant.name;
-                                            c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-javadoc.jar";
-                                            project.ext.artifacts.add(c);
-
-                                            logger.debug("Adding " + "${artifactRoot}/${artifactName}" + ".asc" + " to artifact list");
-
-                                        }
 
 
                                     }
@@ -1197,19 +1131,15 @@ project.plugins.withType(MavenPublishPlugin) {
                                         artifact tasks["generate${variant.name.capitalize()}SourcesJar"]
                                         logger.debug("Adding " + "${buildDir}/libs/${artifactPrefix}-sources.jar" + " to artifact list");
 
+                                        c = new Container();
+                                        if (project.isAndroidApplication)
+                                            c.type = "apk";
+                                        else c.type = "aar";
+                                        c.buildDir = "${buildDir}";
+                                        c.fileName = variant.name;
+                                        c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-sources.jar";
+                                        project.ext.artifacts.add(c);
 
-                                        if (isGPGAvailable()) {
-                                            c = new Container();
-                                            if (project.isAndroidApplication)
-                                                c.type = "apk";
-                                            else c.type = "aar";
-                                            c.buildDir = "${buildDir}";
-                                            c.fileName = variant.name;
-                                            c.fileNameAndPath = "${buildDir}/libs/${artifactPrefix}-sources.jar";
-                                            project.ext.artifacts.add(c);
-
-
-                                        }
                                     }
                                 } else if ((variant.name.toLowerCase().endsWith("release") && !canSign)) {
                                     logger.warn("====================\n\n" +
@@ -1368,8 +1298,6 @@ def dummyOutputStream = new OutputStream() {
  if gpg is available on the system
  */
 def isGPGAvailable(){
-    if (!project.sign)
-        return false;
     if (project.ext.pgpSearch)
         return project.ext.pgpAvailable;
     project.ext.pgpSearch=true;
@@ -1523,19 +1451,23 @@ task publishArtifacts << {
         else
             uploadFile(f,targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName , "application/octet-stream; charset=utf-8");
 
-        //sign
-        signFile(f.absolutePath)
-        uploadFile(new File(f.absolutePath + ".asc"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".asc", "text/plain; charset=utf-8");
-        //hash everything
+        if (isGPGAvailable()) {
+            //sign hash and upload
+            signFile(f.absolutePath)
+            uploadFile(new File(f.absolutePath + ".asc"), targetRepositoryUrl + groupurl + "/" + project.name + "/" + project.version + "/" + uploadedFileName + ".asc", "text/plain; charset=utf-8");
+            generateChecksumForFile(new File(f.absolutePath + ".asc"), 'MD5', 32)
+            generateChecksumForFile(new File(f.absolutePath + ".asc"), 'SHA1', 40)
+            uploadFile(new File(f.absolutePath + ".asc.md5"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".asc.md5", "text/plain; charset=utf-8");
+            uploadFile(new File(f.absolutePath + ".asc.sha1"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".asc.sha1", "text/plain; charset=utf-8");
+        }
+        //hash the artifact
         generateChecksumForFile(f, 'MD5', 32)
         generateChecksumForFile(f, 'SHA1', 40)
-        generateChecksumForFile(new File(f.absolutePath + ".asc"), 'MD5', 32)
-        generateChecksumForFile(new File(f.absolutePath + ".asc"), 'SHA1', 40)
+
         //upload hashes
         uploadFile(new File(f.absolutePath + ".md5"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".md5", "text/plain; charset=utf-8");
         uploadFile(new File(f.absolutePath + ".sha1"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".sha1", "text/plain; charset=utf-8");
-        uploadFile(new File(f.absolutePath + ".asc.md5"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".asc.md5", "text/plain; charset=utf-8");
-        uploadFile(new File(f.absolutePath + ".asc.sha1"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".asc.sha1", "text/plain; charset=utf-8");
+
     }
 
 
@@ -1588,5 +1520,5 @@ def uploadFile(File input, String urlDestination, String contentType){
 
 }
 
-build.finalizedBy(signArtifacts)
+//build.finalizedBy(signArtifacts)
 publishArtifacts.mustRunAfter(signArtifacts)
