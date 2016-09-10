@@ -85,6 +85,9 @@ script:
 
   #setup the username/passwords for nexus defaults
   - ci/configure.sh
+  - ./gradlew generateMasterKey
+  - ./gradlew encryptPassword -Ppassword=admin123 -PstoreField=NEXUS_PASSWORD
+  - ./gradlew encryptPassword -Ppassword=abc -PstoreField=GPG_PASSPHRASE
 
   #build using gradle
   - ./gradlew -version
@@ -118,11 +121,11 @@ script:
   - ci//waitForNexus.sh
 
   # build with signatures and publish
-  - ./gradlew publishArtifacts -Pprofile=sources,javadoc,sign -i
+  - ./gradlew publishArtifacts -Pprofile=sources,javadoc
   - ci/verifyNoSignatures.sh
 
   # build with signatures and publish
-  - ./gradlew publishArtifacts -Pprofile=sources,javadoc,sign -i
+  - ./gradlew publishArtifacts -Pprofile=sources,javadoc
   # verify correctness
   - ci/verifySignatures.sh
 
