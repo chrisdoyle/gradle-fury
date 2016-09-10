@@ -412,19 +412,16 @@ afterEvaluate { project ->
         project.ext.set("sourcesProfileEnabled", project.ext.profiles.contains("sources")
                 || project.ext.profiles.contains("source")  //for typos
                 || project.ciProfileEnabled);
-
-        project.ext.set("sign", project.ext.profiles.contains("sign"));
     }
     else {
         project.ext.set("ciProfileEnabled", false);
         project.ext.set("javadocProfileEnabled", false);
         project.ext.set("sourcesProfileEnabled", false);
-        project.ext.set("sign", false);
     }
 
-    System.out.println(project.name +": Javadocs enabled [" + project.javadocProfileEnabled + "]")
-    System.out.println(project.name +": Sources enabled [" + project.sourcesProfileEnabled + "]")
-    System.out.println(project.name +": CI enabled [" + project.ciProfileEnabled + "]")
+    logger.info(":Javadocs enabled [" + project.javadocProfileEnabled + "]\t"+project.name)
+    logger.info(":Sources enabled [" + project.sourcesProfileEnabled + "]\t"+project.name)
+    logger.info(":CI enabled [" + project.ciProfileEnabled + "]\t"+project.name)
 
     if (project.isJavaProject) {
         if (project.javadocProfileEnabled) {
