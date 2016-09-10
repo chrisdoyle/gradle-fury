@@ -1509,72 +1509,33 @@ task publishArtifacts << {
         File f = new File(item.fileNameAndPath);
 
         String uploadedFileName = f.getName();
+        //this part is a hack to work around gradle's strange handling of poms
         if (uploadedFileName.equalsIgnoreCase("pom-default.xml")) {
             uploadedFileName = project.name + "-" + project.version + ".pom"
         }
+        //an artifact was added to the list that is a signature, we'll skip it since we sign everything anyhow
         if (uploadedFileName.toLowerCase().endsWith(".asc"))
             continue;
-        try {
 
-            if (uploadedFileName.endsWith(".pom"))
+        //upload the primart artifact
+        if (uploadedFileName.endsWith(".pom"))
             uploadFile(f,targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName , "text/xml; charset=utf-8");
-            else
-                uploadFile(f,targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName , "application/octet-stream; charset=utf-8");
+        else
+            uploadFile(f,targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName , "application/octet-stream; charset=utf-8");
 
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        //sign
         signFile(f.absolutePath)
-        try {
-
-            uploadFile(new File(f.absolutePath + ".asc"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".asc", "text/plain; charset=utf-8");
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
+        uploadFile(new File(f.absolutePath + ".asc"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".asc", "text/plain; charset=utf-8");
+        //hash everything
         generateChecksumForFile(f, 'MD5', 32)
         generateChecksumForFile(f, 'SHA1', 40)
-
         generateChecksumForFile(new File(f.absolutePath + ".asc"), 'MD5', 32)
         generateChecksumForFile(new File(f.absolutePath + ".asc"), 'SHA1', 40)
-
-        try {
-
-            uploadFile(new File(f.absolutePath + ".md5"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".md5", "text/plain; charset=utf-8");
-
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-        try {
-
-            uploadFile(new File(f.absolutePath + ".sha1"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".sha1", "text/plain; charset=utf-8");
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-
-        try {
-            uploadFile(new File(f.absolutePath + ".asc.md5"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".asc.md5", "text/plain; charset=utf-8");
-
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-        try {
-
-            uploadFile(new File(f.absolutePath + ".asc.sha1"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".asc.sha1", "text/plain; charset=utf-8");
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-
+        //upload hashes
+        uploadFile(new File(f.absolutePath + ".md5"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".md5", "text/plain; charset=utf-8");
+        uploadFile(new File(f.absolutePath + ".sha1"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".sha1", "text/plain; charset=utf-8");
+        uploadFile(new File(f.absolutePath + ".asc.md5"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".asc.md5", "text/plain; charset=utf-8");
+        uploadFile(new File(f.absolutePath + ".asc.sha1"),targetRepositoryUrl + groupurl + "/" + project.name  + "/" + project.version+ "/" + uploadedFileName +".asc.sha1", "text/plain; charset=utf-8");
     }
 
 
@@ -1621,6 +1582,9 @@ def uploadFile(File input, String urlDestination, String contentType){
 
     logger.debug("Wrote " + totalBytesRead + " bytes of " + input.length() + ", ratio: " +(double)totalBytesRead / (double)input.length());
 
+    if (connection.getResponseCode()<200 || connection.getResponseCode()>=300){
+        throw new Exception("unexcepted response code. Published failed.")
+    }
 
 }
 
