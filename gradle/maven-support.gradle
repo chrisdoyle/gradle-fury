@@ -931,7 +931,7 @@ project.plugins.withType(MavenPublishPlugin) {
                     if (project.isDistribution){
                         project.pom.packaging = 'zip'
 
-                        System.out.println("processing dist zip")
+                        //System.out.println("processing dist zip")
                         zip(MavenPublication) {
                             groupId project.group
                             artifactId project.name
@@ -939,7 +939,7 @@ project.plugins.withType(MavenPublishPlugin) {
 
                             modifyGeneratedPom(pom)
 
-                            System.out.println("processing dist zip pom")
+                            //System.out.println("processing dist zip pom")
                             def artifactName = project.name + "-" + project.version + "." + project.pom.packaging;
                             def artifactRoot = "${buildDir}/distributions/"
 
@@ -948,7 +948,7 @@ project.plugins.withType(MavenPublishPlugin) {
                             //here we manually reparse rootDir/gradle.properties for all the pom settings
                             //then create a pom on the fly and write it to disk
                             if (project.isDistribution && !project.isJavaProject) {
-                                System.out.println("processing dist only package generating pom")
+                                //System.out.println("processing dist only package generating pom")
                                 createPom("${artifactRoot}", "pom-default.xml")
                                 //the pom
                                 Container c = new Container();
@@ -974,7 +974,7 @@ project.plugins.withType(MavenPublishPlugin) {
                             c.fileNameAndPath = "${artifactRoot}${artifactName}";
                             c.type = "zip";
                             project.ext.artifacts.add(c);
-                            logger.warn("Adding " + "${artifactRoot}${artifactName}" + " to artifact list");
+                            logger.debug("Adding " + "${artifactRoot}${artifactName}" + " to artifact list");
 
 
                             //needed for local publishing
