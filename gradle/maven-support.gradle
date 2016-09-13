@@ -1779,7 +1779,7 @@ configurations {
 }
 
 dependencies {
-    umljavadoc 'org.umlgraph:umlgraph:5.6'
+    umljavadoc 'org.umlgraph:umlgraph:5.6.6'
 }
 
 def isGraphvizDotAvailable() {
