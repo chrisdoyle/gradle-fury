@@ -21,14 +21,15 @@ android:
 env:
   matrix:
     # default out of the box set
-    - GRADLE_VERSION='3.0' GRADLE_PLUGIN_VERSION='2.1.3'
-    - GRADLE_VERSION='2.14' GRADLE_PLUGIN_VERSION='2.1.3'
-    - GRADLE_VERSION='2.10' GRADLE_PLUGIN_VERSION='2.1.2'
-    - GRADLE_VERSION='2.14' GRADLE_PLUGIN_VERSION='2.1.0'
-    - GRADLE_VERSION='2.14' GRADLE_PLUGIN_VERSION='2.0.0'
-    - GRADLE_VERSION='2.2.1' GRADLE_PLUGIN_VERSION='1.5.0'
-    - GRADLE_VERSION='2.2.1' GRADLE_PLUGIN_VERSION='1.3.1'
-    - GRADLE_VERSION='2.2.1' GRADLE_PLUGIN_VERSION='1.3.0'
+    - GRADLE_VERSION='3.0' GRADLE_PLUGIN_VERSION='2.1.3' GRAPHVIZ='NO'
+    - GRADLE_VERSION='3.0' GRADLE_PLUGIN_VERSION='2.1.3' GRAPHVIZ='YES'
+    - GRADLE_VERSION='2.14' GRADLE_PLUGIN_VERSION='2.1.3' GRAPHVIZ='NO'
+    - GRADLE_VERSION='2.10' GRADLE_PLUGIN_VERSION='2.1.2' GRAPHVIZ='NO'
+    - GRADLE_VERSION='2.14' GRADLE_PLUGIN_VERSION='2.1.0' GRAPHVIZ='NO'
+    - GRADLE_VERSION='2.14' GRADLE_PLUGIN_VERSION='2.0.0' GRAPHVIZ='NO'
+    - GRADLE_VERSION='2.2.1' GRADLE_PLUGIN_VERSION='1.5.0' GRAPHVIZ='NO'
+    - GRADLE_VERSION='2.2.1' GRADLE_PLUGIN_VERSION='1.3.1' GRAPHVIZ='NO'
+    - GRADLE_VERSION='2.2.1' GRADLE_PLUGIN_VERSION='1.3.0' GRAPHVIZ='NO'
 
     #- GRADLE_VERSION='2.9' GRADLE_PLUGIN_VERSION='1.3.1'
     #- GRADLE_VERSION='2.4' GRADLE_PLUGIN_VERSION='1.3.1'
@@ -49,8 +50,8 @@ sudo: required
 
 
 before_script:
- # We need GraphViz to draw figures of graphs and lattices:
- - sudo apt-get install graphviz
+ - chmod 755 ci/*.sh
+ - ci/configJavadocs.sh
  - sudo apt-get install gnupg2
  - sudo apt-get install rng-tools gnupg-agent pinentry-curses
  #- sudo echo EXTRAOPTIONS=\"-r /dev/random\" >> /etc/conf.d/rngd
@@ -67,7 +68,7 @@ before_script:
  - gpg --verbose --batch --gen-key ci/gpginput.txt &
  - gpg --list-keys
 
- - chmod 755 ci/*.sh
+
 
  #setup the maven android sdk stuff
  #- mkdir temp
