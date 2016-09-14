@@ -203,9 +203,9 @@ if (hasProperty("android.signingConfigs.release.storePassword")){
 }
 if (hasProperty("android.signingConfigs.release.keyPassword")){
     try{
-    if (mightBeEncrypted(project.property("android.signingConfigs.release.keyPassword"))){
-        project.setProperty("android.signingConfigs.release.keyPassword", tryDecrypt(project.property("android.signingConfigs.release.keyPassword")))
-    }
+        if (mightBeEncrypted(project.property("android.signingConfigs.release.keyPassword"))){
+            project.setProperty("android.signingConfigs.release.keyPassword", tryDecrypt(project.property("android.signingConfigs.release.keyPassword")))
+        }
     }catch (Exception ex){}
 }
 
@@ -451,28 +451,76 @@ afterEvaluate { project ->
 
     if (project.isJavaProject) {
         if (project.javadocProfileEnabled) {
-            javadoc {
-                classpath = configurations.compile
+            if (isGraphvizDotAvailable()) {
 
-                options.charSet 'UTF-8'
-                options.docEncoding 'UTF-8'
-                options.encoding 'UTF-8'
-                //options.addStringOption('Xdoclint:none', '-quiet')
-                //classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
-                failOnError false
+                task javadoc(overwrite: true, dependsOn: compileJava)  {
+                    setDescription('Generates Javadoc API documentation with UMLGraph diagrams')
+                    setGroup(JavaBasePlugin.DOCUMENTATION_GROUP)
+                    doLast {
 
-                // FIXME :: @chrisdoyle :: this assumes Java 7...
-                options.links 'http://docs.oracle.com/javase/7/docs/api/'
-                options.links("http://developer.android.com/reference/");
-
-                options {
-                    setMemberLevel(JavadocMemberLevel.PACKAGE)
+                        logger.debug("Java ant javadoc")
+                        def javaFilePath = file('src/main/java')
+                        if (javaFilePath.exists()) {
+                            ant.javadoc(classpath: (configurations.compile).asPath,
+                                    sourcepath: file('src/main/java'),
+                                    packagenames: '*',
+                                    destdir: "${docsDir}/javadoc",
+                                    private: 'true',
+                                    failonerror: 'false',
+                                    failonwarning: 'false',
+                                    docletpath: configurations.umljavadoc.asPath) {
+                                doclet(name: 'org.umlgraph.doclet.UmlGraphDoc') {
+                                    param(name: '-inferrel')
+                                    param(name: '-inferdep')
+                                    param(name: '-qualify')
+                                    param(name: '-postfixpackage')
+                                    param(name: '-hide', value: 'java.*')
+                                    param(name: '-collpackages', value: 'java.util.*')
+                                    param(name: '-nodefontsize', value: '9')
+                                    param(name: '-nodefontpackagesize', value: '7')
+                                    param(name: '-link', value: 'http://java.sun.com/j2se/1.5.0/docs/guide/javadoc/doclet/spec')
+                                    param(name: '-link', value: 'http://java.sun.com/j2se/1.5/docs/api')
+                                    param(name: '-link', value: 'http://docs.oracle.com/javase/7/docs/api/')
+                                    param(name: '-link', value: 'http://developer.android.com/reference/')
+                                }
+                            }
+                        }
+                    }
                 }
-            }
 
-            task javadocJar(type: Jar, dependsOn: javadoc) {
-                classifier = 'javadoc'
-                from javadoc.destinationDir
+                task javadocJar(type: Jar, dependsOn: javadoc) {
+                    classifier = 'javadoc'
+                    from "${docsDir}/javadoc"
+
+                }
+
+            } else {
+                logger.debug("Java gradle javadoc")
+                javadoc {
+
+                    classpath = configurations.compile
+
+                    options.charSet 'UTF-8'
+                    options.docEncoding 'UTF-8'
+                    options.encoding 'UTF-8'
+                    //options.addStringOption('Xdoclint:none', '-quiet')
+                    //classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
+                    failOnError false
+                    failOnWarning false
+
+                    // FIXME :: @chrisdoyle :: this assumes Java 7...
+                    options.links 'http://docs.oracle.com/javase/7/docs/api/'
+                    options.links("http://developer.android.com/reference/");
+
+                    options {
+                        setMemberLevel(JavadocMemberLevel.PACKAGE)
+                    }
+                }
+
+                task javadocJar(type: Jar, dependsOn: javadoc) {
+                    classifier = 'javadoc'
+                    from javadoc.destinationDir
+                }
             }
         }
 
@@ -498,49 +546,121 @@ afterEvaluate { project ->
                     project.pom.packaging;
 
             if (project.javadocProfileEnabled) {
-                project.task("${variant.name}Javadoc", type: Javadoc) {
 
-                    // https://github.com/chrisbanes/gradle-mvn-push/issues/9
-                    failOnError false
+                if (isGraphvizDotAvailable()) {
 
-                    destinationDir = new File("$project.buildDir/javadoc/$variant.name")
+                    logger.debug("Java ant javadoc")
+                    project.task("${variant.name}Javadoc")  {
 
-                    source = variant.javaCompile.source
 
-                    String csdk = "${project.android.compileSdkVersion}";
-                    if (csdk.contains("Google")){
-                        try {
-                            csdk = csdk.split(":")[2];
-                        }catch (Exception ex){}
+                        logger.warn("running Dot for " + artifactName)
+
+                        File destinationDir = new File("$project.buildDir/javadoc/$variant.name")
+                        destinationDir.mkdirs();
+                        def source = variant.javaCompile.source
+
+                        String csdk = "${project.android.compileSdkVersion}";
+                        if (csdk.contains("Google")) {
+                            try {
+                                csdk = csdk.split(":")[2];
+                            } catch (Exception ex) {
+                            }
+                        }
+
+                        ext.androidJar =
+                                "${project.android.sdkDirectory}/platforms/" + csdk + "/android.jar"
+
+                        //classpath is either an array list for a file collection
+                        def classpath = project.files(variant.javaCompile.classpath.files)
+                        classpath += project.files(ext.androidJar)
+                        //System.out.println(classpath.asPath)
+
+                        // def javaFilePath = variant.javaCompile.source
+                        ant.javadoc(bootclasspath: androidJar,
+                                classpath: (classpath).asPath,
+                                sourcepath: 'src/main/java',        //fixme variants
+                                packagenames: '*',
+                                destdir: destinationDir,
+                                private: 'true',
+                                failonerror: 'false',
+                                verbose: "true",
+                                failonwarning: 'false',
+                                //links :"http://docs.oracle.com/javase/7/docs/api/",
+                                // linksOffline : "http://d.android.com/reference ${project.android.sdkDirectory}/docs/reference",
+                                docletpath: configurations.umljavadoc.asPath) {
+                            doclet(name: 'org.umlgraph.doclet.UmlGraphDoc') {
+                                param(name: '-inferrel')
+                                param(name: '-inferdep')
+                                param(name: '-qualify')
+                                param(name: '-postfixpackage')
+                                param(name: '-hide', value: 'java.*')
+                                param(name: '-collpackages', value: 'java.util.*')
+                                param(name: '-nodefontsize', value: '9')
+                                param(name: '-nodefontpackagesize', value: '7')
+                                param(name: '-link', value: 'http://java.sun.com/j2se/1.5.0/docs/guide/javadoc/doclet/spec')
+                                param(name: '-link', value: 'http://java.sun.com/j2se/1.5/docs/api')
+                                param(name: '-link', value: 'http://docs.oracle.com/javase/7/docs/api/')
+                                param(name: '-link', value: 'http://developer.android.com/reference/')
+                                //param(name: '-link', value: "${project.android.sdkDirectory}/docs/reference")
+                            }
+                            //useless reflect (ant)
+                        }
+
                     }
+                } else {
 
-                    ext.androidJar =
-                            "${project.android.sdkDirectory}/platforms/" + csdk + "/android.jar"
+                    logger.debug("Java gradle javadoc")
 
-                    classpath = project.files(variant.javaCompile.classpath.files)
-                    classpath += project.files(ext.androidJar)
-                    //-bootclasspath /path/to/sdk/platforms/android-##/android.jar
-                    // other lame attempts to overcome the 3-headed monster...
+                    project.task("${variant.name}Javadoc", type: Javadoc) {
+
+
+                        logger.debug("running regular javadoc for " + artifactName)
+                        destinationDir = new File("$project.buildDir/javadoc/$variant.name")
+                        destinationDir.mkdirs();
+                        source = variant.javaCompile.source
+
+                        String csdk = "${project.android.compileSdkVersion}";
+                        if (csdk.contains("Google")) {
+                            try {
+                                csdk = csdk.split(":")[2];
+                            } catch (Exception ex) {
+                            }
+                        }
+
+                        ext.androidJar =
+                                "${project.android.sdkDirectory}/platforms/" + csdk + "/android.jar"
+
+                        classpath = project.files(variant.javaCompile.classpath.files)
+                        classpath += project.files(ext.androidJar)
+                        //-bootclasspath /path/to/sdk/platforms/android-##/android.jar
+                        // other lame attempts to overcome the 3-headed monster...
 //                      classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
 //                      classpath += variants.toList().first().javaCompile.classpath
 
-                    options {
-                        links "http://docs.oracle.com/javase/7/docs/api/"
-                        linksOffline("http://d.android.com/reference",
-                                "${project.android.sdkDirectory}/docs/reference")
-                        setMemberLevel(JavadocMemberLevel.PACKAGE)
-                        docEncoding = 'UTF-8'
-                        encoding = 'UTF-8'
-                        charSet = 'UTF-8'
-                    }
+                        // https://github.com/chrisbanes/gradle-mvn-push/issues/9
+                        failOnError false
+                        failOnWarning false
 
-                    exclude '**/BuildConfig.java'
-                    exclude '**/R.java'
+                        options {
+                            links "http://docs.oracle.com/javase/7/docs/api/"
+                            linksOffline("http://d.android.com/reference",
+                                    "${project.android.sdkDirectory}/docs/reference")
+                            setMemberLevel(JavadocMemberLevel.PACKAGE)
+                            docEncoding = 'UTF-8'
+                            encoding = 'UTF-8'
+                            charSet = 'UTF-8'
+                        }
+
+                        exclude '**/BuildConfig.java'
+                        exclude '**/R.java'
+
+                    }
                 }
 
                 project.task("generate${variant.name.capitalize()}JavadocJar", type: Jar,
-                        dependsOn: "${variant.name}Javadoc") {
+                        dependsOn: "${variant.name}Javadoc" ) {
 
+                    logger.debug("firing javadoc generation")
                     classifier "${variant.name}-javadoc"
 
                     description = 'Assembles a JAR archive containing the generated Javadoc API documentation of $variant.name.'
@@ -1246,8 +1366,9 @@ project.plugins.withType(MavenPublishPlugin) {
 
 
                                     if (project.javadocProfileEnabled) {
+                                        //project.getTasksByName("generate${variant.name.capitalize()}JavadocJar",false).iterator().next().dependsOn build
                                         artifact tasks["generate${variant.name.capitalize()}JavadocJar"]
-                                        logger.debug("Adding " + "${buildDir}/libs/${artifactPrefix}-javadoc.jar" + " to artifact list");
+                                        logger.warn("Adding " + "${buildDir}/libs/${artifactPrefix}-javadoc.jar" + " to artifact list");
 
                                         c = new Container();
                                         if (project.isAndroidApplication)
@@ -1410,6 +1531,7 @@ gradle.taskGraph.whenReady { taskGraph ->
 
 
 def reflect(object) {
+    System.out.println(object)
     Method[] bits = object.class.methods
     for (int k =0; k < bits.length; k++){
         System.out.println(bits[k].name);
@@ -1637,7 +1759,7 @@ def uploadFile(File input, String urlDestination, String contentType){
         outputStream.write(streamFileBytes, 0, bytesRead);
 
         totalBytesRead += bytesRead;
-       // notifyListenersOnProgress((double)totalBytesRead / (double)input.length());
+        // notifyListenersOnProgress((double)totalBytesRead / (double)input.length());
     }
 
     outputStream.flush();
@@ -1923,9 +2045,9 @@ def loadKey(){
         //defined in rooDir/local.properties file
         Properties properties = new Properties()
 
-            properties.load(keys.newDataInputStream())
-            if (properties.containsKey("FURY_MASTER_PASSWORD"))
-                return properties.getProperty("FURY_MASTER_PASSWORD");
+        properties.load(keys.newDataInputStream())
+        if (properties.containsKey("FURY_MASTER_PASSWORD"))
+            return properties.getProperty("FURY_MASTER_PASSWORD");
     }
     //defined in the project gradle.properties file
     if (hasProperty('FURY_MASTER_PASSWORD')){
@@ -1984,3 +2106,35 @@ def mightBeEncrypted(String text){
         return true;
     return false;
 }
+
+
+
+
+
+configurations {
+    umljavadoc
+}
+
+dependencies {
+    umljavadoc 'org.umlgraph:umlgraph:5.6.6'
+}
+
+def isGraphvizDotAvailable() {
+    try {
+        Runtime rt = Runtime.getRuntime();
+        Process proc = rt.exec("dot -?");
+        int exitVal = proc.waitFor();
+
+        if (exitVal == 0) {
+            System.out.println("DOT is available");
+            return true;
+        }
+    }catch (Exception ex){
+        //ex.printStackTrace();
+    }
+
+    System.out.println("DOT is NOT available");
+    return false;
+}
+
+
