@@ -432,6 +432,7 @@ afterEvaluate { project ->
                     setGroup(JavaBasePlugin.DOCUMENTATION_GROUP)
                     doLast {
 
+                        logger.debug("Java ant javadoc")
                         def javaFilePath = file('src/main/java')
                         if (javaFilePath.exists()) {
                             ant.javadoc(classpath: (configurations.compile).asPath,
@@ -440,6 +441,7 @@ afterEvaluate { project ->
                                     destdir: "${docsDir}/javadoc",
                                     private: 'true',
                                     failonerror: 'false',
+                                    failonwarning: 'false',
                                     docletpath: configurations.umljavadoc.asPath) {
                                 doclet(name: 'org.umlgraph.doclet.UmlGraphDoc') {
                                     param(name: '-inferrel')
@@ -463,9 +465,11 @@ afterEvaluate { project ->
                 task javadocJar(type: Jar, dependsOn: javadoc) {
                     classifier = 'javadoc'
                     from "${docsDir}/javadoc"
+
                 }
 
             } else {
+                logger.debug("Java gradle javadoc")
                 javadoc {
 
                     classpath = configurations.compile
@@ -476,6 +480,7 @@ afterEvaluate { project ->
                     //options.addStringOption('Xdoclint:none', '-quiet')
                     //classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
                     failOnError false
+                    failOnWarining false
 
                     // FIXME :: @chrisdoyle :: this assumes Java 7...
                     options.links 'http://docs.oracle.com/javase/7/docs/api/'
@@ -518,14 +523,15 @@ afterEvaluate { project ->
 
                 if (isGraphvizDotAvailable()) {
 
-                    project.task("${variant.name}Javadoc", type: Javadoc, overwrite: true)  {
+                    logger.debug("Java ant javadoc")
+                    project.task("${variant.name}Javadoc")  {
 
 
                         logger.warn("running Dot for " + artifactName)
 
-                        destinationDir = new File("$project.buildDir/javadoc/$variant.name")
+                        File destinationDir = new File("$project.buildDir/javadoc/$variant.name")
                         destinationDir.mkdirs();
-                        source = variant.javaCompile.source
+                        def source = variant.javaCompile.source
 
                         String csdk = "${project.android.compileSdkVersion}";
                         if (csdk.contains("Google")) {
@@ -538,8 +544,10 @@ afterEvaluate { project ->
                         ext.androidJar =
                                 "${project.android.sdkDirectory}/platforms/" + csdk + "/android.jar"
 
-                        classpath = project.files(variant.javaCompile.classpath.files)
+                        //classpath is either an array list for a file collection
+                        def classpath = project.files(variant.javaCompile.classpath.files)
                         classpath += project.files(ext.androidJar)
+                        //System.out.println(classpath.asPath)
 
                         // def javaFilePath = variant.javaCompile.source
                         ant.javadoc(bootclasspath: androidJar,
@@ -575,11 +583,12 @@ afterEvaluate { project ->
                     }
                 } else {
 
+                    logger.debug("Java gradle javadoc")
 
                     project.task("${variant.name}Javadoc", type: Javadoc) {
 
 
-                        logger.warn("running regular javadoc for " + artifactName)
+                        logger.debug("running regular javadoc for " + artifactName)
                         destinationDir = new File("$project.buildDir/javadoc/$variant.name")
                         destinationDir.mkdirs();
                         source = variant.javaCompile.source
@@ -604,7 +613,7 @@ afterEvaluate { project ->
 
                         // https://github.com/chrisbanes/gradle-mvn-push/issues/9
                         failOnError false
-
+                        failOnWarining false
 
                         options {
                             links "http://docs.oracle.com/javase/7/docs/api/"
@@ -623,9 +632,9 @@ afterEvaluate { project ->
                 }
 
                 project.task("generate${variant.name.capitalize()}JavadocJar", type: Jar,
-                        dependsOn: "${variant.name}Javadoc") {
+                        dependsOn: "${variant.name}Javadoc" ) {
 
-                    logger.warn("firing javadoc generation")
+                    logger.debug("firing javadoc generation")
                     classifier "${variant.name}-javadoc"
 
                     description = 'Assembles a JAR archive containing the generated Javadoc API documentation of $variant.name.'
@@ -1268,8 +1277,9 @@ project.plugins.withType(MavenPublishPlugin) {
 
 
                                     if (project.javadocProfileEnabled) {
+                                        //project.getTasksByName("generate${variant.name.capitalize()}JavadocJar",false).iterator().next().dependsOn build
                                         artifact tasks["generate${variant.name.capitalize()}JavadocJar"]
-                                        logger.debug("Adding " + "${buildDir}/libs/${artifactPrefix}-javadoc.jar" + " to artifact list");
+                                        logger.warn("Adding " + "${buildDir}/libs/${artifactPrefix}-javadoc.jar" + " to artifact list");
 
                                         c = new Container();
                                         if (project.isAndroidApplication)
