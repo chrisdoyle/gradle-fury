@@ -480,7 +480,7 @@ afterEvaluate { project ->
                     //options.addStringOption('Xdoclint:none', '-quiet')
                     //classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
                     failOnError false
-                    failOnWarining false
+                    failOnWarning false
 
                     // FIXME :: @chrisdoyle :: this assumes Java 7...
                     options.links 'http://docs.oracle.com/javase/7/docs/api/'
@@ -613,7 +613,7 @@ afterEvaluate { project ->
 
                         // https://github.com/chrisbanes/gradle-mvn-push/issues/9
                         failOnError false
-                        failOnWarining false
+                        failOnWarning false
 
                         options {
                             links "http://docs.oracle.com/javase/7/docs/api/"
