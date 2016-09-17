@@ -464,7 +464,25 @@ afterEvaluate { project ->
                 // FIXME :: @chrisdoyle :: this assumes Java 7...
                 options.links 'http://docs.oracle.com/javase/7/docs/api/'
                 options.links("http://developer.android.com/reference/");
+                if (isGraphvizDotAvailable()) {
 
+                    options {
+                        doclet = 'org.umlgraph.doclet.UmlGraphDoc'
+                        options.docletpath = configurations.umljavadoc.files.asType(List)
+                        addStringOption('-inferrel')
+                        addStringOption('-inferdep')
+                        addStringOption('-qualify')
+                        addStringOption('-postfixpackage')
+                        addStringOption('-hide=java.*')
+                        addStringOption('-collpackages=java.util.*')
+                        addStringOption('-nodefontsize=9')
+                        addStringOption('-nodefontpackagesize=7')
+                        addStringOption('-link=http://java.sun.com/j2se/1.5.0/docs/guide/javadoc/doclet/spec')
+                        addStringOption('-link=http://java.sun.com/j2se/1.5/docs/api')
+                        addStringOption('-link=http://docs.oracle.com/javase/7/docs/api/')
+                        addStringOption('-link=http://developer.android.com/reference/')
+                    }
+                }
                 options {
                     setMemberLevel(JavadocMemberLevel.PACKAGE)
                 }
@@ -532,6 +550,25 @@ afterEvaluate { project ->
                         docEncoding = 'UTF-8'
                         encoding = 'UTF-8'
                         charSet = 'UTF-8'
+                    }
+                    if (isGraphvizDotAvailable()) {
+
+                        options {
+                            doclet = 'org.umlgraph.doclet.UmlGraphDoc'
+                            options.docletpath = configurations.umljavadoc.files.asType(List)
+                            addStringOption('-inferrel')
+                            addStringOption('-inferdep')
+                            addStringOption('-qualify')
+                            addStringOption('-postfixpackage')
+                            addStringOption('-hide=java.*')
+                            addStringOption('-collpackages=java.util.*')
+                            addStringOption('-nodefontsize=9')
+                            addStringOption('-nodefontpackagesize=7')
+                            addStringOption('-link=http://java.sun.com/j2se/1.5.0/docs/guide/javadoc/doclet/spec')
+                            addStringOption('-link=http://java.sun.com/j2se/1.5/docs/api')
+                            addStringOption('-link=http://docs.oracle.com/javase/7/docs/api/')
+                            addStringOption('-link=http://developer.android.com/reference/')
+                        }
                     }
 
                     exclude '**/BuildConfig.java'
@@ -1984,3 +2021,35 @@ def mightBeEncrypted(String text){
         return true;
     return false;
 }
+
+
+
+
+
+configurations {
+    umljavadoc
+}
+
+dependencies {
+    umljavadoc 'org.umlgraph:umlgraph:5.6.6'
+}
+
+def isGraphvizDotAvailable() {
+    try {
+        Runtime rt = Runtime.getRuntime();
+        Process proc = rt.exec("dot -?");
+        int exitVal = proc.waitFor();
+
+        if (exitVal == 0) {
+            System.out.println("DOT is available");
+            return true;
+        }
+    }catch (Exception ex){
+        //ex.printStackTrace();
+    }
+
+    System.out.println("DOT is NOT available");
+    return false;
+}
+
+
