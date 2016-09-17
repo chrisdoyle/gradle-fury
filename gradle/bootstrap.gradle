@@ -1,0 +1,143 @@
+import java.nio.file.CopyOption
+import java.nio.file.Files
+
+/**
+ * Gradle-Fury bootstrap script.
+ *
+ * Usage: You have an existing project or new project gradle project that you want to use
+ * gradle-fury with and don't have the time to actually read the readme.md or look at the examples
+ *
+ * Purpose: automagically look at your existing gradle build files, apply gradle fury with minimal
+ * changes and making backups along the way.
+ *
+ *
+ * put this in your root gradle.build file
+     apply from 'https://raw.githubusercontent.com/chrisdoyle/gradle-fury/master/gradle/encryption.gradle'
+     apply from: "${rootDir}/gradle/encryption.gradle"
+
+
+ * then run
+     ./gradlew hackTime
+
+ * backups go to fury-backup
+ */
+
+
+task hackTime() << {
+    File backupDir = new File("${rootDir}/fury-backup/");
+    backupDir.mkdirs();
+    File rootBuild = new File("${rootDir}/build.gradle");
+    File rootBuildBak = new File(backupDir.getAbsolutePath() + "/build.gradle");
+    java.nio.file.Files.copy(rootBuild.toPath(), rootBuildBak.toPath(), StandardCopyOption.REPLACE_EXISTING)
+
+    File props = new File("${rootDir}/gradle.properties");
+    java.nio.file.Files.copy(props.toPath(), backupDir.getAbsolutePath() + "/gradle.properties", StandardCopyOption.REPLACE_EXISTING)
+
+    Properties p = new Properties();
+    p.load(new FileInputStream(props));
+
+    if (!p.containsKey("pom.version")) {
+        p.setProperty("pom.version", getString("Version", "1.0.0-SNAPSHOT"));
+    }
+    if (!p.containsKey("pom.groupId")){
+        p.setProperty("pom.groupId", getString("Group Id",new File("${rootDir}").getName()));
+    }
+    if (!p.containsKey("description")){
+        p.setProperty("description", getString("Project description",new File("${rootDir}").getName()));
+    }
+    if (!p.containsKey("pom.url")){
+        p.setProperty("pom.url", getString("Project URL","http://TBD"));
+    }
+    if (!p.containsKey("pom.inceptionYear")){
+        p.setProperty("pom.inceptionYear", getString("Inception Year",Calendar.getInstance().get(Calendar.YEAR)));
+    }
+    if (!p.containsKey("pom.licenses.license.0.name")){
+        //more complex stuff goes here
+    }
+    if (!p.containsKey("pom.organization.name")){
+        p.setProperty("pom.organization.name", getString("Organization Name","Github"));
+    }
+    if (!p.containsKey("pom.organization.url")){
+        p.setProperty("pom.organization.url", getString("Organization Url","http://github.com"));
+    }
+    if (!p.containsKey("pom.issueManagement.system")){
+        p.setProperty("pom.issueManagement.system", getString("Issue Management","Github"));
+    }
+    if (!p.containsKey("pom.issueManagement.url")){
+        p.setProperty("pom.issueManagement.url", getString("Issue URL","https://github.com/org/" + new File("${rootDir}").getName() + "/issues"));
+    }
+    if (!p.containsKey("pom.ciManagement.system")){
+        p.setProperty("pom.ciManagement.system", getString("CI Management","Travis"));
+    }
+    if (!p.containsKey("pom.ciManagement.url")){
+        p.setProperty("pom.ciManagement.url", getString("CI URL","http://TBD"));
+    }
+    if (!p.containsKey("pom.scm.url")){
+        p.setProperty("pom.scm.url", getString("SCM URL","https://github.com/org/project"));
+    }
+
+    if (!p.containsKey("pom.scm.url")){
+        p.setProperty("pom.scm.url", getString("SCM URL","https://github.com/org/project"));
+    }
+    if (!p.containsKey("pom.scm.connection")){
+        p.setProperty("pom.scm.connection", getString("SCM URL","https://github.com/org/project.git"));
+    }
+    if (!p.containsKey("pom.scm.developerConnection")){
+        p.setProperty("pom.scm.developerConnection", getString("SCM URL","https://github.com/org/project.git"));
+    }
+    if (!p.containsKey("pom.distributionManagement.site.id")){
+        p.setProperty("pom.distributionManagement.site.id", getString("Distribution Management Id","Github"));
+    }
+    if (!p.containsKey("pom.distributionManagement.site.url")){
+        p.setProperty("pom.distributionManagement.site.url", getString("Distribution URL","https://github.com/org/project/releases"));
+    }
+
+
+    String devCount = getString("How many developers?","1");
+    int count=Integer.parseInt(devCount);
+    for (int i=0; i < count; i++){
+
+        //do stuff
+
+        if (!p.containsKey("pom.developers.developer." + i + ".id")){
+            p.setProperty("pom.developers.developer." + i + ".id", getString("[" + i + "] Developer Id","bob"));
+        }
+        if (!p.containsKey("pom.developers.developer." + i + ".name")){
+            p.setProperty("pom.developers.developer." + i + ".name", getString("[" + i + "] Developer Name","bob"));
+        }
+        if (!p.containsKey("pom.developers.developer." + i + ".email")){
+            p.setProperty("pom.developers.developer." + i + ".email", getString("[" + i + "] Developer Email","bob"));
+        }
+        if (!p.containsKey("pom.developers.developer." + i + ".organization")){
+            p.setProperty("pom.developers.developer." + i + ".organization", getString("[" + i + "] Developer Organization","bob"));
+        }
+        if (!p.containsKey("pom.developers.developer." + i + ".role.0")){
+            p.setProperty("pom.developers.developer." + i + ".role.0", getString("[" + i + "] Developer Role","Software Engineer"));
+        }
+
+    }
+    p.store(new FileOutputStream(new FileInputStream(props)))
+
+
+
+
+
+
+
+
+
+
+    if (!p.containsKey("RELEASE_REPOSITORY_URL")) {
+        p.setProperty("RELEASE_REPOSITORY_URL", getString("Nexus release url","https://oss.sonatype.org/service/local/staging/deploy/maven2/"));
+    }
+    if (!p.containsKey("SNAPSHOT_REPOSITORY_URL")) {
+        p.setProperty("SNAPSHOT_REPOSITORY_URL", getString("Nexus snapshot url","https://oss.sonatype.org/content/repositories/snapshots/"));
+    }
+
+
+
+    //for recursing into the build
+    //ignore folders that start with . or build or libs
+    File rootDirectory = new File("${rootDir}/");
+}
+
