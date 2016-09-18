@@ -9,7 +9,7 @@ mv gradle2.properties gradle.properties
 #mv gradle2.properties gradle.properties
 
 #echo signing.passPhrase=abc >> gradle.properties
-echo \nsigning.useAgent=false >> gradle.properties
+echo $'\n'signing.useAgent=false >> gradle.properties
  #set the location of gpg in our gradle.properties file
 echo $'\n'GPG_PATH=$(which gpg) >> gradle.properties
 #echo GPG_PASSPHRASE=abc >> gradle.properties
