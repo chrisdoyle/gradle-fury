@@ -121,11 +121,10 @@ script:
   - ci//waitForNexus.sh
 
   - ./gradlew distZip -Pprofile=sources,javadoc
-
-  # build with signatures and publish
-  - ./gradlew publishArtifacts -Pprofile=sources,javadoc
-  - ci/verifyNoSignatures.sh
-
+  # run this on failure
+  - cat local.properties
+  - cat gradle.properties
+  
   # build with signatures and publish
   - ./gradlew publishArtifacts -Pprofile=sources,javadoc
   # verify correctness
