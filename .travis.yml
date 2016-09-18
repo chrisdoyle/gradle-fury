@@ -154,3 +154,8 @@ script:
   #- mvn install -fn -U
   #- mvn install -fn -U
   #- mvn install -U
+
+after_failure:
+  # run this on failure
+  - cat local.properties
+  - cat gradle.properties
