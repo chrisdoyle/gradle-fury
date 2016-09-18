@@ -11,7 +11,7 @@ mv gradle2.properties gradle.properties
 #echo signing.passPhrase=abc >> gradle.properties
 echo \nsigning.useAgent=false >> gradle.properties
  #set the location of gpg in our gradle.properties file
-echo \nGPG_PATH=$(which gpg) >> gradle.properties
+echo $'\n'GPG_PATH=$(which gpg) >> gradle.properties
 #echo GPG_PASSPHRASE=abc >> gradle.properties
 
 sed "s/RELEASE_REPOSITORY_URL\=/RELEASE_REPOSITORY_URL=http:\/\/localhost:8081\/nexus\/content\/repositories\/releases\//g" gradle.properties >  gradle2.properties
