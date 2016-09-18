@@ -109,7 +109,7 @@ ext.gpgPassphrase = (
                 ? GPG_PASSPHRASE
                 : ""
 );
-ext.gpgPassphrase = (
+ext.gpgPassphrase2 = (
         hasProperty('signing.passPhrase')
                 ? project.property("signing.passPhrase")
                 : ""
@@ -117,6 +117,9 @@ ext.gpgPassphrase = (
 
 if (mightBeEncrypted(ext.gpgPassphrase)){
     ext.gpgPassphrase=tryDecrypt(ext.gpgPassphrase);
+}
+if (mightBeEncrypted(ext.gpgPassphrase2)){
+    ext.gpgPassphrase2=tryDecrypt(ext.gpgPassphrase2);
 }
 
 ext.gpgisInteractive = (
@@ -1380,6 +1383,11 @@ ext.signFile = { file ->
         arguments.add("--passphrase");
         arguments.add(ext.gpgPassphrase);
     }
+    if (ext.gpgPassphrase2!=null && !"".equalsIgnoreCase(ext.gpgPassphrase2)){
+        arguments.add("--batch");
+        arguments.add("--passphrase");
+        arguments.add(ext.gpgPassphrase2);
+    }
     if (ext.gpgSecretKeyRingFile!=null && !"".equalsIgnoreCase(ext.gpgSecretKeyRingFile)){
         arguments.add("--secret-keyring");
         arguments.add(ext.gpgSecretKeyRingFile);
@@ -1399,7 +1407,8 @@ ext.signFile = { file ->
     arguments.add(file);
     String[] bits = arguments.toArray(new String[arguments.size()]);
 
-
+    for (int x=0; x < arguments.size(); x++)
+        System.out.println("DEBUG GPG " + arguments.get(x));
     logger.info("\n\nSigning file " + file);
 
     exec {
