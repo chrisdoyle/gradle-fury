@@ -1,0 +1,115 @@
+/**
+ our attempt at a maven site plugin, which uses most of the stuff that maven's
+
+ gradle says they are working on one, but there hasn't been any activity on it in like 3 years.
+
+ we'd love to reuse doxia, but it is a bit on the complex side and extracting it from maven was attempted
+ and proved to be more difficult that writing one from scratch.
+ */
+
+ext.webSrcDir = "${rootDir}/src/site/"
+ext.buildWebsiteDir = "${rootDir}/build/site/"
+ext.javadocsModules = new ArrayList<>();
+ext.reports = new ArrayList<>();
+
+
+task site (
+        description: 'Builds the web-site contents.' )  << {
+    List<File> javadocs = copyJavadocPages(rootDir,true);
+    List<File> reportsDocs = copyReports(rootDir,true);
+
+    for (int i=0; i < javadocs.size(); i++){
+        System.out.println(javadocs.get(i).getAbsolutePath());
+    }
+    for (int i=0; i < reportsDocs.size(); i++){
+        System.out.println(reportsDocs.get(i).getAbsolutePath());
+    }
+
+
+
+}
+
+List<File> copyJavadocPages(File currentDir, boolean firstRun) {
+
+    List<File> ret = new ArrayList<>();
+    File[] files = currentDir.listFiles();
+    if (files != null) {
+        for (int i = 0; i < files.length; i++) {
+            if (firstRun && files[i].getAbsolutePath().endsWith("build"))
+                continue;
+            if (files[i].getAbsolutePath().endsWith("build/docs/javadoc")) {
+
+                String[] s2 = files[i].getAbsolutePath().split("/");
+                String module = s2[s2.length-4];
+               // System.out.println("javadoc " + files[i].getAbsolutePath() + " " + module);
+                copy {
+                    from files[i].absolutePath
+                    into ext.buildWebsiteDir + "/javadocs/" + module
+                }
+                ret.add(files[i]);
+            } else if ( files[i].getAbsolutePath().contains("build/javadoc")){
+
+                String[] s2 = files[i].getAbsolutePath().split("/");
+                String module = s2[s2.length-3];
+                copy {
+                    from files[i].absolutePath
+                    into buildWebsiteDir + "/javadocs/" + module
+                }
+                ret.add(files[i]);
+            }
+            else if (files[i].isDirectory() &&
+                    !files[i].isHidden()) {
+                        ret.addAll(copyJavadocPages(files[i],false));
+            }
+        }
+    }
+    return ret;
+    //search for build/docs/javadoc folders
+    //search for build/javadoc/flavorDebug/Release folders
+    //search for build/javadoc/debug/release folders
+}
+
+
+
+List<File> copyReports(File currentDir, boolean firstRun) {
+
+    List<File> ret = new ArrayList<>();
+    File[] files = currentDir.listFiles();
+    if (files != null) {
+        for (int i = 0; i < files.length; i++) {
+            if (firstRun && files[i].getAbsolutePath().endsWith("build"))
+                continue;
+                if (files[i].getAbsolutePath().endsWith("build/reports")) {
+
+                String[] s2 = files[i].getAbsolutePath().split("/");
+                String module = s2[s2.length-3];
+                //System.out.println("report " + files[i].getAbsolutePath() + " " + module);
+                copy {
+                    from files[i].absolutePath
+                    into ext.buildWebsiteDir + "/reports/" + module
+                }
+                ret.add(files[i]);
+            } else if (files[i].getAbsolutePath().contains("build/outputs")) {
+                String[] s2 = files[i].getAbsolutePath().split("/");
+                String module = s2[s2.length-3];
+               // System.out.println("report " + files[i].getAbsolutePath() + " " + module);
+                copy {
+                    from files[i].absolutePath
+                    into ext.buildWebsiteDir + "/reports/" + module
+                    include '*.html'
+                    include 'lint*/**'
+                }
+                ret.add(files[i]);
+
+            }
+            else if (files[i].isDirectory() &&
+                    !files[i].isHidden()) {
+                        ret.addAll(copyReports(files[i],false));
+                    }
+        }
+    }
+    return ret;
+    //search for build/docs/javadoc folders
+    //search for build/javadoc/flavorDebug/Release folders
+    //search for build/javadoc/debug/release folders
+}
