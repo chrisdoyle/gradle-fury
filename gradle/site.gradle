@@ -1,3 +1,7 @@
+import java.nio.charset.Charset
+import java.nio.file.Files
+import java.nio.file.Paths
+
 /**
  our attempt at a maven site plugin, which uses most of the stuff that maven's
 
@@ -5,7 +9,41 @@
 
  we'd love to reuse doxia, but it is a bit on the complex side and extracting it from maven was attempted
  and proved to be more difficult that writing one from scratch.
+
+ Heavily based on the work done by Paul Speed-2 @ filament
+ https://sourceforge.net/p/filament/code/HEAD/tree/trunk/site/build.gradle
+
+ http://maven.apache.org/skins/maven-fluido-skin/
+
+
  */
+
+
+buildscript{
+    repositories {
+        jcenter()
+        mavenCentral()
+        mavenLocal()
+    }
+    dependencies {
+        // https://mvnrepository.com/artifact/org.pegdown/pegdown
+        //classpath 'org.pegdown:pegdown:1.6.0'
+        classpath 'com.atlassian.commonmark:commonmark:0.7.0'
+        classpath 'com.atlassian.commonmark:commonmark-ext-gfm-tables:0.7.0'
+        classpath 'com.atlassian.commonmark:commonmark-ext-gfm-strikethrough:0.7.0'
+        classpath 'com.atlassian.commonmark:commonmark-ext-autolink:0.7.0'
+
+
+
+        classpath 'org.asciidoctor:asciidoctorj:1.5.4'
+    }
+}
+
+import org.commonmark.node.*;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer
+
+import java.text.SimpleDateFormat;
 
 ext.webSrcDir = "${rootDir}/src/site/"
 ext.buildWebsiteDir = "${rootDir}/build/site/"
@@ -13,10 +51,12 @@ ext.javadocsModules = new ArrayList<>();
 ext.reports = new ArrayList<>();
 
 
-task site (
+task site(group: "Gradle Fury Site Generation",
         description: 'Builds the web-site contents.' )  << {
     List<File> javadocs = copyJavadocPages(rootDir,true);
+
     List<File> reportsDocs = copyReports(rootDir,true);
+
 
     for (int i=0; i < javadocs.size(); i++){
         System.out.println(javadocs.get(i).getAbsolutePath());
@@ -25,8 +65,207 @@ task site (
         System.out.println(reportsDocs.get(i).getAbsolutePath());
     }
 
+    copyUserSiteSrc();
+
+    generateNavMenu(javadocs, reportsDocs);
+
+    prepareTemplate();
+
+    generateCannedContent(javadocs, reportsDocs);
 
 
+
+    convertContent();
+
+
+}
+def prepareTemplate(){
+    long time = System.currentTimeMillis();
+    project.ext.siteTemplate = "";
+    project.ext.siteTimestamp = time;
+
+    String header = readFile(ext.webSrcDir + "/template.html", Charset.defaultCharset());
+    header = preprocessContents(header);
+    String fork = getForkMe();
+    header = header.replace('${forkMeOnGitHub}', fork);
+
+    //${generatedMenu}
+
+    project.ext.siteTemplate = header;
+
+
+
+
+
+}
+def convertContent(){
+    processContent(new File(ext.buildWebsiteDir));
+
+}
+
+def processContent(File directory){
+
+    File f= directory;
+    File[] files = f.listFiles();
+    for (int i=0; i < files.length; i++){
+        if (files[i].isDirectory()){
+            //recurse
+            processContent(files[i]);
+        } else if (!files[i].isHidden() && files[i].isFile()){
+            processFile(files[i]);
+        }
+    }
+}
+
+def processFile(File file){
+    //read all contents
+    //process
+    long start = System.currentTimeMillis();
+    //write all back to the same file
+    //org.pegdown.PegDownProcessor pegDownProcessor = new org.pegdown.PegDownProcessor(org.pegdown.Extensions.);
+    org.asciidoctor.Asciidoctor asciidoctor = org.asciidoctor.Asciidoctor.Factory.create();
+    Map<String, Object> asciidoctorOptions = org.asciidoctor.OptionsBuilder.options().safe(
+            org.asciidoctor.SafeMode.SAFE)
+            .asMap();
+
+    String contents = readFile(file.getAbsolutePath(), Charset.defaultCharset());
+
+    contents = preprocessContents(contents);
+
+    if (file.getName().toLowerCase().endsWith(".md")) {
+
+        List<org.commonmark.Extension> extensions = new ArrayList<>();
+        extensions.add(org.commonmark.ext.gfm.tables.TablesExtension.create());
+        extensions.add(org.commonmark.ext.gfm.strikethrough.StrikethroughExtension.create());
+        extensions.add(org.commonmark.ext.autolink.AutolinkExtension.create());
+        Parser parser = Parser.builder().extensions(extensions).build();
+
+        Node document = parser.parse(contents);
+        HtmlRenderer renderer = HtmlRenderer.builder().build();
+        contents = renderer.render(document);  // "<p>This is <em>Sparta</em></p>\n"
+
+        String template = project.ext.siteTemplate;
+        contents=template.replace('${body}', contents);
+
+        String targetFileName = file.getAbsolutePath();
+        targetFileName = targetFileName.substring(0, targetFileName.lastIndexOf(".")) + ".html"
+
+        PrintWriter out = new PrintWriter(targetFileName);
+        out.println(contents);
+        out.close()
+        System.out.println("Transform as markdown " + file.getAbsolutePath() + " complete in " +(System.currentTimeMillis()-start) + "ms");
+        //file.delete();
+    }
+    /*else if (file.getName().toLowerCase().endsWith(".asciidoc")) {
+        System.out.println("Transform as asciidoc " + file.getAbsolutePath());
+        String contents = readFile(file.getAbsolutePath(), Charset.defaultCharset());
+        contents = asciidoctor.convert(contents,asciidoctorOptions);
+
+        //ok now we have docbook
+        String targetFileName = file.getAbsolutePath();
+        targetFileName = targetFileName.substring(targetFileName.lastIndexOf(".")) + ".html"
+        PrintWriter out = new PrintWriter(targetFileName);
+        out.println(contents);
+        out.close()
+        System.out.println("Transform complete in " +(System.currentTimeMillis()-start) + "ms");
+    }*/ else {
+        //no processing needed just output it
+        PrintWriter out = new PrintWriter(file.absolutePath);
+        out.println(contents);
+        out.println(contents);
+        out.close()
+    }
+
+
+
+}
+
+/**
+ * replaces variables ${something} with ext values
+ * @param content
+ * @return
+ */
+def preprocessContents(String content){
+
+    Properties p = new Properties();
+    p.load(new FileInputStream(rootDir.absolutePath + "/gradle.properties"));
+    def iterator = p.entrySet().iterator();
+    while (iterator.hasNext()){
+        def next = iterator.next();
+        content=content.replace('${' + next.getKey() + '}', next.getValue());
+    }
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+    content=content.replace('${currentYYYYMMDD}', sdf.format(new Date(project.ext.siteTimestamp)));
+
+    sdf = new SimpleDateFormat("yyyy-MM-dd");
+    content=content.replace('${currentYYYY-MM-DD}', sdf.format(new Date(project.ext.siteTimestamp)));
+
+
+    return content;
+}
+static String readFile(String path, Charset encoding)
+        throws IOException
+{
+    byte[] encoded = Files.readAllBytes(Paths.get(path));
+    return new String(encoded, encoding);
+}
+
+def generateNavMenu(List<File> javadocs, List<File> reports){
+
+
+}
+
+def generateCannedContent(List<File> javadocs, List<File> reports) {
+    /*
+    modules list
+    repositories
+    artifact list?
+    issue tracking
+    licenses
+    team
+    source repo
+    reports, might be better to tie these to specific modules?
+    java docs - do we even need separate pages for this?
+     */
+    StringBuilder javadocMarkdown = new StringBuilder();
+    javadocMarkdown.append("|Module \t|Javadocs \t|\n");
+    javadocMarkdown.append("|---|---|\n")
+    String rootdir = ext.buildWebsiteDir;
+    for (int i = 0; i < javadocs.size(); i++) {
+        File f = javadocs.get(i);
+        if (new File(f.getAbsolutePath() + "/index.html").exists()) {
+            String subpath = f.getAbsolutePath().replace(rootdir, "");
+            javadocMarkdown.append("|").append(f.getName()).append("\t|[Javadocs](").append(subpath + "/index.html").append(")\t|\n");
+        } else {
+            //we have variants to deal with
+            File[] variants = f.listFiles();
+            if (variants != null) {
+                for (int k = 0; k < variants.length; k++) {
+                    File variant = variants[k];
+                    if (new File(variant.getAbsolutePath() + "/index.html").exists()) {
+                        String subpath = variant.getAbsolutePath().replace(rootdir, "");
+                        javadocMarkdown.append("|").append(f.getName()).append("\t|[").append(variant.getName()).append("](").append(subpath+ "/index.html").append(")\t|\n");
+                    }
+                }
+            }
+        }
+    }
+    PrintWriter out = new PrintWriter(rootdir + "/javadoc.md");
+    out.println(javadocMarkdown.toString());
+    out.close()
+}
+def copyUserSiteSrc(){
+    copy {
+        from new File(ext.webSrcDir).absolutePath
+        into ext.buildWebsiteDir
+    }
+}
+
+/**
+ * find and replace for all supported variables
+ */
+def preprocessUserSiteContent(){
+    //TODO
 }
 
 List<File> copyJavadocPages(File currentDir, boolean firstRun) {
@@ -46,7 +285,7 @@ List<File> copyJavadocPages(File currentDir, boolean firstRun) {
                     from files[i].absolutePath
                     into ext.buildWebsiteDir + "/javadocs/" + module
                 }
-                ret.add(files[i]);
+                ret.add(new File(ext.buildWebsiteDir + "/javadocs/" + module));
             } else if ( files[i].getAbsolutePath().contains("build/javadoc")){
 
                 String[] s2 = files[i].getAbsolutePath().split("/");
@@ -55,7 +294,7 @@ List<File> copyJavadocPages(File currentDir, boolean firstRun) {
                     from files[i].absolutePath
                     into buildWebsiteDir + "/javadocs/" + module
                 }
-                ret.add(files[i]);
+                ret.add(new File(buildWebsiteDir + "/javadocs/" + module));
             }
             else if (files[i].isDirectory() &&
                     !files[i].isHidden()) {
@@ -112,4 +351,25 @@ List<File> copyReports(File currentDir, boolean firstRun) {
     //search for build/docs/javadoc folders
     //search for build/javadoc/flavorDebug/Release folders
     //search for build/javadoc/debug/release folders
+}
+
+def getForkMe(){
+    Properties p = new Properties();
+    p.load(new FileInputStream(rootDir.absolutePath + "/gradle.properties"));
+
+    //System.out.println(p.getProperty("site.forkMe.enable"));
+    //System.out.println(p.getProperty("pom.scm.url"));
+
+
+    if (p.containsKey("site.forkMe.enable") &&
+        p.getProperty("site.forkMe.enable").equalsIgnoreCase("true") &&
+        p.containsKey("pom.scm.url") &&
+        p.getProperty("pom.scm.url").contains("https://github.com")){
+        return "<a href=\"" + p.getProperty("pom.scm.url") + "\">\n" +
+                "    <img style=\"position: absolute; top: 0; right: 0; border: 0; z-index: 10000;\"\n" +
+                "    src=\"./img/forkme_right_gray_6d6d6d.png\"\n" +
+                "    alt=\"Fork me on GitHub\">\n" +
+                "    </a>";
+    }
+    return "";
 }
