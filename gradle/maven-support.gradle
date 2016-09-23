@@ -1945,8 +1945,7 @@ def tryDecrypt(String ciphertext){
         String text= decrypt(textToDecrypt, loadKey());
         return text;
     }catch (Exception ex){
-        logger.warn("Descryption failure - input text was not encrypted or encrypted with a different key," , ex)
-        throw ex;
+        logger.warn("Decryption failure - input text was not encrypted or encrypted with a different key," , ex)
     }
     return ciphertext
 }
