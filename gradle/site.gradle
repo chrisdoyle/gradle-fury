@@ -118,45 +118,46 @@ def processContent(File directory){
 }
 
 def processFile(File file){
-    //read all contents
-    //process
-    long start = System.currentTimeMillis();
-    //write all back to the same file
-    //org.pegdown.PegDownProcessor pegDownProcessor = new org.pegdown.PegDownProcessor(org.pegdown.Extensions.);
-    org.asciidoctor.Asciidoctor asciidoctor = org.asciidoctor.Asciidoctor.Factory.create();
+    if (file.getName().endsWith(".md") ) {
+        //read all contents
+        //process
+        long start = System.currentTimeMillis();
+        //write all back to the same file
+        //org.pegdown.PegDownProcessor pegDownProcessor = new org.pegdown.PegDownProcessor(org.pegdown.Extensions.);
+        /*org.asciidoctor.Asciidoctor asciidoctor = org.asciidoctor.Asciidoctor.Factory.create();
     Map<String, Object> asciidoctorOptions = org.asciidoctor.OptionsBuilder.options().safe(
             org.asciidoctor.SafeMode.SAFE)
             .asMap();
+*/
+        String contents = readFile(file.getAbsolutePath(), Charset.defaultCharset());
 
-    String contents = readFile(file.getAbsolutePath(), Charset.defaultCharset());
+        contents = preprocessContents(contents);
 
-    contents = preprocessContents(contents);
+        if (file.getName().toLowerCase().endsWith(".md")) {
 
-    if (file.getName().toLowerCase().endsWith(".md")) {
+            List<org.commonmark.Extension> extensions = new ArrayList<>();
+            extensions.add(org.commonmark.ext.gfm.tables.TablesExtension.create());
+            extensions.add(org.commonmark.ext.gfm.strikethrough.StrikethroughExtension.create());
+            extensions.add(org.commonmark.ext.autolink.AutolinkExtension.create());
+            Parser parser = Parser.builder().extensions(extensions).build();
 
-        List<org.commonmark.Extension> extensions = new ArrayList<>();
-        extensions.add(org.commonmark.ext.gfm.tables.TablesExtension.create());
-        extensions.add(org.commonmark.ext.gfm.strikethrough.StrikethroughExtension.create());
-        extensions.add(org.commonmark.ext.autolink.AutolinkExtension.create());
-        Parser parser = Parser.builder().extensions(extensions).build();
+            Node document = parser.parse(contents);
+            HtmlRenderer renderer = HtmlRenderer.builder().build();
+            contents = renderer.render(document);  // "<p>This is <em>Sparta</em></p>\n"
 
-        Node document = parser.parse(contents);
-        HtmlRenderer renderer = HtmlRenderer.builder().build();
-        contents = renderer.render(document);  // "<p>This is <em>Sparta</em></p>\n"
+            String template = project.ext.siteTemplate;
+            contents = template.replace('${body}', contents);
 
-        String template = project.ext.siteTemplate;
-        contents=template.replace('${body}', contents);
+            String targetFileName = file.getAbsolutePath();
+            targetFileName = targetFileName.substring(0, targetFileName.lastIndexOf(".")) + ".html"
 
-        String targetFileName = file.getAbsolutePath();
-        targetFileName = targetFileName.substring(0, targetFileName.lastIndexOf(".")) + ".html"
-
-        PrintWriter out = new PrintWriter(targetFileName);
-        out.println(contents);
-        out.close()
-        System.out.println("Transform as markdown " + file.getAbsolutePath() + " complete in " +(System.currentTimeMillis()-start) + "ms");
-        //file.delete();
-    }
-    /*else if (file.getName().toLowerCase().endsWith(".asciidoc")) {
+            PrintWriter out = new PrintWriter(targetFileName);
+            out.println(contents);
+            out.close()
+            System.out.println("Transform as markdown " + file.getAbsolutePath() + " complete in " + (System.currentTimeMillis() - start) + "ms");
+            //file.delete();
+        }
+        /*else if (file.getName().toLowerCase().endsWith(".asciidoc")) {
         System.out.println("Transform as asciidoc " + file.getAbsolutePath());
         String contents = readFile(file.getAbsolutePath(), Charset.defaultCharset());
         contents = asciidoctor.convert(contents,asciidoctorOptions);
@@ -169,14 +170,13 @@ def processFile(File file){
         out.close()
         System.out.println("Transform complete in " +(System.currentTimeMillis()-start) + "ms");
     }*/ else {
-        //no processing needed just output it
-        PrintWriter out = new PrintWriter(file.absolutePath);
-        out.println(contents);
-        out.println(contents);
-        out.close()
+            //no processing needed just output it
+            PrintWriter out = new PrintWriter(file.absolutePath);
+            out.println(contents);
+            out.close()
+        }
+
     }
-
-
 
 }
 
