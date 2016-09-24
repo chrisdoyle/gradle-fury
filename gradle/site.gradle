@@ -473,7 +473,36 @@ List<ReportsContainer> scanReports(List<String> reports){
                         }
                     }
 
-                }else if (test.getName().endsWith(".html")){
+                } else if (test.getName().equalsIgnoreCase("jacoco")){
+                    //get all .html files within the folder 'test' and add to the findbugs reports
+                    File rpt = new File(test.absolutePath + "/test/html/index.html");
+                    if (rpt.exists()) {
+                        String subpath = rpt.getAbsolutePath().replace(rootdir, "");
+                        ReportsContainer r = null;
+
+                        r = ReportsContainer.containsModuleReport(f.getName(), test.getName(), ret);
+
+                        if (r == null) {
+                            r = new ReportsContainer();
+                            r.module = f.getName();
+                            r.reportType = test.getName();
+
+                            Link l = new Link();
+                            l.text = test.getName()
+                            l.url = subpath;
+                            r.links.add(l);
+                            ret.add(r);
+                        } else {
+                            //report already exists, just add a new link
+                            Link l = new Link();
+                            l.text = test.getName()
+                            l.url = subpath;
+                            if (!Link.containsLink(r.links, l))
+                                r.links.add(l);
+                        }
+                    }
+
+                } else if (test.getName().endsWith(".html")){
 
                     String subpath = test.getAbsolutePath().replace(rootdir, "");
                     //these are typically

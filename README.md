@@ -418,7 +418,11 @@ mkdir src/site/
 Next, you'll want to grab all the files from gradle-fury's [src/site/](https://github.com/chrisdoyle/gradle-fury/tree/develop/src/site).
 Put those files in your `src/site/` folder.
 
-Next, edit `index.md`. This will be come your site's `index.html`, the first page people will look at it.
+Next, edit `index.md`. This will be come your site's `index.html`, the first page people will look at it. 
+
+**Note:** if you're looking for gradle-fury's index.md page, you won't find it. Instead, we copy this readme.md to the right place 
+and rename it.
+
 Most Github flavored markdown tags are supported. You can also any files put in `src/site/` will
 be included in the site. Any html or pdf files in the root `src/site/` will be auto-linked on the left hand site
 navigation menu.
@@ -429,13 +433,22 @@ Same goes for CI, distro management and issue tracking.
 
 ```bash
 ./gradlew install -Pprofile=javadoc,sources
-# if needed
+# if needed, for distribution projects
 ./gradlew distZip -Pprofile=javadoc,sources
-# if needed for on device android test and reports
+# if needed, for on device android test and reports
 ./gradlew cC
+# if needed, for findbugs
+./gradlew check
+# if needed, for jacoco
+./gradlew jacocoTestReport
+
+# finally, generate the site
 ./gradlew site
 ```
 
+The output goes to `rootDir/build/site/`
+
+In the future, we may add some extra tasks for zipping up the site, deploying to an ftp or something else.
 
 Acknowledgements
 ----------------

@@ -11,10 +11,6 @@ apply from: "${rootDir}/gradle/android-support.gradle"
 //Protip: apply the gradle fury plugin before setting up your android specific stuff (if needed)
 
 
-//not mandatory, we use these plugins to exercise the site plugin
-apply plugin: 'findbugs'
-apply plugin: "jacoco"
-
 
 
 dependencies {
@@ -30,26 +26,3 @@ dependencies {
 
 
 
-
-
-/*******************************************************/
-/*******************************************************/
-// more reporting stuff, not required but we use it to exercise the site plugin
-/*******************************************************/
-/*******************************************************/
-
-//gradlew check or findbugsMain should fire off findbugs
-
-tasks.withType(FindBugs) {
-    reports {
-        xml.enabled = false
-        html.enabled = true
-        //html.stylesheet resources.text.fromFile('config/xsl/findbugs-custom.xsl')
-    }
-}
-
-/*******************************************************/
-/*******************************************************/
-// END more reporting stuff, not required but we use it to exercise the site plugin
-/*******************************************************/
-/*******************************************************/
