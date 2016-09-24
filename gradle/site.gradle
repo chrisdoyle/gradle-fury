@@ -64,14 +64,6 @@ task site(group: "Gradle Fury Site Generation",
 
     List<File> reportsDocs = copyReports(rootDir,true);
 
-
-    for (int i=0; i < javadocs.size(); i++){
-        System.out.println(javadocs.get(i).getAbsolutePath());
-    }
-    for (int i=0; i < reportsDocs.size(); i++){
-        System.out.println(reportsDocs.get(i).getAbsolutePath());
-    }
-
     copyUserSiteSrc();
 
     generateNavMenu();
@@ -126,23 +118,17 @@ def processContent(File directory){
 }
 
 def processFile(File file){
-    if (file.getName().endsWith(".md") ) {
+    if (file.getName().endsWith(".md") || file.getName().endsWith(".asciidoc") ) {
         //read all contents
         //process
         long start = System.currentTimeMillis();
-        //write all back to the same file
-        //org.pegdown.PegDownProcessor pegDownProcessor = new org.pegdown.PegDownProcessor(org.pegdown.Extensions.);
-        /*org.asciidoctor.Asciidoctor asciidoctor = org.asciidoctor.Asciidoctor.Factory.create();
-    Map<String, Object> asciidoctorOptions = org.asciidoctor.OptionsBuilder.options().safe(
-            org.asciidoctor.SafeMode.SAFE)
-            .asMap();
-*/
+
         String contents = readFile(file.getAbsolutePath(), Charset.defaultCharset());
 
         contents = preprocessContents(contents);
 
         if (file.getName().toLowerCase().endsWith(".md")) {
-
+            //render it
             List<org.commonmark.Extension> extensions = new ArrayList<>();
             extensions.add(org.commonmark.ext.gfm.tables.TablesExtension.create());
             extensions.add(org.commonmark.ext.gfm.strikethrough.StrikethroughExtension.create());
@@ -154,9 +140,11 @@ def processFile(File file){
             HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
             contents = renderer.render(document);  // "<p>This is <em>Sparta</em></p>\n"
 
+            //inject into the template
             String template = project.ext.siteTemplate;
             contents = template.replace('${body}', contents);
 
+            //save it
             String targetFileName = file.getAbsolutePath();
             targetFileName = targetFileName.substring(0, targetFileName.lastIndexOf(".")) + ".html"
 
@@ -164,26 +152,29 @@ def processFile(File file){
             out.println(contents);
             out.close()
             System.out.println("Transform as markdown " + file.getAbsolutePath() + " complete in " + (System.currentTimeMillis() - start) + "ms");
-            //file.delete();
+            file.delete();
         }
-        /*else if (file.getName().toLowerCase().endsWith(".asciidoc")) {
-        System.out.println("Transform as asciidoc " + file.getAbsolutePath());
-        String contents = readFile(file.getAbsolutePath(), Charset.defaultCharset());
-        contents = asciidoctor.convert(contents,asciidoctorOptions);
+        else if (file.getName().toLowerCase().endsWith(".asciidoc")) {
+            org.asciidoctor.Asciidoctor asciidoctor = org.asciidoctor.Asciidoctor.Factory.create();
+            Map<String, Object> asciidoctorOptions = org.asciidoctor.OptionsBuilder.options().safe(
+                    org.asciidoctor.SafeMode.SAFE)
+                    .asMap();
+            //render it
+            contents = asciidoctor.convert(contents,asciidoctorOptions);
 
-        //ok now we have docbook
-        String targetFileName = file.getAbsolutePath();
-        targetFileName = targetFileName.substring(targetFileName.lastIndexOf(".")) + ".html"
-        PrintWriter out = new PrintWriter(targetFileName);
-        out.println(contents);
-        out.close()
-        System.out.println("Transform complete in " +(System.currentTimeMillis()-start) + "ms");
-    }*/ else {
-            //no processing needed just output it
-            PrintWriter out = new PrintWriter(file.absolutePath);
+            //inject into template
+            String template = project.ext.siteTemplate;
+            contents = template.replace('${body}', contents);
+
+            //save it
+            String targetFileName = file.getAbsolutePath();
+            targetFileName = targetFileName.substring(0,targetFileName.lastIndexOf(".")) + ".html"
+            PrintWriter out = new PrintWriter(targetFileName);
             out.println(contents);
             out.close()
+            System.out.println("Transform as asciidoc " + file.getAbsolutePath() + " complete in " + (System.currentTimeMillis() - start) + "ms");
         }
+        //TODO future ascii based documentation formats?
 
     }
 
@@ -225,7 +216,9 @@ def generateNavMenu(){
     File[] srcs =new File(ext.webSrcDir).listFiles(new FilenameFilter() {
         @Override
         boolean accept(File file, String name) {
-            if (name.toLowerCase().endsWith(".html") || name.toLowerCase().endsWith(".md") ||
+            if (name.toLowerCase().endsWith(".html") ||
+                    name.toLowerCase().endsWith(".md") ||
+                    name.toLowerCase().endsWith(".asciidoc") ||
                     name.toLowerCase().endsWith(".pdf"))
                 return true;
             return false;
@@ -290,7 +283,7 @@ def generateTeamList(){
 
                 for (def j = 0; hasProperty("pom.developers.developer.${i}.role.${j}"); ++j) {
 
-                    team.append(project.property("pom.developers.developer.${i}.role.${j}")).append(" ");
+                    team.append(project.property("pom.developers.developer.${i}.role.${j}")).append("<br>");
 
                 }
             }
@@ -561,22 +554,60 @@ def generateProjectInfo(){
 
     reportsMarkdown.append('## Project Information\n This document provides an overview of the various documents and links that are part of this project\'s general information. All of this content is automatically generated by [Gradle-Fury](https://github.com/chrisdoyle/gradle-fury) on behalf of the project.\n' +
             '\n\n#Modules\n\n');
-    reportsMarkdown.append("| Group | Module \t |  Version \t| Description \t|\n");
-    reportsMarkdown.append("| ------ \t | ------ \t| ---- \t| --- | \n")
+    reportsMarkdown.append("| Group | Module \t |  Version \t| Description \t| Type | Variants\n");
+    reportsMarkdown.append("| ------ \t | ------ \t| ---- \t| --- | --- | --- |\n")
     subprojects.each { p ->
         //note path has a : prefix
-        reportsMarkdown.append("| " +  p.group + " | " +p.path.substring(1) + " | " + p.version + " | " + p.description).append(" | \n");
-        //System.out.println("Group " + p.group  + p.path + ":" + p.version + " " + p.description);
-        //useless System.out.println("status " + p.status);
-        //System.out.println("version " + p.version);
-        //println p.path
+
+
+        boolean java=p.plugins.hasPlugin('java');
+        boolean distro = p.plugins.hasPlugin('distribution') || p.plugins.hasPlugin('application');
+        boolean war = p.plugins.hasPlugin('war');
+        boolean aar = p.plugins.hasPlugin('com.android.library')
+        boolean apk = p.plugins.hasPlugin('com.android.application')
+
+        String type = "";
+        if (war)
+            type+= " war ";
+        if (aar)
+            type += " aar ";
+        if (apk)
+            type += " apk ";
+        if (java)
+            type+=" jar "
+        if (distro){
+            type+=" zip "
+        }
+
+        reportsMarkdown.append("| " +  p.group + " | " +p.path.substring(1) + " | " + p.version + " | " + p.description);
+
+        reportsMarkdown.append(" | ").append(type).append(" | ");
+        //variants
+        if (apk || aar){
+            def variants
+
+            if (p.android.hasProperty('applicationVariants')) {
+                variants = p.android.applicationVariants;
+            } else if (p.android.hasProperty('libraryVariants')) {
+                variants = p.android.libraryVariants;
+            }
+            variants.all { variant ->
+
+                reportsMarkdown.append(variant.name).append("<br>");
+            }
+
+        }
+
+
+        reportsMarkdown.append("\n");
+
     }
 
 
 
 
     reportsMarkdown.append("\n\n");
-    out = new PrintWriter(rootdir + "/project-license.md");
+    out = new PrintWriter(rootdir + "/project-info.md");
     out.println(reportsMarkdown.toString());
     out.close()
 }
@@ -605,7 +636,7 @@ def generateRepositories(){
     StringBuilder reportsMarkdown = new StringBuilder();
 
     reportsMarkdown.append('## Dependency Repositories\n This document provides a listing of repositories this project uses for resolving dependencies. It may be useful to you if you use any of this project\'s dependencies within your own project.\n');
-    reportsMarkdown.append('\n\n#Repositories\n\n');
+    reportsMarkdown.append('\n\n## Repositories\n\n');
     reportsMarkdown.append("| id | Name \t |  Url |\n");
     reportsMarkdown.append("| ------ \t | ------ \t| ---- \t| \n")
     project.repositories.each {
@@ -692,6 +723,7 @@ def generateLicenses(){
 
 def copyUserSiteSrc(){
     copy {
+
         from new File(ext.webSrcDir).absolutePath
         into ext.buildWebsiteDir
     }

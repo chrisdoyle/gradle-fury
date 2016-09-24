@@ -1,0 +1,86 @@
+Apache jUDDI Guide
+==================
+:doctype: book
+:docinfo:
+
+Why is this here?
+-----------------
+This page was taken as an example on how to include an asciidoc file into the gradle-fury site plugin
+
+
+[dedication]
+Dedication
+----------
+We'd like to dedicate this guide to Steve Viens and Andy Cutright who started this project back in 2003.
+
+[preface]
+Preface
+-------
+The jUDDI project maintains a UDDIv3 registry that can be deployed to most modern JEE application servers. The jUDDI project is part of the Apache Software Foundation and encourages participation. It is easy to participate and if you discover a simple typo or would like to contribute to this guide in general please read the README page (add link).
+
+:numbered!:
+
+////
+/* commenting out till we need it */
+[appendix]
+Example Appendix
+----------------
+One or more optional appendixes go here at section level 1.
+
+Appendix Sub-section
+~~~~~~~~~~~~~~~~~~~
+Sub-section body.
+////
+
+[bibliography]
+Bibliography
+------------
+
+[bibliography]
+.Books
+- [[[graham-Davis-et-all]]] Steve Graham, Doug Davis et all.
+'Building Web Services with Java - Making sense of XML, SOAP, WSDL, and UDDI'. Second Edition. Sams Publishing. 2005.
+ISBN 0-672-32641-8.
+- [[[stam-oree]]] Kurt Stam, Alex O'Ree et all.
+'jUDDI Client and GUI Guide'. 2014.
+
+[bibliography]
+.Articles
+- [[[uddi-v3]]] OASIS. 'https://www.oasis-open.org/standards#uddiv3.0.2'. 2003.
+
+[bibliography]
+.WebSites
+- [[[uddi-xml-org]]] UDDI XML.org Editorial Board. 'http://uddi.xml.org/'. 2014.
+- [[[uddi-oasis-open-org]]] OASIS. 'https://www.oasis-open.org/standards#uddiv3.0.2'. 2003.
+
+
+////
+/* commenting out till we need it */
+[glossary]
+Example Glossary
+----------------
+Glossaries are optional. Glossaries entries are an example of a style
+of AsciiDoc labeled lists.
+
+[glossary]
+A glossary term::
+The corresponding (indented) definition.
+
+A second glossary term::
+The corresponding (indented) definition.
+
+
+[colophon]
+Example Colophon
+----------------
+Text at the end of a book describing facts about its production.
+
+////
+
+[index]
+Index
+-----
+////////////////////////////////////////////////////////////////
+The index is normally left completely empty, it's contents being
+generated automatically by the DocBook toolchain.
+////////////////////////////////////////////////////////////////

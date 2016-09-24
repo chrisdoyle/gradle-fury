@@ -1,5 +1,3 @@
-Note: There may be some strong language on this site. Discretion advised.
-
 # gradle-fury
 
 *"Before I could pull the trigger, I was hit by lightning and bitten by a cobra. I blacked out, and
@@ -13,7 +11,9 @@ Purpose
 -------
 
 An alternative Gradle helper to publish multi-flavored Android artifacts to local and remote Maven
-repositories with pretty POM files using simple property configuration.
+repositories with pretty POM files using simple property configuration. It also provides a wide
+variety of things that Maven provides out of the box, in gradle, such as encrypted credentials and
+the maven site plugin.
 
 Why use Gradle-Fury
 -------------------
@@ -32,7 +32,9 @@ Master: [![Build Status](https://travis-ci.org/chrisdoyle/gradle-fury.svg?branch
 
 Requirements
 ------------
+Requirements for using Gradle-Fury
 
+* JDK 7
 * Gradle 2+
 * For Android support, gradle android plugin v1.3.0 or higher, we test using a variety of configurations. See the [Travis build matrix](https://github.com/chrisdoyle/gradle-fury/blob/develop/.travis.yml)
 * For digital signature support, GPG must be installed on your computer. We test with gnugpg.
@@ -388,6 +390,51 @@ Then you'll have to manually edit local.properties to insert your cipher text.
 * Items marked as not mapped are not referenced in the pom. Pom's are 
 generally used for releases, such as, items specific to a scope, such as
 'debugCompile' aren't useful since it won't be in the release version. 
+
+
+## Maven Site Plugin
+
+Well it's not exactly the Maven Site Plugin, but it's our version of it. It's pretty darn close.
+It uses theming inspired by [Apache Fluido](http://maven.apache.org/skins/maven-fluido-skin/) and is loosely based
+on the work Paul Speed-2 @ filament did over [here](https://sourceforge.net/p/filament/code/HEAD/tree/trunk/site/build.gradle).
+Instread of the APT based sites, we opted for a simpler solution, a singluar page template 
+which is then merged with generated content and your content using Markdown and the
+[Common Mark](https://github.com/atlassian/commonmark-java) renderer. We also
+looked at [Pegdown](https://github.com/sirthias/pegdown) but ran into performance issues.
+[Asciidoc](https://github.com/asciidoctor/asciidoctorj)/docbook
+ 
+### Make the site
+
+Before making the site, you should run all your tests and any gradle tasks that generate reports.
+If they were't created first, they won't be included with site generation.
+
+Also before making, you need to make some directories and files.
+
+```bash
+mkdir src
+mkdir src/site/
+```
+
+Next, you'll want to grab all the files from gradle-fury's [src/site/](https://github.com/chrisdoyle/gradle-fury/tree/develop/src/site).
+Put those files in your `src/site/` folder.
+
+Next, edit `index.md`. This will be come your site's `index.html`, the first page people will look at it.
+Most Github flavored markdown tags are supported. You can also any files put in `src/site/` will
+be included in the site. Any html or pdf files in the root `src/site/` will be auto-linked on the left hand site
+navigation menu.
+
+We also took some liberties from the maven-site-plugin. Many of the pages it generates can be reduced to just a link.
+For instance, the location of the source (do we really need an entire web page that only shows the link to the source code?). 
+Same goes for CI, distro management and issue tracking.
+
+```bash
+./gradlew install -Pprofile=javadoc,sources
+# if needed
+./gradlew distZip -Pprofile=javadoc,sources
+# if needed for on device android test and reports
+./gradlew cC
+./gradlew site
+```
 
 
 Acknowledgements

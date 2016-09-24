@@ -52,4 +52,18 @@ subprojects {
 //see https://github.com/chrisdoyle/gradle-fury/issues/67
 //apply from 'https://raw.githubusercontent.com/chrisdoyle/gradle-fury/master/gradle/encryption.gradle'
 apply from: "${rootDir}/gradle/encryption.gradle"
+
+//this is the gradle-fury site plugin, very similar to the maven site plugin
+//apply from 'https://raw.githubusercontent.com/chrisdoyle/gradle-fury/master/gradle/site.gradle'
 apply from: "${rootDir}/gradle/site.gradle"
+
+
+//this task is a gradle-fury specific thing, since we want to reuse the project readme as the homepage
+task copyReadme() << {
+    copy{
+        from rootDir.absolutePath + "/README.md"
+        into rootDir.absolutePath + "/src/site/"
+        rename ("README.md", "index.md")
+    }
+}
+site.dependsOn copyReadme
