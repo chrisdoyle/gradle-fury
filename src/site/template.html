@@ -74,7 +74,8 @@ ${forkMeOnGitHub}
                         <a href="index.html"><span class="none"></span>Introduction</a>
                     </li>
 
-                    <!-- user generated menu goes here -->
+                    <!-- user generated menu goes here, basically any additional html or markdown files
+                    from src/site are auto linked here-->
                     ${generatedMenu}
 
                     <li class="nav-header">Project Documentation</li>
@@ -85,7 +86,6 @@ ${forkMeOnGitHub}
                             <span class="icon-chevron-down"></span>
                             Project Information</a>
                         <ul class="nav nav-list">
-<!-- site.name -->
 
                             <li>
 
@@ -96,7 +96,7 @@ ${forkMeOnGitHub}
 
                             <li>
 
-                                <a href="source-repository.html" title="Source Repository">
+                                <a href="${pom.scm.developerConnection}" title="Source Repository">
                                     <span class="none"></span>
                                     Source Repository</a>
                             </li>
@@ -107,7 +107,7 @@ ${forkMeOnGitHub}
                                     <span class="none"></span>
                                     Issue Tracking</a>
                             </li>
-
+<!-- maybe in the future
                             <li>
 
                                 <a href="mail-lists.html" title="Mailing Lists">
@@ -128,24 +128,24 @@ ${forkMeOnGitHub}
                                     <span class="none"></span>
                                     Dependencies</a>
                             </li>
-
+-->
                             <li>
 
                                 <a href="${pom.ciManagement.url}" title="Continuous Integration">
                                     <span class="none"></span>
                                     Continuous Integration</a>
                             </li>
-
+<!--
                             <li>
 
                                 <a href="plugins.html" title="Project Plugins">
                                     <span class="none"></span>
                                     Project Plugins</a>
                             </li>
-
+-->
                             <li>
 
-                                <a href="distribution-management.html"
+                                <a href="${pom.distributionManagement.site.url}"
                                    title="Distribution Management">
                                     <span class="none"></span>
                                     Distribution Management</a>

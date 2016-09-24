@@ -1,3 +1,5 @@
+import com.sun.xml.internal.ws.util.StringUtils
+
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -32,6 +34,7 @@ buildscript{
         classpath 'com.atlassian.commonmark:commonmark-ext-gfm-tables:0.7.0'
         classpath 'com.atlassian.commonmark:commonmark-ext-gfm-strikethrough:0.7.0'
         classpath 'com.atlassian.commonmark:commonmark-ext-autolink:0.7.0'
+        classpath 'org.apache.commons:commons-lang3:3.4'
 
         //no go classpath 'org.commonjava.googlecode.markdown4j:markdown4j:2.2-cj-1.1'
 
@@ -69,7 +72,7 @@ task site(group: "Gradle Fury Site Generation",
 
     copyUserSiteSrc();
 
-    generateNavMenu(javadocs, reportsDocs);
+    generateNavMenu();
 
     prepareTemplate();
 
@@ -92,6 +95,7 @@ def prepareTemplate(){
     header = header.replace('${forkMeOnGitHub}', fork);
 
     //${generatedMenu}
+    header = header.replace('${generatedMenu}', project.ext.siteMenu);
 
     project.ext.siteTemplate = header;
 
@@ -212,10 +216,45 @@ static String readFile(String path, Charset encoding)
     return new String(encoded, encoding);
 }
 
-def generateNavMenu(List<File> javadocs, List<File> reports){
+def generateNavMenu(){
+    //TODO
 
+    StringBuilder sb = new StringBuilder();
+    File[] srcs =new File(ext.webSrcDir).listFiles(new FilenameFilter() {
+        @Override
+        boolean accept(File file, String name) {
+            if (name.toLowerCase().endsWith(".html") || name.toLowerCase().endsWith(".md") ||
+                    name.toLowerCase().endsWith(".pdf"))
+                return true;
+            return false;
+        }
+    });
+    if (srcs!=null){
+        for (int i=0; i < srcs.length; i++){
+            String file = srcs[i].getName();
+            if (file.equalsIgnoreCase("template.html"))
+                continue;
+            if (file.equalsIgnoreCase("index.md"))
+                continue;
+            //trim off the extension
+            file = file.substring(0,file.lastIndexOf("."));
+            String name = file;
+            name = name.replace("-", " ");
+            name = org.apache.commons.lang3.StringUtils.join(
+                    org.apache.commons.lang3.StringUtils.splitByCharacterTypeCamelCase(name),' ');
+            name = org.apache.commons.lang3.StringUtils.capitalize(name);
+            sb.append(" <li>\n" +
+                    "\n" +
+                    "                                <a href=\"" + file + ".html\" title=\"" + name + "\">\n" +
+                    "                                    <span class=\"none\"></span>\n" +
+                    "                                    " + name + "</a>\n" +
+                    "                            </li>" );
+        }
+    }
+    project.ext.siteMenu = sb.toString();
 
 }
+
 
 def generateTeamList(){
     PrintWriter out;
@@ -229,7 +268,7 @@ def generateTeamList(){
             'The team is comprised of Members and Contributors. Members have direct access to the source of a project and actively evolve the code-base. Contributors improve the project through submission of patches and suggestions to the Members. The number of Contributors to the project is unbounded. Get involved today. All contributions to the project are greatly appreciated.\n\n');
 
     team.append("## Members\n\n" +
-            "The following is a list of developers with commit privileges that have directly contributed to the project in one way or another.");
+            "The following is a list of developers with commit privileges that have directly contributed to the project in one way or another.\n\n");
 
 
     if (hasProperty("pom.developers.developer.0.id")) {
@@ -267,6 +306,7 @@ def generateTeamList(){
     out.close()
 }
 
+
 def generateJavadocContent(List<File> javadocs){
 
     PrintWriter out;
@@ -302,6 +342,7 @@ def generateJavadocContent(List<File> javadocs){
     out.println(javadocMarkdown.toString());
     out.close()
 }
+
 
 def generateReportList(List<File> reports){
 
@@ -359,15 +400,17 @@ def generateReportList(List<File> reports){
     out.println(reportsMarkdown.toString());
     out.close()
 }
+
+
 def generateCannedContent(List<File> javadocs, List<File> reports) {
     /*
-    modules list
-    repositories
-    artifact list?
+    TODO modules list
+    TODO repositories
+    TODO artifact list?
     done  issue tracking
-    licenses
+    TODO licenses
     done team
-    source repo
+    done source repo
     done  ci/integration
     done reports, might be better to tie these to specific modules?
 
@@ -382,6 +425,8 @@ def generateCannedContent(List<File> javadocs, List<File> reports) {
 
 
 }
+
+
 def copyUserSiteSrc(){
     copy {
         from new File(ext.webSrcDir).absolutePath
@@ -482,6 +527,7 @@ List<File> copyReports(File currentDir, boolean firstRun) {
     //search for build/javadoc/flavorDebug/Release folders
     //search for build/javadoc/debug/release folders
 }
+
 
 def getForkMe(){
     Properties p = new Properties();
