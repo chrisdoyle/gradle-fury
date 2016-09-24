@@ -447,13 +447,48 @@ def reflect(object) {
 }
 
 
+def generateRepositories(){
+
+    //dependency-repos
+
+    PrintWriter out;
+    String rootdir = ext.buildWebsiteDir;
+
+
+    //reportsMarkdown docs
+    StringBuilder reportsMarkdown = new StringBuilder();
+
+    reportsMarkdown.append('## Dependency Repositories\n This document provides a listing of repositories this project uses for resolving dependencies. It may be useful to you if you use any of this project\'s dependencies within your own project.\n');
+    reportsMarkdown.append('\n\n#Repositories\n\n');
+    reportsMarkdown.append("| id | Name \t |  Url |\n");
+    reportsMarkdown.append("| ------ \t | ------ \t| ---- \t| \n")
+    project.repositories.each {
+        if (!it.url.toString().startsWith("file:/")) {
+            reportsMarkdown.append(it.name).append(" | ");
+            reportsMarkdown.append( it.name).append(" | ");
+            reportsMarkdown.append(it.url).append(" \n");
+        }
+
+    }
+
+
+
+
+    reportsMarkdown.append("\n\n");
+    out = new PrintWriter(rootdir + "/dependency-repos.md");
+    out.println(reportsMarkdown.toString());
+    out.close()
+}
+
+
+
 def generateCannedContent(List<File> javadocs, List<File> reports) {
     /*
     done modules list
     TODO repositories
     done artifact list?
     done  issue tracking
-    TODO licenses
+    done licenses
     done team
     done source repo
     done  ci/integration
@@ -467,6 +502,7 @@ def generateCannedContent(List<File> javadocs, List<File> reports) {
     generateJavadocContent(javadocs);
     generateReportList(reports);
     generateLicenses();
+    generateRepositories();
 
 
 
