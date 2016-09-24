@@ -267,13 +267,13 @@ def generateTeamList(){
 
 
     if (hasProperty("pom.developers.developer.0.id")) {
-        team.append("| Image | Id | Name | Email | Organization | Roles \n");
-        team.append("| --- | --- | --- | --- | --- | --- |\n")
+        team.append("| Id | Name | Email | Organization | Roles \n");
+        team.append("| --- | --- | --- | --- | --- |\n")
 
         // parse the roles of each developer
         for (def i = 0; hasProperty("pom.developers.developer.${i}.id"); ++i) {
 
-            team.append("| no image | ").append(project.property("pom.developers.developer.${i}.id"));
+            team.append("| ").append(project.property("pom.developers.developer.${i}.id"));
             team.append("| ").append(project.property("pom.developers.developer.${i}.name"));
             team.append("| ").append(project.property("pom.developers.developer.${i}.email"));
             team.append("| ").append(project.property("pom.developers.developer.${i}.organization"));
@@ -644,7 +644,7 @@ List<ReportsContainer> scanReports(List<String> reports){
                                     if (vars != null) {
                                         for (int x = 0; x < vars.length; x++) {
                                             File idx = new File(vars[x].absolutePath + "/index.html");
-                                            System.out.println('----' + vars[x].absolutePath);
+                                            //System.out.println('----' + vars[x].absolutePath);
                                             if (idx.exists()) {
 
                                                 String subpath = idx.getAbsolutePath().replace(rootdir, "");
@@ -841,12 +841,11 @@ def generateLicenses(){
     StringBuilder team = new StringBuilder();
 
     team.append('## Overview\n Typically the licenses listed for the project are that of the project itself, and not of dependencies.\n' +
-            '\n##Project License' +
-            'The team is comprised of Members and Contributors. Members have direct access to the source of a project and actively evolve the code-base. Contributors improve the project through submission of patches and suggestions to the Members. The number of Contributors to the project is unbounded. Get involved today. All contributions to the project are greatly appreciated.\n\n');
+            '\n##Project License\n\n');
 
 
     if (hasProperty("pom.licenses.license.0.name")) {
-        team.append("| Licnse | Link \t |  Distribution |\n");
+        team.append("| License | Link \t |  Distribution |\n");
         team.append("| ------ \t | ------ \t| ---- |\n")
         for (def i = 0; hasProperty("pom.licenses.license.${i}.name"); ++i) {
 
