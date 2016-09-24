@@ -109,17 +109,19 @@ ext.gpgPassphrase = (
                 ? GPG_PASSPHRASE
                 : ""
 );
-ext.gpgPassphrase2 = (
+
+if (mightBeEncrypted(ext.gpgPassphrase)){
+    ext.gpgPassphrase=tryDecrypt(ext.gpgPassphrase);
+}
+
+ext.gpgPassphraseNew = (
         hasProperty('signing.passPhrase')
                 ? project.property("signing.passPhrase")
                 : ""
 );
 
-if (mightBeEncrypted(ext.gpgPassphrase)){
-    ext.gpgPassphrase=tryDecrypt(ext.gpgPassphrase);
-}
-if (mightBeEncrypted(ext.gpgPassphrase2)){
-    ext.gpgPassphrase2=tryDecrypt(ext.gpgPassphrase2);
+if (mightBeEncrypted(ext.gpgPassphraseNew)){
+    ext.gpgPassphraseNew=tryDecrypt(ext.gpgPassphraseNew);
 }
 
 ext.gpgisInteractive = (
@@ -464,9 +466,21 @@ afterEvaluate { project ->
                 //classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
                 failOnError false
 
-                // FIXME :: @chrisdoyle :: this assumes Java 7...
-                options.links 'http://docs.oracle.com/javase/7/docs/api/'
-                options.links("http://developer.android.com/reference/");
+                if (hasProperty('compileJava.sourceCompatibility') &&
+                        project.property("compileJava.sourceCompatibility").equals("1.5")) {
+                    options.links 'http://java.sun.com/j2se/1.5.0/docs/guide/javadoc/doclet/spec'
+                    options.links 'http://java.sun.com/j2se/1.5/docs/api/'
+                } else if (hasProperty('compileJava.sourceCompatibility') &&
+                        project.property("compileJava.sourceCompatibility").equals("1.6")) {
+                    options.links 'http://docs.oracle.com/javase/6/docs/api/'
+                } else if (hasProperty('compileJava.sourceCompatibility') &&
+                        project.property("compileJava.sourceCompatibility").equals("1.7")) {
+                    options.links 'http://docs.oracle.com/javase/7/docs/api/'
+                } else if (hasProperty('compileJava.sourceCompatibility') &&
+                        project.property("compileJava.sourceCompatibility").equals("1.8")) {
+                    options.links 'http://docs.oracle.com/javase/8/docs/api/'
+                }
+
                 if (isGraphvizDotAvailable()) {
 
                     options {
@@ -480,10 +494,20 @@ afterEvaluate { project ->
                         addStringOption('-collpackages=java.util.*')
                         addStringOption('-nodefontsize=9')
                         addStringOption('-nodefontpackagesize=7')
-                        addStringOption('-link=http://java.sun.com/j2se/1.5.0/docs/guide/javadoc/doclet/spec')
-                        addStringOption('-link=http://java.sun.com/j2se/1.5/docs/api')
-                        addStringOption('-link=http://docs.oracle.com/javase/7/docs/api/')
-                        addStringOption('-link=http://developer.android.com/reference/')
+                        if (hasProperty('compileJava.sourceCompatibility') &&
+                                project.property("compileJava.sourceCompatibility").equals("1.5")) {
+                            addStringOption('-link=http://java.sun.com/j2se/1.5.0/docs/guide/javadoc/doclet/spec')
+                            addStringOption('-link=http://java.sun.com/j2se/1.5/docs/api')
+                        } else if (hasProperty('compileJava.sourceCompatibility') &&
+                                project.property("compileJava.sourceCompatibility").equals("1.6")) {
+                            addStringOption('-link=http://docs.oracle.com/javase/6/docs/api/')
+                        } else if (hasProperty('compileJava.sourceCompatibility') &&
+                                project.property("compileJava.sourceCompatibility").equals("1.7")) {
+                            addStringOption('-link=http://docs.oracle.com/javase/7/docs/api/')
+                        } else if (hasProperty('compileJava.sourceCompatibility') &&
+                                project.property("compileJava.sourceCompatibility").equals("1.8")) {
+                            addStringOption('-link=http://docs.oracle.com/javase/8/docs/api/')
+                        }
                     }
                 }
                 options {
@@ -545,8 +569,21 @@ afterEvaluate { project ->
 //                      classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
 //                      classpath += variants.toList().first().javaCompile.classpath
 
+                    if (hasProperty('compileJava.sourceCompatibility') &&
+                            project.property("compileJava.sourceCompatibility").equals("1.5")) {
+                        options.links 'http://java.sun.com/j2se/1.5.0/docs/guide/javadoc/doclet/spec'
+                        options.links 'http://java.sun.com/j2se/1.5/docs/api/'
+                    } else if (hasProperty('compileJava.sourceCompatibility') &&
+                            project.property("compileJava.sourceCompatibility").equals("1.6")) {
+                        options.links 'http://docs.oracle.com/javase/6/docs/api/'
+                    } else if (hasProperty('compileJava.sourceCompatibility') &&
+                            project.property("compileJava.sourceCompatibility").equals("1.7")) {
+                        options.links 'http://docs.oracle.com/javase/7/docs/api/'
+                    } else if (hasProperty('compileJava.sourceCompatibility') &&
+                            project.property("compileJava.sourceCompatibility").equals("1.8")) {
+                        options.links 'http://docs.oracle.com/javase/8/docs/api/'
+                    }
                     options {
-                        links "http://docs.oracle.com/javase/7/docs/api/"
                         linksOffline("http://d.android.com/reference",
                                 "${project.android.sdkDirectory}/docs/reference")
                         setMemberLevel(JavadocMemberLevel.PACKAGE)
@@ -567,9 +604,20 @@ afterEvaluate { project ->
                             addStringOption('-collpackages=java.util.*')
                             addStringOption('-nodefontsize=9')
                             addStringOption('-nodefontpackagesize=7')
-                            addStringOption('-link=http://java.sun.com/j2se/1.5.0/docs/guide/javadoc/doclet/spec')
-                            addStringOption('-link=http://java.sun.com/j2se/1.5/docs/api')
-                            addStringOption('-link=http://docs.oracle.com/javase/7/docs/api/')
+                            if (hasProperty('compileJava.sourceCompatibility') &&
+                                 project.property("compileJava.sourceCompatibility").equals("1.5")) {
+                                addStringOption('-link=http://java.sun.com/j2se/1.5.0/docs/guide/javadoc/doclet/spec')
+                                addStringOption('-link=http://java.sun.com/j2se/1.5/docs/api')
+                            } else if (hasProperty('compileJava.sourceCompatibility') &&
+                                    project.property("compileJava.sourceCompatibility").equals("1.6")) {
+                                addStringOption('-link=http://docs.oracle.com/javase/6/docs/api/')
+                            } else if (hasProperty('compileJava.sourceCompatibility') &&
+                                    project.property("compileJava.sourceCompatibility").equals("1.7")) {
+                                addStringOption('-link=http://docs.oracle.com/javase/7/docs/api/')
+                            } else if (hasProperty('compileJava.sourceCompatibility') &&
+                                project.property("compileJava.sourceCompatibility").equals("1.8")) {
+                                addStringOption('-link=http://docs.oracle.com/javase/8/docs/api/')
+                            }
                             addStringOption('-link=http://developer.android.com/reference/')
                         }
                     }
@@ -1383,10 +1431,10 @@ ext.signFile = { file ->
         arguments.add("--passphrase");
         arguments.add(ext.gpgPassphrase);
     }
-    if (ext.gpgPassphrase2!=null && !"".equalsIgnoreCase(ext.gpgPassphrase2)){
+    if (ext.gpgPassphraseNew!=null && !"".equalsIgnoreCase(ext.gpgPassphraseNew)){
         arguments.add("--batch");
         arguments.add("--passphrase");
-        arguments.add(ext.gpgPassphrase2);
+        arguments.add(ext.gpgPassphraseNew);
     }
     if (ext.gpgSecretKeyRingFile!=null && !"".equalsIgnoreCase(ext.gpgSecretKeyRingFile)){
         arguments.add("--secret-keyring");
