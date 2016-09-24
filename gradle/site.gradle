@@ -348,17 +348,93 @@ def generateJavadocContent(List<File> javadocs){
 
 def generateReportList(List<File> reports){
 
+
+    //TODO fixme, a certain level deep requires the parent path to identify the report type
+    //may need two passes to group things together and sort?
     PrintWriter out;
     String rootdir = ext.buildWebsiteDir;
-
+//TODO special handling for findbugs and/or jacoco?
 
     //reportsMarkdown docs
     StringBuilder reportsMarkdown = new StringBuilder();
 
-    reportsMarkdown.append('## Project Reports\n Here\'s all the Reports that were generated during the build for the project ${site.name}\n\n');
-    reportsMarkdown.append("| Module \t | Report \t| Link \t|\n");
-    reportsMarkdown.append("| ------ \t | ------ \t| ---- \t|\n")
+    reportsMarkdown.append('## Project Reports\n Here\'s all the Reports that were generated during the build for the project [${site.name}](${pom.url})\n\n');
+    reportsMarkdown.append("| Module \t | Report Type\t| Link \t|\n");
+    reportsMarkdown.append("| ------ \t | ------     \t| ---- \t|\n")
 
+    List<ReportsContainer> rpts = scanReports(reports);
+    for (int i=0; i < rpts.size(); i++){
+
+        ReportsContainer r = rpts.get(i);
+        reportsMarkdown.
+                append("| ").
+                append(r.module).
+                append(" | ").
+                append(org.apache.commons.lang3.StringUtils.capitalize(r.reportType)).
+                append(" \t| ");
+        for (int k=0; k < r.links.size(); k++){
+            reportsMarkdown.
+                    append("[").
+                    append(org.apache.commons.lang3.StringUtils.capitalize(r.links.get(k).text)).
+                    append("](").
+                    append(r.links.get(k).url).
+                    append(") ");
+        }
+        reportsMarkdown.append("| \n");
+
+    }
+
+    reportsMarkdown.append("\n\n");
+    out = new PrintWriter(rootdir + "/reports.md");
+    out.println(reportsMarkdown.toString());
+    out.close()
+}
+
+
+class ReportsContainer{
+    String module;
+    String reportType;
+    List<Link> links = new ArrayList<>();
+
+
+    static ReportsContainer containsModuleReport(String module, String reportType, List<ReportsContainer> items){
+        for (int i=0; i < items.size(); i++){
+            if (items.get(i).module.equalsIgnoreCase(module) &&
+                    items.get(i).reportType.equalsIgnoreCase(reportType))
+                return items.get(i);
+
+        }
+        return null;
+    }
+
+}
+
+class Link{
+    String text;
+    String url;
+    public String toString(){
+        return "Link: " + text + " " + url;
+    }
+    public static boolean containsLink(List<Link> links,  Link newlink){
+        if (links==null || newlink==null)
+            return false;
+        for (int i=0; i < links.size(); i++){
+            if (links.get(i).text.equalsIgnoreCase(newlink.text) &&
+                links.get(i).url.equalsIgnoreCase(newlink.url))
+                return true;
+        }
+        return false;
+    }
+}
+
+/**
+ * this atrocious bit of code is necessary because gradle has 0 governance for storing reports
+ * @param reports
+ * @return
+ */
+List<ReportsContainer> scanReports(List<String> reports){
+    List<ReportsContainer> ret = new ArrayList<>();
+    String rootdir = ext.buildWebsiteDir;
     for (int i = 0; i < reports.size(); i++) {
         File f = reports.get(i);
         //f is the module name
@@ -369,25 +445,99 @@ def generateReportList(List<File> reports){
                 File test = report[k];
 
                 if (test.getName().endsWith(".html")){
-                    //found a test artifact
+
                     String subpath = test.getAbsolutePath().replace(rootdir, "");
-                    reportsMarkdown.append("| ").append(f.getName()).append(" | ").
-                            append(test.getName().replace(".html","")).append(" \t| [").append(test.getName()).append("](").append(subpath).append(") \t |\n");
-                }
-                if (test.isDirectory() && new File(test.getAbsolutePath() + "/index.html").exists()) {
+                    //these are typically
+                    //apk lint reports or any report that just dumps itself in the build/repeorts file, how rude
+                    ReportsContainer r =null;
+                    if (test.getName().contains("lint-")) {
+                        r = ReportsContainer.containsModuleReport(f.getName(), "Lint", ret);
+                    } else {
+                        r = ReportsContainer.containsModuleReport(f.getName(), test.getName(), ret);
+                    }
+                    if (r==null){
+                        r = new ReportsContainer();
+                        r.module = f.getName();
+                        if (test.getName().contains("lint-")) {
+                            r.reportType = "Lint";
+                        } else {
+                            r.reportType = test.getName();
+                        }
+                        Link l = new Link();
+                        l.text = test.getName().replace(".html","");
+                        l.url =subpath;
+                        r.links.add(l);
+                        ret.add(r);
+                    } else {
+                        //report already exists, just add a new link
+                        Link l = new Link();
+                        l.text = test.getName().replace(".html","");
+                        l.url =subpath;
+                        if (!Link.containsLink(r.links,l))
+                            r.links.add(l);
+                    }
+
+                } else if (test.isDirectory() && new File(test.getAbsolutePath() + "/index.html").exists()) {
                     String subpath = test.getAbsolutePath().replace(rootdir, "");
-                    reportsMarkdown.append("| ").append(f.getName()).append(" | ").
-                            append(test.getName()).append(" \t| [").append(test.getName()).append("](").append(subpath+ "/index.html").append(") \t |\n");
+                    //these are typically jar projects, test results
+                    ReportsContainer r =null;
+
+                    r = ReportsContainer.containsModuleReport(f.getName(), test.getName(), ret);
+
+                    if (r==null){
+                        r = new ReportsContainer();
+                        r.module = f.getName();
+                        r.reportType = test.getName();
+
+                        Link l = new Link();
+                        l.text = test.getName();
+                        l.url =subpath+ "/index.html";
+                        r.links.add(l);
+                        ret.add(r);
+                    } else {
+                        //report already exists, just add a new link
+                        Link l = new Link();
+                        l.text = test.getName();
+                        l.url =subpath+ "/index.html";
+                        if (!Link.containsLink(r.links,l))
+                            r.links.add(l);
+                    }
+
                 } else if (test.isDirectory()) {
-                    //these are variants
+                    //these are typically
+                    //apks with variants test reports
                     File[] variants = test.listFiles();
                     if (variants!=null){
                         for (int j=0; j < variants.length; j++){
                             File index=new File(variants[j].getAbsolutePath() + "/index.html");
                             if (index.exists()){
                                 String subpath = index.getAbsolutePath().replace(rootdir, "");
-                                reportsMarkdown.append("| ").append(f.getName()).append(" | ").
-                                        append(variants[j].getName()).append(" \t| [").append(variants[j].getName()).append("](").append(subpath).append(") \t |\n");
+
+                                ReportsContainer r =null;
+
+                                r = ReportsContainer.containsModuleReport(f.getName(), test.getName(), ret);
+
+                                if (r==null){
+                                    r = new ReportsContainer();
+                                    r.module = f.getName();
+                                    r.reportType = test.getName();
+
+                                    Link l = new Link();
+                                    l.text = variants[j].getName()
+                                    l.url =subpath;
+                                    r.links.add(l);
+                                    ret.add(r);
+                                } else {
+                                    //report already exists, just add a new link
+
+                                    Link l = new Link();
+                                    l.text = variants[j].getName()
+                                    l.url =subpath;
+                                    if (!Link.containsLink(r.links,l))
+                                        r.links.add(l);
+
+                                }
+
                             }
                         }
                     }
@@ -397,12 +547,8 @@ def generateReportList(List<File> reports){
         }
 
     }
-    reportsMarkdown.append("\n\n");
-    out = new PrintWriter(rootdir + "/reports.md");
-    out.println(reportsMarkdown.toString());
-    out.close()
+    return ret;
 }
-
 
 def generateProjectInfo(){
 
