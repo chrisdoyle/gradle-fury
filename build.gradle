@@ -48,10 +48,36 @@ subprojects {
     task allDeps(type: DependencyReportTask) {}
 }
 
+
+
+/*******************************************************/
+/*******************************************************/
+// crypto plugin
+/*******************************************************/
+/*******************************************************/
+
 //this gives us the generateMasterKey and encryptPassword tasks
 //see https://github.com/chrisdoyle/gradle-fury/issues/67
 //apply from 'https://raw.githubusercontent.com/chrisdoyle/gradle-fury/master/gradle/encryption.gradle'
 apply from: "${rootDir}/gradle/encryption.gradle"
+
+/*******************************************************/
+/*******************************************************/
+// END crypto plugin
+/*******************************************************/
+/*******************************************************/
+
+
+
+
+
+
+
+/*******************************************************/
+/*******************************************************/
+// site plugin
+/*******************************************************/
+/*******************************************************/
 
 //this is the gradle-fury site plugin, very similar to the maven site plugin
 //apply from 'https://raw.githubusercontent.com/chrisdoyle/gradle-fury/master/gradle/site.gradle'
@@ -67,3 +93,12 @@ task copyReadme() << {
     }
 }
 site.dependsOn copyReadme
+
+/*******************************************************/
+/*******************************************************/
+// end site plugin
+/*******************************************************/
+/*******************************************************/
+
+
+

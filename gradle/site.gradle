@@ -340,15 +340,9 @@ def generateJavadocContent(List<File> javadocs){
 
 
 def generateReportList(List<File> reports){
-
-
-    //TODO fixme, a certain level deep requires the parent path to identify the report type
-    //may need two passes to group things together and sort?
     PrintWriter out;
     String rootdir = ext.buildWebsiteDir;
-//TODO special handling for findbugs and/or jacoco?
 
-    //reportsMarkdown docs
     StringBuilder reportsMarkdown = new StringBuilder();
 
     reportsMarkdown.append('## Project Reports\n Here\'s all the Reports that were generated during the build for the project [${site.name}](${pom.url})\n\n');
@@ -422,6 +416,11 @@ class Link{
 
 /**
  * this atrocious bit of code is necessary because gradle has 0 governance for storing reports
+ *
+ * to be honest, it's kind of brittle and because THERE'S NO GOVERNANCE!!! it's kind of hard to
+ * guess and whatever the hell report task xyz produces.
+ *
+ * TODO special handling for findbugs and/or jacoco?
  * @param reports
  * @return
  */
@@ -436,8 +435,45 @@ List<ReportsContainer> scanReports(List<String> reports){
         if (report != null) {
             for (int k = 0; k < report.length; k++) {
                 File test = report[k];
+                //i hate that i need to do special handling for everything. f gradle
+                if (test.getName().equalsIgnoreCase("findbugs")){
+                    //get all .html files within the folder 'test' and add to the findbugs reports
 
-                if (test.getName().endsWith(".html")){
+                    File[] buggers = test.listFiles(new FilenameFilter() {
+                        @Override
+                        boolean accept(File file, String s) {
+                            return (s.toLowerCase().endsWith(".html"))
+                        }
+                    });
+                    if (buggers!=null){
+                        for (int bb=0;bb < buggers.length; bb++){
+                            String subpath = buggers[bb].getAbsolutePath().replace(rootdir, "");
+                            ReportsContainer r =null;
+
+                            r = ReportsContainer.containsModuleReport(f.getName(), test.getName(), ret);
+
+                            if (r==null){
+                                r = new ReportsContainer();
+                                r.module = f.getName();
+                                r.reportType = test.getName();
+
+                                Link l = new Link();
+                                l.text = buggers[bb].getName().substring(0, buggers[bb].getName().lastIndexOf("."));
+                                l.url =subpath;
+                                r.links.add(l);
+                                ret.add(r);
+                            } else {
+                                //report already exists, just add a new link
+                                Link l = new Link();
+                                l.text =  buggers[bb].getName().substring(0, buggers[bb].getName().lastIndexOf("."));
+                                l.url =subpath;
+                                if (!Link.containsLink(r.links,l))
+                                    r.links.add(l);
+                            }
+                        }
+                    }
+
+                }else if (test.getName().endsWith(".html")){
 
                     String subpath = test.getAbsolutePath().replace(rootdir, "");
                     //these are typically
@@ -531,7 +567,88 @@ List<ReportsContainer> scanReports(List<String> reports){
 
                                 }
 
-                            }
+                            } else if (variants[j].name.equalsIgnoreCase("connected")){
+                                //android connected tests. shit. seriously why?
+                                //this is for the "all" bit
+                                //all/index.html
+                                File testrpt = new File(variants[j].absolutePath + "/all/index.html");
+                                if (testrpt.exists()){
+                                    String subpath = testrpt.getAbsolutePath().replace(rootdir, "");
+                                    ReportsContainer r =null;
+
+                                    r = ReportsContainer.containsModuleReport(f.getName(), "AndroidTests", ret);
+
+                                    if (r==null){
+                                        r = new ReportsContainer();
+                                        r.module = f.getName();
+                                        r.reportType = "AndroidTests"
+
+                                        Link l = new Link();
+                                        l.text = "All"
+                                        l.url =subpath;
+                                        r.links.add(l);
+                                        ret.add(r);
+                                    } else {
+                                        //report already exists, just add a new link
+
+                                        Link l = new Link();
+                                        l.text = "All"
+                                        l.url =subpath;
+                                        if (!Link.containsLink(r.links,l))
+                                            r.links.add(l);
+
+                                    }
+                                }
+
+                                //this is for the "product flavors" bit
+                                //flavors/{name}/index.html
+                                File xxx = new File(variants[j].absolutePath + "/flavors/");
+                                if (xxx.exists()) {
+                                    File[] vars = xxx.listFiles(new FilenameFilter() {
+                                        @Override
+                                        boolean accept(File file, String s) {
+                                            if (file.isDirectory() && !s.equalsIgnoreCase("all"))
+                                                return true;
+                                            return false;
+                                        }
+                                    });
+                                    if (vars != null) {
+                                        for (int x = 0; x < vars.length; x++) {
+                                            File idx = new File(vars[x].absolutePath + "/index.html");
+                                            System.out.println('----' + vars[x].absolutePath);
+                                            if (idx.exists()) {
+
+                                                String subpath = idx.getAbsolutePath().replace(rootdir, "");
+                                                ReportsContainer r = null;
+
+                                                r = ReportsContainer.containsModuleReport(f.getName(), "AndroidTests", ret);
+
+                                                if (r == null) {
+                                                    r = new ReportsContainer();
+                                                    r.module = f.getName();
+                                                    r.reportType = "AndroidTests"
+
+                                                    Link l = new Link();
+                                                    l.text = vars[x].name
+                                                    l.url = subpath;
+                                                    r.links.add(l);
+                                                    ret.add(r);
+                                                } else {
+                                                    //report already exists, just add a new link
+
+                                                    Link l = new Link();
+                                                    l.text = vars[x].name
+                                                    l.url = subpath;
+                                                    if (!Link.containsLink(r.links, l))
+                                                        r.links.add(l);
+
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else
+                                logger.debug(variants[j].getAbsolutePath() + " skipped");
                         }
                     }
 
