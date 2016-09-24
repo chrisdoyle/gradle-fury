@@ -27,11 +27,13 @@ buildscript{
     }
     dependencies {
         // https://mvnrepository.com/artifact/org.pegdown/pegdown
-        //classpath 'org.pegdown:pegdown:1.6.0'
+        // oom errors classpath 'org.pegdown:pegdown:1.6.0'
         classpath 'com.atlassian.commonmark:commonmark:0.7.0'
         classpath 'com.atlassian.commonmark:commonmark-ext-gfm-tables:0.7.0'
         classpath 'com.atlassian.commonmark:commonmark-ext-gfm-strikethrough:0.7.0'
         classpath 'com.atlassian.commonmark:commonmark-ext-autolink:0.7.0'
+
+        //no go classpath 'org.commonjava.googlecode.markdown4j:markdown4j:2.2-cj-1.1'
 
 
 
@@ -215,27 +217,72 @@ def generateNavMenu(List<File> javadocs, List<File> reports){
 
 }
 
-def generateCannedContent(List<File> javadocs, List<File> reports) {
-    /*
-    modules list
-    repositories
-    artifact list?
-    issue tracking
-    licenses
-    team
-    source repo
-    reports, might be better to tie these to specific modules?
-    java docs - do we even need separate pages for this?
-     */
-    StringBuilder javadocMarkdown = new StringBuilder();
-    javadocMarkdown.append("|Module \t|Javadocs \t|\n");
-    javadocMarkdown.append("|---|---|\n")
+def generateTeamList(){
+    PrintWriter out;
     String rootdir = ext.buildWebsiteDir;
+
+    //team-list
+    StringBuilder team = new StringBuilder();
+
+    team.append('## The Team\n A successful project requires many people to play many roles. Some members write code or documentation, while others are valuable as testers, submitting patches and suggestions.\n' +
+            '\n' +
+            'The team is comprised of Members and Contributors. Members have direct access to the source of a project and actively evolve the code-base. Contributors improve the project through submission of patches and suggestions to the Members. The number of Contributors to the project is unbounded. Get involved today. All contributions to the project are greatly appreciated.\n\n');
+
+    team.append("## Members\n\n" +
+            "The following is a list of developers with commit privileges that have directly contributed to the project in one way or another.");
+
+
+    if (hasProperty("pom.developers.developer.0.id")) {
+        team.append("| Image | Id | Name | Email | Organization | Roles \n");
+        team.append("| --- | --- | --- | --- | --- | --- |\n")
+
+        // parse the roles of each developer
+        for (def i = 0; hasProperty("pom.developers.developer.${i}.id"); ++i) {
+
+            team.append("| no image | ").append(project.property("pom.developers.developer.${i}.id"));
+            team.append("| ").append(project.property("pom.developers.developer.${i}.name"));
+            team.append("| ").append(project.property("pom.developers.developer.${i}.email"));
+            team.append("| ").append(project.property("pom.developers.developer.${i}.organization"));
+            team.append("| ");
+
+            if (hasProperty("pom.developers.developer.${i}.role.0")) {
+
+                for (def j = 0; hasProperty("pom.developers.developer.${i}.role.${j}"); ++j) {
+
+                    team.append(project.property("pom.developers.developer.${i}.role.${j}")).append(" ");
+
+                }
+            }
+            team.append("\n");
+
+
+        }
+
+    }
+    else team.append("No one was listed, check gradle.properties");
+
+    team.append("\n\n");
+    out = new PrintWriter(rootdir + "/team-list.md");
+    out.println(team.toString());
+    out.close()
+}
+
+def generateJavadocContent(List<File> javadocs){
+
+    PrintWriter out;
+    String rootdir = ext.buildWebsiteDir;
+    //java docs
+    StringBuilder javadocMarkdown = new StringBuilder();
+
+    javadocMarkdown.append('## Javadoc\n Here\'s all the Javadocs generate for the project ${site.name}\n\n');
+    javadocMarkdown.append("| Module \t| Javadocs \t|\n");
+    javadocMarkdown.append("| ------ \t| -------- \t|\n")
+    //String rootdir = ext.buildWebsiteDir;
     for (int i = 0; i < javadocs.size(); i++) {
         File f = javadocs.get(i);
         if (new File(f.getAbsolutePath() + "/index.html").exists()) {
             String subpath = f.getAbsolutePath().replace(rootdir, "");
-            javadocMarkdown.append("|").append(f.getName()).append("\t|[Javadocs](").append(subpath + "/index.html").append(")\t|\n");
+            javadocMarkdown.append("| ").append(f.getName()).append(" \t| [Javadocs](").append(subpath + "/index.html").append(") \t|\n");
         } else {
             //we have variants to deal with
             File[] variants = f.listFiles();
@@ -244,15 +291,96 @@ def generateCannedContent(List<File> javadocs, List<File> reports) {
                     File variant = variants[k];
                     if (new File(variant.getAbsolutePath() + "/index.html").exists()) {
                         String subpath = variant.getAbsolutePath().replace(rootdir, "");
-                        javadocMarkdown.append("|").append(f.getName()).append("\t|[").append(variant.getName()).append("](").append(subpath+ "/index.html").append(")\t|\n");
+                        javadocMarkdown.append("| ").append(f.getName()).append(" \t| [").append(variant.getName()).append("](").append(subpath+ "/index.html").append(") \t |\n");
                     }
                 }
             }
         }
     }
-    PrintWriter out = new PrintWriter(rootdir + "/javadoc.md");
+    javadocMarkdown.append("\n\n");
+    out = new PrintWriter(rootdir + "/javadoc.md");
     out.println(javadocMarkdown.toString());
     out.close()
+}
+
+def generateReportList(List<File> reports){
+
+    PrintWriter out;
+    String rootdir = ext.buildWebsiteDir;
+
+
+    //reportsMarkdown docs
+    StringBuilder reportsMarkdown = new StringBuilder();
+
+    reportsMarkdown.append('## Project Reports\n Here\'s all the Reports that were generated during the build for the project ${site.name}\n\n');
+    reportsMarkdown.append("| Module \t | Report \t| Link \t|\n");
+    reportsMarkdown.append("| ------ \t | ------ \t| ---- \t|\n")
+
+    for (int i = 0; i < reports.size(); i++) {
+        File f = reports.get(i);
+        //f is the module name
+
+        File[] report = f.listFiles();
+        if (report != null) {
+            for (int k = 0; k < report.length; k++) {
+                File test = report[k];
+
+                if (test.getName().endsWith(".html")){
+                    //found a test artifact
+                    String subpath = test.getAbsolutePath().replace(rootdir, "");
+                    reportsMarkdown.append("| ").append(f.getName()).append(" | ").
+                            append(test.getName().replace(".html","")).append(" \t| [").append(test.getName()).append("](").append(subpath).append(") \t |\n");
+                }
+                if (test.isDirectory() && new File(test.getAbsolutePath() + "/index.html").exists()) {
+                    String subpath = test.getAbsolutePath().replace(rootdir, "");
+                    reportsMarkdown.append("| ").append(f.getName()).append(" | ").
+                            append(test.getName()).append(" \t| [").append(test.getName()).append("](").append(subpath+ "/index.html").append(") \t |\n");
+                } else if (test.isDirectory()) {
+                    //these are variants
+                    File[] variants = test.listFiles();
+                    if (variants!=null){
+                        for (int j=0; j < variants.length; j++){
+                            File index=new File(variants[j].getAbsolutePath() + "/index.html");
+                            if (index.exists()){
+                                String subpath = index.getAbsolutePath().replace(rootdir, "");
+                                reportsMarkdown.append("| ").append(f.getName()).append(" | ").
+                                        append(variants[j].getName()).append(" \t| [").append(variants[j].getName()).append("](").append(subpath).append(") \t |\n");
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+
+    }
+    reportsMarkdown.append("\n\n");
+    out = new PrintWriter(rootdir + "/reports.md");
+    out.println(reportsMarkdown.toString());
+    out.close()
+}
+def generateCannedContent(List<File> javadocs, List<File> reports) {
+    /*
+    modules list
+    repositories
+    artifact list?
+    done  issue tracking
+    licenses
+    done team
+    source repo
+    done  ci/integration
+    done reports, might be better to tie these to specific modules?
+
+     */
+
+
+    generateTeamList();
+    generateJavadocContent(javadocs);
+    generateReportList(reports);
+
+
+
+
 }
 def copyUserSiteSrc(){
     copy {
@@ -327,7 +455,8 @@ List<File> copyReports(File currentDir, boolean firstRun) {
                     from files[i].absolutePath
                     into ext.buildWebsiteDir + "/reports/" + module
                 }
-                ret.add(files[i]);
+                ret.add(new File(ext.buildWebsiteDir + "/reports/" + module));
+                //ret.add(files[i]);
             } else if (files[i].getAbsolutePath().contains("build/outputs")) {
                 String[] s2 = files[i].getAbsolutePath().split("/");
                 String module = s2[s2.length-3];
@@ -338,7 +467,8 @@ List<File> copyReports(File currentDir, boolean firstRun) {
                     include '*.html'
                     include 'lint*/**'
                 }
-                ret.add(files[i]);
+                    ret.add(new File(ext.buildWebsiteDir + "/reports/" + module));
+                //ret.add(files[i]);
 
             }
             else if (files[i].isDirectory() &&

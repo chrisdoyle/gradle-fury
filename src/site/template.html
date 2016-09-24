@@ -86,24 +86,6 @@ ${forkMeOnGitHub}
                             Project Information</a>
                         <ul class="nav nav-list">
 <!-- site.name -->
-                            <li  >
-
-                                <a href="#"><span class="none"></span>About</a>
-                            </li>
-
-                            <li>
-
-                                <a href="project-summary.html" title="Project Summary">
-                                    <span class="none"></span>
-                                    Project Summary</a>
-                            </li>
-
-                            <li>
-
-                                <a href="dependency-info.html" title="Dependency Information">
-                                    <span class="none"></span>
-                                    Dependency Information</a>
-                            </li>
 
                             <li>
 
@@ -121,7 +103,7 @@ ${forkMeOnGitHub}
 
                             <li>
 
-                                <a href="issue-tracking.html" title="Issue Tracking">
+                                <a href="${pom.issueManagement.url}" title="Issue Tracking">
                                     <span class="none"></span>
                                     Issue Tracking</a>
                             </li>
@@ -149,16 +131,9 @@ ${forkMeOnGitHub}
 
                             <li>
 
-                                <a href="integration.html" title="Continuous Integration">
+                                <a href="${pom.ciManagement.url}" title="Continuous Integration">
                                     <span class="none"></span>
                                     Continuous Integration</a>
-                            </li>
-
-                            <li>
-
-                                <a href="plugin-management.html" title="Plugin Management">
-                                    <span class="none"></span>
-                                    Plugin Management</a>
                             </li>
 
                             <li>
@@ -175,15 +150,25 @@ ${forkMeOnGitHub}
                                     <span class="none"></span>
                                     Distribution Management</a>
                             </li>
+                            <li>
+
+                                <a href="javadoc.html" title="Project Reports">
+                                    <span class="none"></span>
+                                    Javadocs</a>
+
+                            </li>
+
+                            <li>
+
+                                <a href="reports.html" title="Project Reports">
+                                    <span class="none"></span>
+                                    Project Reports</a>
+
+                            </li>
+
                         </ul>
                     </li>
 
-                    <li>
-
-                        <a href="project-reports.html" title="Project Reports">
-                            <span class="icon-chevron-right"></span>
-                            Project Reports</a>
-                    </li>
 
                 </ul>
 
