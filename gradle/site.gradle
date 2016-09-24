@@ -1,4 +1,5 @@
 import com.sun.xml.internal.ws.util.StringUtils
+import org.w3c.dom.Element
 
 import java.lang.reflect.Method
 import java.nio.charset.Charset
@@ -429,7 +430,7 @@ def generateProjectInfo(){
 
 
     reportsMarkdown.append("\n\n");
-    out = new PrintWriter(rootdir + "/project-info.md");
+    out = new PrintWriter(rootdir + "/project-license.md");
     out.println(reportsMarkdown.toString());
     out.close()
 }
@@ -465,10 +466,45 @@ def generateCannedContent(List<File> javadocs, List<File> reports) {
     generateTeamList();
     generateJavadocContent(javadocs);
     generateReportList(reports);
+    generateLicenses();
 
 
 
 
+}
+
+def generateLicenses(){
+    //pom.licenses.license.0.name
+    PrintWriter out;
+    String rootdir = ext.buildWebsiteDir;
+
+    //team-list
+    StringBuilder team = new StringBuilder();
+
+    team.append('## Overview\n Typically the licenses listed for the project are that of the project itself, and not of dependencies.\n' +
+            '\n##Project License' +
+            'The team is comprised of Members and Contributors. Members have direct access to the source of a project and actively evolve the code-base. Contributors improve the project through submission of patches and suggestions to the Members. The number of Contributors to the project is unbounded. Get involved today. All contributions to the project are greatly appreciated.\n\n');
+
+
+    if (hasProperty("pom.licenses.license.0.name")) {
+        team.append("| Licnse | Link \t |  Distribution |\n");
+        team.append("| ------ \t | ------ \t| ---- |\n")
+        for (def i = 0; hasProperty("pom.licenses.license.${i}.name"); ++i) {
+
+            team.append(project.property("pom.licenses.license.${i}.name")).append(" | ");
+
+            team.append("[").append(project.property("pom.licenses.license.${i}.url")).append("](").append(project.property("pom.licenses.license.${i}.url")).append(") | ");
+            team.append((hasProperty("pom.licenses.license.${i}.distribution")
+                    ? project.property("pom.licenses.license.${i}.distribution") : ""));
+            team.append("\n");
+        }
+    }
+    else team.append("No license was listed, check gradle.properties");
+
+    team.append("\n\n");
+    out = new PrintWriter(rootdir + "/project-license.md");
+    out.println(team.toString());
+    out.close()
 }
 
 
