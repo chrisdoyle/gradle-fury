@@ -9,5 +9,3 @@ Suggestions for your project...
 Introduce it, what does it do, why would someone want to use
 
 A quick start tutorial
-
-F gradle
