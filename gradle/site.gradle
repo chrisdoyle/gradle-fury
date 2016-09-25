@@ -57,6 +57,8 @@ ext.buildWebsiteDir = "${rootDir}/build/site/"
 ext.javadocsModules = new ArrayList<>();
 ext.reports = new ArrayList<>();
 
+if (!hasProperty("site.name"))
+    setProperty("site.name", rootDir.getName());
 
 task site(group: "Gradle Fury Site Generation",
         description: 'Builds the web-site contents.' )  << {
@@ -135,6 +137,7 @@ def processFile(File file){
             extensions.add(org.commonmark.ext.autolink.AutolinkExtension.create());
             Parser parser = Parser.builder().extensions(extensions).build();
 
+            //TODO replace [[ with [, the next | with ]( and ]] with .html)
 
             Node document = parser.parse(contents);
             HtmlRenderer renderer = HtmlRenderer.builder().extensions(extensions).build();
@@ -847,7 +850,7 @@ def generateLicenses(){
     StringBuilder team = new StringBuilder();
 
     team.append('## Overview\n Typically the licenses listed for the project are that of the project itself, and not of dependencies.\n' +
-            '\n##Project License\n\n');
+            '\n## Project Licenses\n\n');
 
 
     if (hasProperty("pom.licenses.license.0.name")) {
@@ -857,7 +860,9 @@ def generateLicenses(){
 
             team.append(project.property("pom.licenses.license.${i}.name")).append(" | ");
 
-            team.append("[").append(project.property("pom.licenses.license.${i}.url")).append("](").append(project.property("pom.licenses.license.${i}.url")).append(") | ");
+            if (hasProperty("pom.licenses.license.${i}.url"))
+            team.append("[").append(project.property("pom.licenses.license.${i}.url")).append("](").append(project.property("pom.licenses.license.${i}.url")).append(")");
+            team.append(" | ");
             team.append((hasProperty("pom.licenses.license.${i}.distribution")
                     ? project.property("pom.licenses.license.${i}.distribution") : ""));
             team.append("\n");
