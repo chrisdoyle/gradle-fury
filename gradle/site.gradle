@@ -274,9 +274,15 @@ def generateTeamList(){
         for (def i = 0; hasProperty("pom.developers.developer.${i}.id"); ++i) {
 
             team.append("| ").append(StringEscapeUtils.escapeHtml4(project.property("pom.developers.developer.${i}.id")));
-            team.append("| ").append(StringEscapeUtils.escapeHtml4(project.property("pom.developers.developer.${i}.name")));
-            team.append("| ").append(StringEscapeUtils.escapeHtml4(project.property("pom.developers.developer.${i}.email")));
-            team.append("| ").append(StringEscapeUtils.escapeHtml4(project.property("pom.developers.developer.${i}.organization")));
+            team.append("| ");
+            if (hasProperty("pom.developers.developer.${i}.name"))
+                team.append(StringEscapeUtils.escapeHtml4(project.property("pom.developers.developer.${i}.name")));
+            team.append("| ");
+            if (hasProperty("pom.developers.developer.${i}.email"))
+                team.append(StringEscapeUtils.escapeHtml4(project.property("pom.developers.developer.${i}.email")));
+            team.append("| ");
+            if (hasProperty("pom.developers.developer.${i}.organization"))
+                team.append(StringEscapeUtils.escapeHtml4(project.property("pom.developers.developer.${i}.organization")));
             team.append("| ");
 
             if (hasProperty("pom.developers.developer.${i}.role.0")) {
