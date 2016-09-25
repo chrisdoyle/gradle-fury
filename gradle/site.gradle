@@ -58,7 +58,7 @@ ext.javadocsModules = new ArrayList<>();
 ext.reports = new ArrayList<>();
 
 if (!hasProperty("site.name"))
-    setProperty("site.name", rootDir.getName());
+    ext.setProperty("site.name", rootDir.getName());
 
 task site(group: "Gradle Fury Site Generation",
         description: 'Builds the web-site contents.' )  << {
