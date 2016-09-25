@@ -45,7 +45,7 @@ buildscript{
         classpath 'org.asciidoctor:asciidoctorj:1.5.4'
     }
 }
-
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.commonmark.node.*;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer
@@ -72,12 +72,11 @@ task site(group: "Gradle Fury Site Generation",
 
     generateCannedContent(javadocs, reportsDocs);
 
-
-
     convertContent();
 
-
 }
+
+
 def prepareTemplate(){
     long time = System.currentTimeMillis();
     project.ext.siteTemplate = "";
@@ -98,9 +97,10 @@ def prepareTemplate(){
 
 
 }
+
+
 def convertContent(){
     processContent(new File(ext.buildWebsiteDir));
-
 }
 
 def processContent(File directory){
@@ -192,7 +192,7 @@ def preprocessContents(String content){
     def iterator = p.entrySet().iterator();
     while (iterator.hasNext()){
         def next = iterator.next();
-        content=content.replace('${' + next.getKey() + '}', next.getValue());
+        content=content.replace('${' + next.getKey() + '}', StringEscapeUtils.escapeHtml4(next.getValue()));
     }
     SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
     content=content.replace('${currentYYYYMMDD}', sdf.format(new Date(project.ext.siteTimestamp)));
@@ -240,9 +240,9 @@ def generateNavMenu(){
             name = org.apache.commons.lang3.StringUtils.capitalize(name);
             sb.append(" <li>\n" +
                     "\n" +
-                    "                                <a href=\"" + file + ".html\" title=\"" + name + "\">\n" +
+                    "                                <a href=\"" + file + ".html\" title=\"" + StringEscapeUtils.escapeHtml4(name) + "\">\n" +
                     "                                    <span class=\"none\"></span>\n" +
-                    "                                    " + name + "</a>\n" +
+                    "                                    " + StringEscapeUtils.escapeHtml4(name) + "</a>\n" +
                     "                            </li>" );
         }
     }
@@ -273,17 +273,17 @@ def generateTeamList(){
         // parse the roles of each developer
         for (def i = 0; hasProperty("pom.developers.developer.${i}.id"); ++i) {
 
-            team.append("| ").append(project.property("pom.developers.developer.${i}.id"));
-            team.append("| ").append(project.property("pom.developers.developer.${i}.name"));
-            team.append("| ").append(project.property("pom.developers.developer.${i}.email"));
-            team.append("| ").append(project.property("pom.developers.developer.${i}.organization"));
+            team.append("| ").append(StringEscapeUtils.escapeHtml4(project.property("pom.developers.developer.${i}.id")));
+            team.append("| ").append(StringEscapeUtils.escapeHtml4(project.property("pom.developers.developer.${i}.name")));
+            team.append("| ").append(StringEscapeUtils.escapeHtml4(project.property("pom.developers.developer.${i}.email")));
+            team.append("| ").append(StringEscapeUtils.escapeHtml4(project.property("pom.developers.developer.${i}.organization")));
             team.append("| ");
 
             if (hasProperty("pom.developers.developer.${i}.role.0")) {
 
                 for (def j = 0; hasProperty("pom.developers.developer.${i}.role.${j}"); ++j) {
 
-                    team.append(project.property("pom.developers.developer.${i}.role.${j}")).append("<br>");
+                    team.append(StringEscapeUtils.escapeHtml4(project.property("pom.developers.developer.${i}.role.${j}"))).append("<br>");
 
                 }
             }
@@ -725,7 +725,7 @@ def generateProjectInfo(){
             type+=" zip "
         }
 
-        reportsMarkdown.append("| " +  p.group + " | " +p.path.substring(1) + " | " + p.version + " | " + p.description);
+        reportsMarkdown.append("| " +  StringEscapeUtils.escapeHtml4(p.group) + " | " +StringEscapeUtils.escapeHtml4(p.path.substring(1)) + " | " + StringEscapeUtils.escapeHtml4(p.version) + " | " + StringEscapeUtils.escapeHtml4(p.description));
 
         reportsMarkdown.append(" | ").append(type).append(" | ");
         //variants
