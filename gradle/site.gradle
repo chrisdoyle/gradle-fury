@@ -1102,9 +1102,10 @@ task dependencyReportMd(description: 'Generates a Maven parsable dependency list
     }
     //data collected...
 
-    String rootdir = project.ext.buildWebsiteDir;
+    String rootdir2 = project.ext.buildWebsiteDir;
+    new File(rootdir2).mkdirs();
     //produce the report
-    File outfile = new File(rootdir + "/dependencyReport.md");
+    File outfile = new File(rootdir2 + "/dependencyReport.md");
     StringBuilder sb = new StringBuilder();
     sb.append("# Dependency Report (Gradle Style) \n\n" +
             "This report is useful to analyze your project's dependencies. If you are familiar with Maven's site plugin, this should look familiar " +
