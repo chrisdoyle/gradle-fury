@@ -1000,3 +1000,291 @@ def getForkMe(){
     }
     return "";
 }
+
+
+
+
+class DependencyReport{
+    List<Dependency> deps= new ArrayList<>();
+
+    public Dependency get(String group, String artifact){
+        for (int i=0; i < deps.size(); i++){
+            if (deps.get(i).artifactId.equals(artifact) &&
+                    deps.get(i).groupId.equals(group))
+                    return deps.get(i);
+        }
+        Dependency r = new Dependency();
+        r.groupId=group;
+        r.artifactId = artifact;
+        //r.type.add(type);
+        deps.add(r);
+        return r;
+    }
+}
+
+class Dependency{
+    Set<String> project = new HashSet<>();//that using this dependency
+    String groupId;
+    String artifactId;
+    Set<String> version = new HashSet<>()
+    Set<String>  type= new HashSet<>()
+
+}
+
+
+task dependencyReportMd(description: 'Generates a Maven parsable dependency list for the project', group: 'Reporting') << {
+    DependencyReport rpt = new DependencyReport();
+    int modules=1;
+
+
+
+    project.configurations.each { configuration ->
+        configuration.allDependencies.each { dependency ->
+            if (dependency.group != null && dependency.name != null) {
+                Set<String> t =resolveType(this.project, dependency.name, dependency.version)
+                Dependency d= rpt.get(dependency.group,dependency.name);
+                d.type.addAll(t);
+                d.project.add("root")
+
+                d.version.add(dependency.getVersion());
+            }
+        }
+    }
+
+    buildscript.configurations.all.each { configuration ->
+        configuration.allDependencies.each { dependency ->
+            if (dependency.group != null && dependency.name != null) {
+                if (dependency.group != null && dependency.name != null) {
+                    Set<String> t =resolveType(this.project, dependency.name, dependency.version)
+                    Dependency d= rpt.get(dependency.group,dependency.name);
+                    d.type.addAll(t);
+                    d.project.add("root buildscript")
+                    d.version.add(dependency.getVersion());
+
+                }
+            }
+        }
+    }
+
+    subprojects.findAll{
+        modules++;
+        it.each {
+            it.configurations.each { configuration ->
+                configuration.allDependencies.each { dependency ->
+                    if (dependency.group != null && dependency.name != null) {
+                        Set<String> t =resolveType(it, dependency.name, dependency.version)
+                        Dependency d= rpt.get(dependency.group,dependency.name);
+                        d.type.addAll(t);
+                        d.project.add(it.name)
+                        d.version.add(dependency.getVersion());
+                    }
+                }
+            }
+        }
+    }
+
+    subprojects.findAll{
+        it.each {
+            it.buildscript.configurations.all.each { configuration ->
+                configuration.allDependencies.each { dependency ->
+                    if (dependency.group != null && dependency.name != null) {
+                        if (dependency.group != null && dependency.name != null) {
+                            Set<String> t =resolveType(it, dependency.name, dependency.version)
+                            Dependency d= rpt.get(dependency.group,dependency.name);
+                            d.type.addAll(t);
+                            d.project.add(it.name + " buildscript")
+                            d.version.add(dependency.getVersion());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    //data collected...
+
+    String rootdir = project.ext.buildWebsiteDir;
+    //produce the report
+    File outfile = new File(rootdir + "/dependencyReport.md");
+    StringBuilder sb = new StringBuilder();
+    sb.append("# Dependency Report (Gradle Style) \n\n" +
+            "This report is useful to analyze your project's dependencies. If you are familiar with Maven's site plugin, this should look familiar " +
+            "(Dependency Convergence Report). In addition, " +
+            "if you want to quickly grab all of this projects dependencies and force them to load and cache for use " +
+            "offline use, you should be able to copy and paste the stuff below into an empty gradle.buid file or for a pom.xml.\n\n");
+    sb.append("## Dependency Convergence\n\n");
+
+    sb.append("Statistics\n\n");
+    int NOC=0;
+    int NOD=0;
+    int NOA=0;
+    int NOS=0;
+    int NOWC=0;
+    for (int i=0; i <rpt.deps.size(); i++){
+        NOD++;
+        def iterator = rpt.deps.get(i).version.iterator();
+        if (rpt.deps.get(i).version.size() > 1)
+            NOC+=rpt.deps.get(i).version.size();
+        while (iterator.hasNext()){
+
+            if (rpt.deps.get(i).type.isEmpty()){
+                NOA++;
+            }
+            else {
+                def iterator2 = rpt.deps.get(i).type.iterator();
+                while (iterator2.hasNext()) {
+                    iterator2.next();
+                    NOA++;  //requires the type classifier
+                }
+            }
+
+            String version = iterator.next();
+            if (version.toLowerCase().contains("-snapshot"))
+                NOS++;
+            if (version.contains("+"))
+                NOWC++;
+        }
+    }
+
+    int NODNOA = 100;
+    if (NOA > 0)
+        NODNOA = (int)((NOD/NOA) *100);
+    sb.append("|  | |\n")
+    sb.append("| --- | --- |\n")
+
+    sb.append("Modules: | " + modules + "\n");
+    sb.append("Number of dependencies (NOD): | " + NOD + "\n");
+    sb.append("Number of unique artifacts (NOA): | " + NOA + "\n");
+    sb.append("Number of version-conflicting artifacts (NOC): | " + NOC + "\n");
+    sb.append("Number of SNAPSHOT artifacts (NOS): | " + NOS + "\n");
+    sb.append("Number of Wildcard artifacts (NOWC): | " + NOWC + "\n");
+    sb.append("Convergence (NOD/NOA):| " + NODNOA + "%\n");
+    String readyState= "";
+    if (NOS > 0)
+        readyState = "You have SNAPSHOT dependencies.<br>";
+    if (NODNOA < 100){
+        readyState += "You do not have 100 % convergence.";
+    }
+    sb.append("Ready for release (100 % convergence and no SNAPSHOTS):| ");
+    if (readyState.length() > 0)
+        sb.append("**Error**<br>").append(readyState);
+    else sb.append("Ready");
+    sb.append("\n\n");
+    if (NOC>0)
+        logger.warn("WARN - You have " + NOC + " version conflicting artifacts");
+    if (NODNOA<100)
+        logger.warn("WARN - You have " + NODNOA + "% dependency convergence.");
+    if (NOWC>0)
+        logger.warn("WARN - You have " + NOWC + " dependencies with wildcard versions, this will effect the stability of the build.");
+
+       sb.append("## Gradle Dependencies, composite\n\n" +
+               "Note: the dependencies listed below are all listed as compile, even though they may not actually be compile dependencies. Also missing is type qualifieres.\n\n````\n\ndependencies {\n");
+
+       for (int i=0; i <rpt.deps.size(); i++){
+
+           def iterator = rpt.deps.get(i).version.iterator();
+           if (rpt.deps.get(i).version.size() > 1)
+               sb.append("\n\n//WARN dependency converage flag! Currently used by the modules: " + rpt.deps.get(i).project + "\n");
+           while (iterator.hasNext()){
+                if (rpt.deps.get(i).type.isEmpty()){
+
+                    sb.append('\tcompile: \'');
+                    sb.append(rpt.deps.get(i).groupId + ":");
+                    sb.append(rpt.deps.get(i).artifactId + ":");
+                    sb.append(iterator.next());
+                    sb.append("\'\n");
+                } else {
+                    def iterator2 = rpt.deps.get(i).type.iterator();
+                    while (iterator2.hasNext()) {
+
+                        sb.append('\tcompile: \'');
+                        sb.append(rpt.deps.get(i).groupId + ":");
+                        sb.append(rpt.deps.get(i).artifactId + ":");
+                        sb.append(iterator.next());
+                        sb.append("@" + iterator2.next());
+                        sb.append("\'\n");
+                    }
+                }
+           }
+           if (rpt.deps.get(i).version.size() > 1)
+               sb.append("//END WARN dependency converage flag!\n\n    ")
+       }
+       sb.append('}\n````\n');
+
+          sb.append("## Maven Dependencies, composite\n\n" +
+                  "Note: the dependencies listed below are all listed as compile, even though they may not actually be compile dependencies. Also missing is type qualifieres.\n\n````\n\n<dependencies>\n");
+
+          for (int i=0; i <rpt.deps.size(); i++){
+
+              def iterator = rpt.deps.get(i).version.iterator();
+              if (rpt.deps.get(i).version.size() > 1)
+                  sb.append("\n\n<!--WARN dependency converage flag! Currently used by the modules: " + rpt.deps.get(i).project + "-->\n");
+              while (iterator.hasNext()){
+                  if ( rpt.deps.get(i).type.isEmpty()){
+                      sb.append('\t<dependency>\n');
+                      sb.append('\t\t<groupId>' + rpt.deps.get(i).groupId + "</groupId>\n");
+                      sb.append('\t\t<artifactId>' + rpt.deps.get(i).artifactId + "</artifactId>\n");
+                      String version = iterator.next();
+                      //a gradle wildcard
+                      if ("+".equals(version)) {
+                          version = "LATEST"
+                      } else if (version.endsWith(".+")) {
+                          //the version is something.+
+                          version = "[" + version.replace(".+", ",)");
+                      } else if (version.endsWith("+")) {
+                          version = "[" + version.replace("+", ",)");
+                      }
+                      sb.append('\t\t<version>' + version + '</version>\n');
+                      sb.append("\t</dependency>\n");
+                  }else {
+                      def iterator2 = rpt.deps.get(i).type.iterator();
+                      while (iterator2.hasNext()) {
+                          sb.append('\t<dependency>\n');
+                          sb.append('\t\t<groupId>' + rpt.deps.get(i).groupId + "</groupId>\n");
+                          sb.append('\t\t<artifactId>' + rpt.deps.get(i).artifactId + "</artifactId>\n");
+                          String version = iterator.next();
+                          //a gradle wildcard
+                          if ("+".equals(version)) {
+                              version = "LATEST"
+                          } else if (version.endsWith(".+")) {
+                              //the version is something.+
+                              version = "[" + version.replace(".+", ",)");
+                          } else if (version.endsWith("+")) {
+                              version = "[" + version.replace("+", ",)");
+                          }
+                          sb.append('\t\t<version>' + version + '</version>\n');
+                          sb.append("\t\t<type>" + iterator2.next()).append("</type>\n");
+                          sb.append("\t</dependency>\n");
+                      }
+
+                  }
+              }
+              if (rpt.deps.get(i).version.size() > 1)
+                  sb.append("<!--END WARN dependency converage flag!-->\n\n    ")
+
+          }
+    sb.append('</dependencies>\n````\n');
+    FileOutputStream fos = new FileOutputStream(outfile);
+    fos.write((sb.toString()).getBytes());
+    fos.close();
+
+}
+
+Set<String> resolveType(Project it, String artificat, String version){
+    Set<String> ret = new HashSet<>();
+        String searcher = artificat + "-" + version;
+        it.configurations.findAll { set ->
+            set.each { config ->
+                // Note to future self
+                // this apparently dumps all every jar/aar/war/etc file name of the dependency
+                //useful for #21 and getting the type. This was initially written to get a list
+                //of all configurationNames since they vary from android/jar/war projects
+                if (config.name.startsWith(searcher)) {
+                    ret.add(config.name.substring(config.name.lastIndexOf(".")+1));
+                }
+
+            }
+    }
+    return ret;
+}
+
+site.dependsOn dependencyReportMd
