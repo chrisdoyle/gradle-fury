@@ -2096,8 +2096,7 @@ def isGraphvizDotAvailable() {
     //javadoc failures
     String OS = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
     if ((OS.indexOf("mac") >= 0) || (OS.indexOf("darwin") >= 0)) {
-        logger.info("DOT is NOT available (MacOS guard)");
-        return false;
+        logger.warn("Graphviz/DOT has some issues with MacOS and may cause javadoc generation to fail. Just a heads up");
     }
 
     //if opt-in is not set or is false, return false
