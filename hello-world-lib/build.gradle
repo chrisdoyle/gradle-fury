@@ -2,13 +2,6 @@ description = '[ c h r i s d o y l e ] :: Gradle Fury :: Hello World Java Librar
 
 apply plugin: 'java'
 
-
-//not mandatory, we use these plugins to exercise the site plugin
-apply plugin: 'findbugs'
-apply plugin: "jacoco"
-
-
-
 compileJava {
     sourceCompatibility = "${project.property('compileJava.sourceCompatibility')}"
     targetCompatibility = "${project.property('compileJava.targetCompatibility')}"
@@ -23,46 +16,3 @@ dependencies {
 
     testCompile "junit:junit:${project.property('junit.version')}"
 }
-
-
-
-
-
-
-/*******************************************************/
-/*******************************************************/
-// more reporting stuff, not required but we use it to exercise the site plugin
-/*******************************************************/
-/*******************************************************/
-
-//gradlew check or findbugsMain should fire off findbugs
-
-tasks.withType(FindBugs) {
-    reports {
-        xml.enabled = false
-        html.enabled = true
-        //html.stylesheet resources.text.fromFile('config/xsl/findbugs-custom.xsl')
-    }
-}
-
-test {
-    jacoco{
-        append = false
-    }
-}
-
-jacocoTestReport {
-    dependsOn test
-    description = "Generate Jacoco coverage reports after running tests."
-    reports {
-        xml.enabled true
-        html.enabled true
-    }
-    classDirectories = fileTree(dir: 'build/classes/main', include: '**')
-    sourceDirectories = fileTree(dir: 'scr/main/java', include: '**')
-}
-/*******************************************************/
-/*******************************************************/
-// END more reporting stuff, not required but we use it to exercise the site plugin
-/*******************************************************/
-/*******************************************************/

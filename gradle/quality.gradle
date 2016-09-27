@@ -1,0 +1,150 @@
+/**
+ * This file was lifted...ehm borrowed from
+ * https://github.com/MasonLiuChn/AndroidCodeQuality
+ * Email:MasonLiuChn@gmail.com
+ *
+ * It only applies to android projects!
+ */
+
+
+
+apply plugin: 'checkstyle'
+apply plugin: 'findbugs'
+apply plugin: 'pmd'
+
+
+//configure checkstyle for 'normal' projects
+checkstyle {
+    ignoreFailures = true
+    configFile new File("${project.rootDir}/config/checkstyle/checkstyle.xml")
+}
+
+//configure checkstyle for 'android' projects
+task checkstyleAndroid(type: Checkstyle) {
+    ignoreFailures = true
+    configFile new File("${project.rootDir}/config/checkstyle/checkstyle.xml")
+
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**', '**/test/**'
+
+    classpath = files()
+}
+
+
+tasks.withType(Checkstyle).each { checkstyleTask ->
+
+    checkstyleTask.doLast {
+        reports.all { report ->
+            def outputFile = report.destination
+            if (outputFile.exists() && outputFile.text.contains("<error ") && !checkstyleTask.ignoreFailures) {
+                throw new GradleException("There were checkstyle warnings! For more info check $outputFile")
+            }
+        }
+    }
+}
+
+//configure pmd for 'normal' projects
+pmd {
+    ignoreFailures = true
+    ruleSetFiles = files("${project.rootDir}/config/pmd/pmd-ruleset.xml")
+    ruleSets = []
+}
+
+
+//configure pmd for 'android' projects
+task pmdAndroid(type: Pmd) {
+    ignoreFailures = true
+    ruleSetFiles = files("${project.rootDir}/config/pmd/pmd-ruleset.xml")
+    ruleSets = []
+
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**'
+
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
+
+//configure findbugs for 'normal' projects
+findbugs {
+    ignoreFailures = true
+    excludeFilter = new File("${project.rootDir}/config/findbugs/findbugs-filter.xml")
+    effort = "max"
+    reportLevel = "high"
+}
+
+//configure findbugs for 'android' projects...seriously?
+task findbugsAndroid(type: FindBugs) {
+    ignoreFailures = true
+    excludeFilter = new File("${project.rootDir}/config/findbugs/findbugs-filter.xml")
+    effort = "max"
+    reportLevel = "high"
+    classes = files("$project.buildDir/intermediates/classes")
+
+    source 'src'
+    include '**/*.java'
+    exclude '**/gen/**'
+
+    reports {
+        xml.enabled = false
+        html.enabled = true
+        xml {
+            destination "$project.buildDir/reports/findbugs/findbugs.xml"
+            xml.withMessages true
+        }
+        html {
+            destination "$project.buildDir/reports/findbugs/findbugs.html"
+        }
+    }
+    classpath = files()
+}
+
+
+afterEvaluate {
+    tasks.withType(Task).each { task ->
+        task.doLast {
+            if(task.name.startsWith("assemble")){
+                if (project.plugins.hasPlugin("com.android.library") || project.plugins.hasPlugin("com.android.application")) {
+                    //dumpTasks(project.tasks)
+                    //tasks.add(findbugsAndroid);
+                    tasks.findByName("findbugsAndroid").execute()
+                    tasks.findByName('pmdAndroid').execute();
+                    tasks.findByName('checkstyleAndroid').execute();
+                }
+            }
+        }
+    }
+}
+
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled false
+        html.enabled true
+        //html.stylesheet resources.text.fromFile('config/xsl/findbugs-custom.xsl')
+    }
+}
+
+
+def dumpTasks(TaskExecutionGraph graph){
+    List<Task> allTasks = graph.getAllTasks();
+    for (int i=0; i < allTasks.size(); i++){
+        System.out.println("TASK DUMP " + allTasks.get(i).name);
+    }
+
+}
+
+
+
+def dumpTasks(TaskContainer graph){
+    List<Task> allTasks = graph.all {
+
+        System.out.println("TASK DUMP " + it.name);
+    }
+
+
+}

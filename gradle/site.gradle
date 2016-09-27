@@ -74,7 +74,8 @@ task site(group: "Gradle Fury Site Generation",
 
     generateCannedContent(javadocs, reportsDocs);
 
-    convertContent();
+    int modifiedFiles = convertContent();
+    logger.info("Site generation complete, altered " + modifiedFiles + " files");
 
 }
 
@@ -101,25 +102,49 @@ def prepareTemplate(){
 }
 
 
-def convertContent(){
-    processContent(new File(ext.buildWebsiteDir));
+int convertContent(){
+    return processContent(new File(ext.buildWebsiteDir));
 }
 
-def processContent(File directory){
-
+int processContent(File directory){
+    int count=0;
     File f= directory;
     File[] files = f.listFiles();
     for (int i=0; i < files.length; i++){
         if (files[i].isDirectory()){
             //recurse
-            processContent(files[i]);
+            count+=processContent(files[i]);
         } else if (!files[i].isHidden() && files[i].isFile()){
-            processFile(files[i]);
+            if (processFile(files[i]))
+                count++;
         }
     }
+    return count;
 }
 
-def processFile(File file){
+/**
+ * processes a file and performs basic find/replace tasks. This is what injects site templates
+ * and whatnot into a file.
+ *
+ * It also processes non-site contents, such as generated reports by converting absolute paths to relevative one
+ * @param file
+ * @return returns true if the file was modified, false otherwise
+ */
+boolean processFile(File file){
+    if (file.getName().endsWith(".html") || file.getName().endsWith(".xml") || file.getName().endsWith(".txt")){
+        //this bit of trickery removes parent paths from reports, because who wants to know what
+        //your local file system looks like when browsing a site
+        long start = System.currentTimeMillis();
+        String contents = readFile(file.getAbsolutePath(), Charset.defaultCharset());
+        contents = contents.replace(rootDir.absolutePath, ".");
+        PrintWriter out = new PrintWriter(file);
+        out.println(contents);
+        out.close()
+        logger.info("Transform (remove absolute paths) " + file.getAbsolutePath() + " complete in " + (System.currentTimeMillis() - start) + "ms");
+        return true;
+    }
+
+
     if (file.getName().endsWith(".md") || file.getName().endsWith(".asciidoc") ) {
         //read all contents
         //process
@@ -154,7 +179,7 @@ def processFile(File file){
             PrintWriter out = new PrintWriter(targetFileName);
             out.println(contents);
             out.close()
-            System.out.println("Transform as markdown " + file.getAbsolutePath() + " complete in " + (System.currentTimeMillis() - start) + "ms");
+            logger.info("Transform as markdown " + file.getAbsolutePath() + " complete in " + (System.currentTimeMillis() - start) + "ms");
             file.delete();
         }
         else if (file.getName().toLowerCase().endsWith(".asciidoc")) {
@@ -175,12 +200,13 @@ def processFile(File file){
             PrintWriter out = new PrintWriter(targetFileName);
             out.println(contents);
             out.close()
-            System.out.println("Transform as asciidoc " + file.getAbsolutePath() + " complete in " + (System.currentTimeMillis() - start) + "ms");
+            logger.info("Transform as asciidoc " + file.getAbsolutePath() + " complete in " + (System.currentTimeMillis() - start) + "ms");
+            return true;
         }
         //TODO future ascii based documentation formats?
 
     }
-
+    return false;
 }
 
 /**
@@ -653,7 +679,6 @@ List<ReportsContainer> scanReports(List<String> reports){
                                     if (vars != null) {
                                         for (int x = 0; x < vars.length; x++) {
                                             File idx = new File(vars[x].absolutePath + "/index.html");
-                                            //System.out.println('----' + vars[x].absolutePath);
                                             if (idx.exists()) {
 
                                                 String subpath = idx.getAbsolutePath().replace(rootdir, "");
@@ -904,7 +929,6 @@ List<File> copyJavadocPages(File currentDir, boolean firstRun) {
 
                 String[] s2 = files[i].getAbsolutePath().split("/");
                 String module = s2[s2.length-4];
-               // System.out.println("javadoc " + files[i].getAbsolutePath() + " " + module);
                 copy {
                     from files[i].absolutePath
                     into ext.buildWebsiteDir + "/javadocs/" + module
@@ -933,7 +957,9 @@ List<File> copyJavadocPages(File currentDir, boolean firstRun) {
 }
 
 
-
+//search for build/docs/javadoc folders
+//search for build/javadoc/flavorDebug/Release folders
+//search for build/javadoc/debug/release folders
 List<File> copyReports(File currentDir, boolean firstRun) {
 
     List<File> ret = new ArrayList<>();
@@ -946,17 +972,14 @@ List<File> copyReports(File currentDir, boolean firstRun) {
 
                 String[] s2 = files[i].getAbsolutePath().split("/");
                 String module = s2[s2.length-3];
-                //System.out.println("report " + files[i].getAbsolutePath() + " " + module);
                 copy {
                     from files[i].absolutePath
                     into ext.buildWebsiteDir + "/reports/" + module
                 }
                 ret.add(new File(ext.buildWebsiteDir + "/reports/" + module));
-                //ret.add(files[i]);
             } else if (files[i].getAbsolutePath().contains("build/outputs")) {
                 String[] s2 = files[i].getAbsolutePath().split("/");
                 String module = s2[s2.length-3];
-               // System.out.println("report " + files[i].getAbsolutePath() + " " + module);
                 copy {
                     from files[i].absolutePath
                     into ext.buildWebsiteDir + "/reports/" + module
@@ -964,7 +987,7 @@ List<File> copyReports(File currentDir, boolean firstRun) {
                     include 'lint*/**'
                 }
                     ret.add(new File(ext.buildWebsiteDir + "/reports/" + module));
-                //ret.add(files[i]);
+
 
             }
             else if (files[i].isDirectory() &&
@@ -974,18 +997,12 @@ List<File> copyReports(File currentDir, boolean firstRun) {
         }
     }
     return ret;
-    //search for build/docs/javadoc folders
-    //search for build/javadoc/flavorDebug/Release folders
-    //search for build/javadoc/debug/release folders
 }
 
 
 def getForkMe(){
     Properties p = new Properties();
     p.load(new FileInputStream(rootDir.absolutePath + "/gradle.properties"));
-
-    //System.out.println(p.getProperty("site.forkMe.enable"));
-    //System.out.println(p.getProperty("pom.scm.url"));
 
 
     if (p.containsKey("site.forkMe.enable") &&

@@ -40,6 +40,24 @@ allprojects  {
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
     }
+
+    /*
+        developer commentary:
+        in search ensuring that commonly ran 'check' plugin's output reports are visible after running
+        the site plugin, I ran into a boat load of issues just getting the basics plugins working with
+        both JAR/WAR and Android based projects.
+
+        "This highway leads to the shadowy tip of reality: you're on a through route to the land of
+        the different, the bizarre, the unexplainable...Go as far as you like on this road. Its
+        limits are only those of mind itself. Ladies and Gentlemen, you're entering the wondrous
+        dimension of imagination. . . Next stop The Gradle Zone." ― Rod Serling
+
+        Submitted for your approval is a gradle script that fixes the bullshit and get its running
+        during when running 'gradle build'
+        of a functioning solution for running findbugs, pmd, and checkstyle
+     */
+    if (project.hasProperty('profile') && project.profile.split(',').contains("ci"))
+        apply from: "${rootDir}/gradle/quality.gradle"
 }
 
 subprojects {
