@@ -45,6 +45,12 @@ apply plugin: 'findbugs'
 apply plugin: 'pmd'
 apply plugin: 'jdepend'
 
+
+if (!rootProject.hasProperty('codeQuality')) {
+    rootProject.ext.codeQuality = true
+    println "== Quality plugin active. Hold on to your butts...";
+}
+
 //configure jdepend for 'normal' projects
 jdepend {
     ignoreFailures = true
