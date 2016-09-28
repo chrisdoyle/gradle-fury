@@ -24,7 +24,15 @@ import java.nio.file.StandardCopyOption
  */
 
 
-task hackTime() << {
+task hackTime(description: "Applies the basic config to this project (with backups)", group:"Gradle Fury Bootstrap") << {
+    applyGradleFury();
+}
+
+task bootstrap(description: "Applies the basic config to this project (with backups)", group:"Gradle Fury Bootstrap") << {
+    applyGradleFury();
+}
+
+void applyGradleFury() {
     description = "Applying the basic elements from gradle-fury to this project..."
     println "\n   ----.--.     #####                                        #######                     \n" +
             "--/ _  |___)  #     #  #####    ##   #####  #      ######    #       #    # #####  #   # \n" +
@@ -392,7 +400,7 @@ def getString(String description, String defaultValue) {
 
     //need to ask for it
     if (console) {
-        userinput = console.readPassword('> ' + description + '[' + defaultValue + ']: ')
+        userinput = console.readLine('> ' + description + '[' + defaultValue + ']: ')
     } else {
         new SwingBuilder().edt {
             dialog(modal: true, title: description, alwaysOnTop: true, resizable: false, locationRelativeTo: null, pack: true, show: true) {
@@ -409,6 +417,8 @@ def getString(String description, String defaultValue) {
             }
         }
     }
+    if (userinput==null || userinput.length()==0 || userinput.trim().length()==0)
+        userinput=defaultValue;
     System.out.println("DEBUG " + userinput)
     return userinput
 }

@@ -972,7 +972,7 @@ def modifyGeneratedPom(pom) {
                             // if there are any exclusions in dependency
                             if (dependency.excludeRules.size() > 0) {
                                 def exclusionsNode = dependencyNode.appendNode('exclusions')
-                                dependency.excludeRules.each { rule ->
+                                it.dependency.excludeRules.each { rule ->
                                     def exclusionNode = exclusionsNode.appendNode('exclusion')
                                     exclusionNode.appendNode('groupId', rule.group)
                                     exclusionNode.appendNode('artifactId', rule.module)
@@ -1455,8 +1455,8 @@ ext.signFile = { file ->
     arguments.add(file);
     String[] bits = arguments.toArray(new String[arguments.size()]);
 
-    for (int x=0; x < arguments.size(); x++)
-        System.out.println("DEBUG GPG " + arguments.get(x));
+    //for (int x=0; x < arguments.size(); x++)
+    //    System.out.println("DEBUG GPG " + arguments.get(x));
     logger.info("\n\nSigning file " + file);
 
     exec {
