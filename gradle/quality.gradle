@@ -30,6 +30,12 @@
  *
  *  @since 1.0.10
  *  @author Alex
+ *
+ *
+ *  addendum
+ *  jdepend stuff came from here
+ *
+ *  https://github.com/azagniotov/stubby4j/blob/master/conf/gradle/jdepend.gradle
  */
 
 
@@ -37,6 +43,50 @@
 apply plugin: 'checkstyle'
 apply plugin: 'findbugs'
 apply plugin: 'pmd'
+apply plugin: 'jdepend'
+
+//configure jdepend for 'normal' projects
+jdepend {
+    ignoreFailures = true
+}
+
+task jdependReport(group: 'verification', description: 'Generates a HTML report after executing jdepend checks.') << {
+    //check for 'parent' projects
+    if (new File("$reporting.baseDir/jdepend/main.xml").exists()) {
+        ant.xslt(
+                in: "$reporting.baseDir/jdepend/main.xml",
+                style: "$rootDir/config/jdepend/jdepend-report.xslt",
+                out: "$reporting.baseDir/jdepend/index.html")
+    }
+}
+
+check {
+    dependsOn += ['jdependReport']
+}
+
+
+//configure jdepend for 'android' projects
+task jdependAndroidReport(group: 'verification', description: 'Generates a HTML report after executing jdepend checks.') << {
+    //check for 'parent' projects
+    if (new File("$reporting.baseDir/jdepend/main.xml").exists()) {
+        ant.xslt(
+                in: "$reporting.baseDir/jdepend/main.xml",
+                style: "$rootDir/config/jdepend/jdepend-report.xslt",
+                out: "$reporting.baseDir/jdepend/index.html")
+    }
+}
+
+task jdependAndroid(type: JDepend, dependsOn: 'compileDebugSources') {
+    classesDir file('build/intermediates/')
+    reports {
+        xml {
+            destination "$reporting.baseDir/jdepend/main.xml"
+        }
+    }
+}
+
+jdependAndroidReport.dependsOn jdependAndroid
+
 
 
 //configure checkstyle for 'normal' projects
@@ -140,6 +190,8 @@ afterEvaluate {
                     tasks.findByName("findbugsAndroid").execute()
                     tasks.findByName('pmdAndroid').execute();
                     tasks.findByName('checkstyleAndroid').execute();
+                    tasks.findByName('jdependAndroid').execute();
+                    tasks.findByName('jdependAndroidReport').execute();
                 }
             }
         }
