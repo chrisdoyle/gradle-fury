@@ -80,6 +80,54 @@ task site(group: "Gradle Fury Site Generation",
 }
 
 
+void createWebXml() {
+    new File("${rootDir}/build/site/").mkdirs();
+    new File("${rootDir}/build/site/" + "/WEB-INF/").mkdirs();
+    String contents = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+            "<!DOCTYPE web-app PUBLIC\n" +
+            "    \"-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN\"\n" +
+            "    \"http://java.sun.com/dtd/web-app_2_3.dtd\">\n" +
+            "\n" +
+            "<web-app>\n" +
+            "\n" +
+            "\n" +
+            "    <session-config>\n" +
+            "        <session-timeout>\n" +
+            "            30\n" +
+            "        </session-timeout>\n" +
+            "    </session-config>\n" +
+            "    <welcome-file-list>\n" +
+            "        <welcome-file>index.html</welcome-file>\n" +
+            "    </welcome-file-list>\n" +
+            "\n" +
+            "\n" +
+            "\n" +
+            "</web-app>";
+    File file = new File("${rootDir}/build/site/WEB-INF/web.xml");
+    PrintWriter out = new PrintWriter(file);
+    out.println(contents);
+    out.close()
+}
+
+
+task siteWar(group: "Gradle Fury Site Generation",
+        description: 'Builds the web-site as a war file.',
+        dependsOn:[site])  << {
+
+    createWebXml();
+    task(zipResources, type: Zip) {
+        destinationDir new File("${rootDir}/build/")
+        archiveName 'site.war'
+        from "${rootDir}/build/site/"
+
+    }.execute()
+
+}
+siteWar.dependsOn site
+
+
+
+
 def prepareTemplate(){
     long time = System.currentTimeMillis();
     project.ext.siteTemplate = "";
@@ -181,6 +229,7 @@ boolean processFile(File file){
             out.close()
             logger.info("Transform as markdown " + file.getAbsolutePath() + " complete in " + (System.currentTimeMillis() - start) + "ms");
             file.delete();
+            return true;
         }
         else if (file.getName().toLowerCase().endsWith(".asciidoc")) {
             org.asciidoctor.Asciidoctor asciidoctor = org.asciidoctor.Asciidoctor.Factory.create();
@@ -201,6 +250,7 @@ boolean processFile(File file){
             out.println(contents);
             out.close()
             logger.info("Transform as asciidoc " + file.getAbsolutePath() + " complete in " + (System.currentTimeMillis() - start) + "ms");
+            file.delete();
             return true;
         }
         //TODO future ascii based documentation formats?
