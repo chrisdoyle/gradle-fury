@@ -15,8 +15,8 @@
     <link rel="stylesheet" href="./css/site.css"/>
     <link rel="stylesheet" href="./css/print.css" media="print"/>
 
-    <script type="text/javascript" src="./js/apache-maven-fluido-1.4.min.js"></script>
     <script type="text/javascript" src="./js/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript" src="./js/apache-maven-fluido-1.4.min.js"></script>
 </head>
 <body class="topBarDisabled">
 
@@ -215,8 +215,29 @@ ${forkMeOnGitHub}
     </div>
 </footer>
 
-<script>
+<script type="text/javascript">
 $("table").addClass("table table-striped");
+$(function () {
+    setNavigation();
+});
+
+function setNavigation() {
+    var path = window.location.pathname;
+    path = path.replace(/\/$/, "");
+    path = decodeURIComponent(path);
+    var idx=path.toString().lastIndexOf("/");
+    if (idx >= 0)
+        path=path.substring(idx+1, path.length);
+    console.log(path);
+
+    $(".nav a").each(function () {
+        var href = $(this).attr('href');
+        console.log('attempting to fix ' + path + " " + path.substring(0, href.length) + " " + href);
+        if (path.substring(0, href.length) === href) {
+            $(this).closest('li').addClass('active');
+        }
+    });
+}
 </script>
 </body>
 </html>
