@@ -228,11 +228,11 @@ function setNavigation() {
     var idx=path.toString().lastIndexOf("/");
     if (idx >= 0)
         path=path.substring(idx+1, path.length);
-    console.log(path);
+//    console.log(path);
 
     $(".nav a").each(function () {
         var href = $(this).attr('href');
-        console.log('attempting to fix ' + path + " " + path.substring(0, href.length) + " " + href);
+  //      console.log('attempting to fix ' + path + " " + path.substring(0, href.length) + " " + href);
         if (path.substring(0, href.length) === href) {
             $(this).closest('li').addClass('active');
         }

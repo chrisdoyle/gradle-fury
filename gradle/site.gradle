@@ -1,17 +1,19 @@
-import com.sun.xml.internal.ws.util.StringUtils
-import org.w3c.dom.Element
-
-import java.lang.reflect.Method
-import java.nio.charset.Charset
-import java.nio.file.Files
-import java.nio.file.Paths
-
 /**
- our attempt at a maven site plugin, which uses most of the stuff that maven's
+ our attempt at a maven site plugin
 
- gradle says they are working on one, but there hasn't been any activity on it in like 3 years.
+ never heard of it? Basically most Apache projects use it
+  - https://maven.apache.org/
+  - http://maven.apache.org/skins/maven-fluido-skin/
+  - http://hadoop.apache.org/
 
- we'd love to reuse doxia, but it is a bit on the complex side and extracting it from maven was attempted
+ All of those are 'generated' sites, meaning that most or all of the content is located in the source
+ repo of the project and thus stays synced with the code. Everything else, like project reports, etc
+ are generated as part of the build process to help you make your code better and to provide full
+ disclosure.
+
+ Gradle says they are working on a site plugin, but there hasn't been any activity on it in several years.
+
+ We'd love to reuse doxia, but it is a bit on the complex side and extracting it from maven was attempted
  and proved to be more difficult that writing one from scratch.
 
  Heavily based on the work done by Paul Speed-2 @ filament
@@ -19,6 +21,21 @@ import java.nio.file.Paths
 
  http://maven.apache.org/skins/maven-fluido-skin/
 
+ To apply this to your project
+ - Copy the contents from gradle-fury/src/site into your source repo.
+ - Make sure the properties file for your project is configured (see fury's for an example)
+ - In your root build.gradle file, stick this in the end (not in all projects)
+
+     //this is the gradle-fury site plugin, very similar to the maven site plugin
+     apply from 'https://raw.githubusercontent.com/chrisdoyle/gradle-fury/master/gradle/site.gradle'
+
+ Then execute it with
+
+ 'gradlew site'
+ or optionally
+
+ 'gradlew siteWar'
+ to produce a deployable war file
 
  */
 
@@ -45,6 +62,11 @@ buildscript{
         classpath 'org.asciidoctor:asciidoctorj:1.5.4'
     }
 }
+
+import java.lang.reflect.Method
+import java.nio.charset.Charset
+import java.nio.file.Files
+import java.nio.file.Paths
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.commonmark.node.*;
 import org.commonmark.parser.Parser;

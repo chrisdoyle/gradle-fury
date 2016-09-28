@@ -56,8 +56,23 @@ allprojects  {
         during when running 'gradle build'
         of a functioning solution for running findbugs, pmd, and checkstyle
      */
-    if (project.hasProperty('profile') && project.profile.split(',').contains("ci"))
+
+
+
+    /*******************************************************/
+    /*******************************************************/
+    // quality plugin
+    /*******************************************************/
+    /*******************************************************/
+    if (project.hasProperty('profile') && project.profile.split(',').contains("ci")) {
         apply from: "${rootDir}/gradle/quality.gradle"
+        //apply from 'https://raw.githubusercontent.com/chrisdoyle/gradle-fury/master/gradle/quality.gradle'
+    }
+    /*******************************************************/
+    /*******************************************************/
+    // END quality plugin
+    /*******************************************************/
+    /*******************************************************/
 }
 
 subprojects {

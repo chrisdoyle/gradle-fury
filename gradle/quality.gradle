@@ -1,9 +1,35 @@
 /**
- * This file was lifted...ehm borrowed from
- * https://github.com/MasonLiuChn/AndroidCodeQuality
- * Email:MasonLiuChn@gmail.com
  *
- * It only applies to android projects!
+ * The Quality plugin - runs findbugs, checkstyle, and pmd on all your projects (android and java)
+ *
+ * This file was mostly lifted...ehm borrowed from
+ * https://github.com/MasonLiuChn/AndroidCodeQuality
+ * original author Email:MasonLiuChn@gmail.com
+ *
+ * It originally only worked on android projects but was modified to support both android
+ * and regular java/jar/war projects too.
+ *
+ *
+ * To apply to your project, apply this file under 'allprojects'
+ * then copy the files from gradle-fury/config and place it in your project
+ *
+ * allprojects {
+ *        apply from 'https://raw.githubusercontent.com/chrisdoyle/gradle-fury/master/gradle/quality.gradle'
+ *  }
+ *  then execute with `gradelw build`
+ *
+ * Since the checks can add a lot of time to your build, you probably want to make it optional...
+ *
+ * allprojects {
+ *      if (project.hasProperty('profile') && project.profile.split(',').contains("ci")) {
+ *        apply from 'https://raw.githubusercontent.com/chrisdoyle/gradle-fury/master/gradle/quality.gradle'
+ *     }
+ *  }
+ *
+ *  then execute with `gradelw build -Pprofile=ci`
+ *
+ *  @since 1.0.10
+ *  @author Alex
  */
 
 
