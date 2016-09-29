@@ -146,7 +146,7 @@ script:
   - cd ..
   - cd MavenConsumers
   - cd ..
-  - cd GradleBootStrap
+  - cd GradleBootstrap
   - ./gradlew bootstrap
   - ./gradlew install -Pprofile=javadocs,sources
   #build using maven with integration tests
