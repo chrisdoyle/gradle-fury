@@ -74,8 +74,11 @@ import org.commonmark.renderer.html.HtmlRenderer
 
 import java.text.SimpleDateFormat;
 
+if (!hasProperty("buildWebsiteDir")){
+    ext.buildWebsiteDir = "${rootDir}/build/site/"
+}
 ext.webSrcDir = "${rootDir}/src/site/"
-ext.buildWebsiteDir = "${rootDir}/build/site/"
+//ext.buildWebsiteDir = "${rootDir}/build/site/"
 ext.javadocsModules = new ArrayList<>();
 ext.reports = new ArrayList<>();
 
@@ -105,8 +108,8 @@ task site(group: "Gradle Fury Site Generation",
  * only used for generating a war file
  */
 void createWebXml() {
-    new File("${rootDir}/build/site/").mkdirs();
-    new File("${rootDir}/build/site/" + "/WEB-INF/").mkdirs();
+    new File(project.ext.buildWebsiteDir).mkdirs();
+    new File(project.ext.buildWebsiteDir + "/WEB-INF/").mkdirs();
     String contents = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<!DOCTYPE web-app PUBLIC\n" +
             "    \"-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN\"\n" +
@@ -121,7 +124,7 @@ void createWebXml() {
             "        <welcome-file>index.html</welcome-file>\n" +
             "    </welcome-file-list>\n" +
             "</web-app>";
-    File file = new File("${rootDir}/build/site/WEB-INF/web.xml");
+    File file = new File(project.ext.buildWebsiteDir + "WEB-INF/web.xml");
     PrintWriter out = new PrintWriter(file);
     out.println(contents);
     out.close()
@@ -136,7 +139,7 @@ task siteWar(group: "Gradle Fury Site Generation",
     task(zipResources, type: Zip) {
         destinationDir new File("${rootDir}/build/")
         archiveName 'site.war'
-        from "${rootDir}/build/site/"
+        from project.ext.buildWebsiteDir
 
     }.execute()
 

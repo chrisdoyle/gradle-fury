@@ -455,6 +455,14 @@ Most Github flavored markdown tags are supported. You can also any files put in 
 be included in the site. Any html or pdf files in the root `src/site/` will be auto-linked on the left hand site
 navigation menu.
 
+Finally, put this in your root build.gradle file. Do not place it within `allprojects`.
+
+```groovy
+
+apply from 'https://raw.githubusercontent.com/chrisdoyle/gradle-fury/master/gradle/site.gradle'
+
+```
+
 We also took some liberties from the maven-site-plugin. Many of the pages it generates can be reduced to just a link.
 For instance, the location of the source (do we really need an entire web page that only shows the link to the source code?). 
 Same goes for CI, distro management and issue tracking.
@@ -474,7 +482,7 @@ Same goes for CI, distro management and issue tracking.
 ./gradlew site
 ```
 
-The output goes to `rootDir/build/site/`
+The output goes to `rootDir/build/site/` and can be overridden with `ext.buildWebsiteDir = rootDir.absolutePath + "/docs/"`
 
 In the future, we may add some extra tasks for zipping up the site, deploying to an ftp or something else.
 
