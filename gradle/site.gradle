@@ -464,11 +464,11 @@ def generateReportList(List<File> reports){
                 append(" \t| ");
         for (int k=0; k < r.links.size(); k++){
             reportsMarkdown.
-                    append("[").
+                    append("<a href=\"javascript:showReport('" + r.links.get(k).url + "');\">").
                     append(org.apache.commons.lang3.StringUtils.capitalize(r.links.get(k).text)).
-                    append("](").
-                    append(r.links.get(k).url).
-                    append(") ");
+                    append("</a> ");
+                    //append(r.links.get(k).url).
+                    //append(") ");
         }
         reportsMarkdown.append("| \n");
 

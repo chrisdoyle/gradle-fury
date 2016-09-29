@@ -198,8 +198,20 @@ ${forkMeOnGitHub}
 
 
         <div id="bodyColumn" class="span10">
+            <a name="topOfPage"></a>
             ${body}
+
         </div>
+        <div id="iframenav" style="visibility:hidden">
+        <center><h3><a name="iframeAnchor"></a><a href="#topOfPage"> -- Top --</a></h3>
+            <a href="javascript:popout();">Load in a new window</a>
+        </center>
+        </div>
+
+        <iframe id="frame1" width="100%" height="75%" style="display:none"></iframe>
+
+
+
     </div>
 </div>
 
@@ -237,6 +249,29 @@ ${forkMeOnGitHub}
 
 <script type="text/javascript">
 
+/**
+*    opens the current iframe url in a new window or tab
+*/
+function popout(){
+    var destination = $("#frame1").attr('src');
+    var win = window.open(destination, '_blank');
+    win.focus();
+}
+
+/**
+*    displays a report and shows the iframe
+*/
+function showReport(url){
+    $("#iframenav").css('visibility','');
+    $("#frame1").show();
+    $("#frame1").attr('src', url);
+    $("#frame1").attr('height', window.innerHeight);
+    window.location.assign("#iframeAnchor");
+}
+
+/**
+* shows our maven/gradle helper modal
+*/
 function showModal(group, artifact, version,type, classifier){
     if ("" !== type){
         type = type.trim();
@@ -301,6 +336,10 @@ $(function () {
     setNavigation();
 });
 
+
+/**
+* this sets the "active" bit on the left hand side naviation menu
+*/
 function setNavigation() {
     var path = window.location.pathname;
     path = path.replace(/\/$/, "");
@@ -308,11 +347,9 @@ function setNavigation() {
     var idx=path.toString().lastIndexOf("/");
     if (idx >= 0)
         path=path.substring(idx+1, path.length);
-//    console.log(path);
 
     $(".nav a").each(function () {
         var href = $(this).attr('href');
-  //      console.log('attempting to fix ' + path + " " + path.substring(0, href.length) + " " + href);
         if (path.substring(0, href.length) === href) {
             $(this).closest('li').addClass('active');
         }
