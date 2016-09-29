@@ -46,6 +46,35 @@ apply plugin: 'pmd'
 apply plugin: 'jdepend'
 
 
+// setup for java ncss
+configurations {
+    javancss
+}
+
+dependencies {
+    javancss 'org.codehaus.javancss:javancss:33.54'
+}
+task javancss << {
+    new File("${buildDir}/reports/javancss/").mkdirs()
+    ant {
+        taskdef name:'javancss', classname:'javancss.JavancssAntTask', classpath:configurations.javancss.asPath
+
+        //${buildDir}/
+        //javancss srcdir:'src', includes:'**/*.java', packageMetrics:'true', classMetrics:'true', functionMetrics:'true',abortOnFail:false, generateReport:true, outputfile:"${buildDir}/reports/javancss/main.txt", format:'plain'
+        javancss srcdir:'src', includes:'**/*.java', packageMetrics:'true', classMetrics:'true', functionMetrics:'true',abortOnFail:false, generateReport:true, outputfile:"${buildDir}/reports/javancss/main.xml", format:'xml'
+    }
+
+    ant.xslt(
+            in: "$reporting.baseDir/javancss/main.xml",
+            style: "$rootDir/config/javancss/javancss2html.xsl",
+            out: "$reporting.baseDir/javancss/index.html")
+}
+
+javancss.onlyIf { file('src').exists() }
+check.dependsOn javancss
+// END setup for java ncss
+
+
 if (!rootProject.hasProperty('codeQuality')) {
     rootProject.ext.codeQuality = true
     println "== Quality plugin active. Hold on to your butts...";
