@@ -102,6 +102,8 @@ task site(group: "Gradle Fury Site Generation",
     int modifiedFiles = convertContent();
     logger.info("Site generation complete, altered " + modifiedFiles + " files");
 
+    new File(project.ext.buildWebsiteDir + "/template.html").delete();
+
 }
 
 /**

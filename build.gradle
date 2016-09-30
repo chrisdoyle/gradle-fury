@@ -128,7 +128,7 @@ task copyReadme() << {
 site.dependsOn copyReadme
 
 //tip, you can override the output directory of the site by uncommenting the following
-//ext.buildWebsiteDir = rootDir.absolutePath + "/docs/"
+ext.buildWebsiteDir = rootDir.absolutePath + "/docs/"
 
 //note that gradlew siteWar will always go to the build/site.war file
 
