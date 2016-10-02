@@ -960,7 +960,8 @@ def modifyGeneratedPom(pom) {
                 //https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Scope
                 //maven only supports the following scope identifiers
                 //test, compile, provided, runtime, system,
-                configurationNames.each { configurationName ->
+
+                project.configurations.names.each { configurationName ->
                     configurations[configurationName].allDependencies.each { dependency ->
                         if (dependency.group != null && dependency.name != null) {
 
