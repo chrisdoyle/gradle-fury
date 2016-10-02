@@ -97,9 +97,9 @@ script:
 
   # ok let's blow up the local maven repo
   - rm -rf ~/.m2/
-  # build again with signatures, then verify the signatures
+  # build again with signatures, then verify the signatures and all the reporting stuff
   - ./gradlew clean
-  - ./gradlew install -Pprofile=sources,javadoc
+  - ./gradlew install -Pprofile=ci
   - ci/verify.sh
 
 
@@ -121,14 +121,18 @@ script:
   - ci//waitForNexus.sh
 
   - ./gradlew distZip -Pprofile=sources,javadoc
-  # run this on failure
-  - cat local.properties
-  - cat gradle.properties
-  
+
+  # build with signatures and publish
+  #- ./gradlew publishArtifacts -Pprofile=sources,javadoc
+  #- ci/verifyNoSignatures.sh
+
   # build with signatures and publish
   - ./gradlew publishArtifacts -Pprofile=sources,javadoc
   # verify correctness
   - ci/verifySignatures.sh
+
+  #build the site
+  - ./gradlew siteWar
 
   #stop nexus
   - cd nexus-2.13.0-01/bin
