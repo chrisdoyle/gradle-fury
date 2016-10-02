@@ -146,7 +146,8 @@ script:
   # now let's build some it projects to confirm stuff is working and dependencies are resolved
   - cd it
   - cd GradleConsumers
-  - ./gradlew build
+  - ./gradlew build -Pprofile=ci
+  # TODO future, enable site generation
   - cd ..
   - cd MavenConsumers
   - cd ..
