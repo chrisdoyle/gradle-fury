@@ -68,7 +68,7 @@
                 2016-10-02
             </li>
             <li id="projectVersion" class="pull-right">
-                1.0.14-SNAPSHOT
+                1.0.14
             </li>
 
         </ul>
@@ -92,19 +92,19 @@
                     from src/site are auto linked here-->
                      <li>
 
-                                <a href="encryption.html" title="Encryption">
+                                <a href="sampleAsciidoc.html" title="Sample Asciidoc">
                                     <span class="none"></span>
-                                    Encryption</a>
+                                    Sample Asciidoc</a>
                             </li> <li>
 
-                                <a href="fantastic.html" title="Fantastic">
+                                <a href="sampleHtml.html" title="Sample Html">
                                     <span class="none"></span>
-                                    Fantastic</a>
+                                    Sample Html</a>
                             </li> <li>
 
-                                <a href="Guide.html" title="Guide">
+                                <a href="sampleMarkdown.html" title="Sample Markdown">
                                     <span class="none"></span>
-                                    Guide</a>
+                                    Sample Markdown</a>
                             </li> <li>
 
                                 <a href="wiki.html" title="Wiki">
@@ -243,19 +243,23 @@
 </thead>
 <tbody>
 <tr><td>Modules:</td><td>13</td></tr>
-<tr><td>Number of dependencies (NOD):</td><td>33</td></tr>
-<tr><td>Number of unique artifacts (NOA):</td><td>36</td></tr>
+<tr><td>Number of dependencies (NOD):</td><td>39</td></tr>
+<tr><td>Number of unique artifacts (NOA):</td><td>42</td></tr>
 <tr><td>Number of version-conflicting artifacts (NOC):</td><td>6</td></tr>
-<tr><td>Number of SNAPSHOT artifacts (NOS):</td><td>3</td></tr>
+<tr><td>Number of SNAPSHOT artifacts (NOS):</td><td>0</td></tr>
 <tr><td>Number of Wildcard artifacts (NOWC):</td><td>10</td></tr>
-<tr><td>Convergence (NOD/NOA):</td><td>91%</td></tr>
-<tr><td>Ready for release (100 % convergence and no SNAPSHOTS):</td><td><strong>Error</strong><br>You have SNAPSHOT dependencies.<br>You do not have 100 % convergence.</td></tr>
+<tr><td>Convergence (NOD/NOA):</td><td>92%</td></tr>
+<tr><td>Ready for release (100 % convergence and no SNAPSHOTS):</td><td><strong>Error</strong><br>You do not have 100 % convergence.</td></tr>
 </tbody>
 </table>
 <h2>Gradle Dependencies, composite</h2>
 <p>This is a composite of all dependencies for this project. Useful if you need to go offline and want to force all dependencies to download. Note: the dependencies listed below are all listed as compile, even though they may not actually be compile dependencies. Also missing is classifiers.</p>
 <pre><code>
 dependencies {
+	compile: 'org.codehaus.javancss:javancss:33.54@jar'
+	compile: 'jdepend:jdepend:2.9.1@jar'
+	compile: 'org.apache.ant:ant-jdepend:1.9.6@jar'
+	compile: 'net.sourceforge.pmd:pmd-java:5.2.3@jar'
 	compile: 'org.umlgraph:umlgraph:5.6.6@jar'
 	compile: 'com.atlassian.commonmark:commonmark:0.7.0'
 	compile: 'com.atlassian.commonmark:commonmark-ext-gfm-tables:0.7.0'
@@ -273,15 +277,17 @@ dependencies {
 	compile: 'junit:junit:4.12@jar'
 //END WARN dependency converage flag!
 
-    	compile: 'com.chrisdoyle:hello-world-lib:1.0.14-SNAPSHOT@jar'
+    	compile: 'com.google.code.findbugs:findbugs:3.0.1@jar'
+	compile: 'com.chrisdoyle:hello-world-lib:1.0.14@jar'
 	compile: 'com.android.support:support-annotations:23.3.0@jar'
 	compile: 'org.jacoco:org.jacoco.agent:0.7.4.201502262128@jar'
 	compile: 'org.jacoco:org.jacoco.ant:0.7.4.201502262128@jar'
+	compile: 'com.puppycrawl.tools:checkstyle:5.9@jar'
 	compile: 'com.android.support.test:runner:0.4.+'
 	compile: 'com.android.support.test:rules:0.4.+'
 	compile: 'com.squareup.leakcanary:leakcanary-android:1.4-beta2@aar'
 	compile: 'ch.acra:acra:4.7.0@aar'
-	compile: 'com.chrisdoyle:hello-world-aar:1.0.14-SNAPSHOT@aar'
+	compile: 'com.chrisdoyle:hello-world-aar:1.0.14@aar'
 
 
 //WARN dependency converage flag! Currently used by the modules: [hello-world-apk, hello-world-gmaps, hello-world-apk-overrides]
@@ -303,7 +309,7 @@ dependencies {
 	compile: 'org.apache.commons:commons-math3:3.+'
 	compile: 'commons-codec:commons-codec:1+'
 	compile: 'org.osmdroid:osmdroid-android:5.4.1@aar'
-	compile: 'com.chrisdoyle:hello-universe-lib:1.0.14-SNAPSHOT@jar'
+	compile: 'com.chrisdoyle:hello-universe-lib:1.0.14@jar'
 	compile: 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta2@aar'
 	compile: 'com.google.android.gms:play-services:8.+'
 	compile: 'com.google.android.gms:play-services-maps:8.+'
@@ -313,6 +319,30 @@ dependencies {
 <p>This is a composite of all dependencies for this project. Useful if you need to go offline and want to force all dependencies to download. Note: the dependencies listed below are all listed as compile, even though they may not actually be compile dependencies. Also missing is classifiers.</p>
 <pre><code>
 &lt;dependencies&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.codehaus.javancss&lt;/groupId&gt;
+		&lt;artifactId&gt;javancss&lt;/artifactId&gt;
+		&lt;version&gt;33.54&lt;/version&gt;
+		&lt;type&gt;jar&lt;/type&gt;
+	&lt;/dependency&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;jdepend&lt;/groupId&gt;
+		&lt;artifactId&gt;jdepend&lt;/artifactId&gt;
+		&lt;version&gt;2.9.1&lt;/version&gt;
+		&lt;type&gt;jar&lt;/type&gt;
+	&lt;/dependency&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.apache.ant&lt;/groupId&gt;
+		&lt;artifactId&gt;ant-jdepend&lt;/artifactId&gt;
+		&lt;version&gt;1.9.6&lt;/version&gt;
+		&lt;type&gt;jar&lt;/type&gt;
+	&lt;/dependency&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;net.sourceforge.pmd&lt;/groupId&gt;
+		&lt;artifactId&gt;pmd-java&lt;/artifactId&gt;
+		&lt;version&gt;5.2.3&lt;/version&gt;
+		&lt;type&gt;jar&lt;/type&gt;
+	&lt;/dependency&gt;
 	&lt;dependency&gt;
 		&lt;groupId&gt;org.umlgraph&lt;/groupId&gt;
 		&lt;artifactId&gt;umlgraph&lt;/artifactId&gt;
@@ -386,9 +416,15 @@ dependencies {
 &lt;!--END WARN dependency converage flag!--&gt;
 
     	&lt;dependency&gt;
+		&lt;groupId&gt;com.google.code.findbugs&lt;/groupId&gt;
+		&lt;artifactId&gt;findbugs&lt;/artifactId&gt;
+		&lt;version&gt;3.0.1&lt;/version&gt;
+		&lt;type&gt;jar&lt;/type&gt;
+	&lt;/dependency&gt;
+	&lt;dependency&gt;
 		&lt;groupId&gt;com.chrisdoyle&lt;/groupId&gt;
 		&lt;artifactId&gt;hello-world-lib&lt;/artifactId&gt;
-		&lt;version&gt;1.0.14-SNAPSHOT&lt;/version&gt;
+		&lt;version&gt;1.0.14&lt;/version&gt;
 		&lt;type&gt;jar&lt;/type&gt;
 	&lt;/dependency&gt;
 	&lt;dependency&gt;
@@ -407,6 +443,12 @@ dependencies {
 		&lt;groupId&gt;org.jacoco&lt;/groupId&gt;
 		&lt;artifactId&gt;org.jacoco.ant&lt;/artifactId&gt;
 		&lt;version&gt;0.7.4.201502262128&lt;/version&gt;
+		&lt;type&gt;jar&lt;/type&gt;
+	&lt;/dependency&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;com.puppycrawl.tools&lt;/groupId&gt;
+		&lt;artifactId&gt;checkstyle&lt;/artifactId&gt;
+		&lt;version&gt;5.9&lt;/version&gt;
 		&lt;type&gt;jar&lt;/type&gt;
 	&lt;/dependency&gt;
 	&lt;dependency&gt;
@@ -434,7 +476,7 @@ dependencies {
 	&lt;dependency&gt;
 		&lt;groupId&gt;com.chrisdoyle&lt;/groupId&gt;
 		&lt;artifactId&gt;hello-world-aar&lt;/artifactId&gt;
-		&lt;version&gt;1.0.14-SNAPSHOT&lt;/version&gt;
+		&lt;version&gt;1.0.14&lt;/version&gt;
 		&lt;type&gt;aar&lt;/type&gt;
 	&lt;/dependency&gt;
 
@@ -513,7 +555,7 @@ dependencies {
 	&lt;dependency&gt;
 		&lt;groupId&gt;com.chrisdoyle&lt;/groupId&gt;
 		&lt;artifactId&gt;hello-universe-lib&lt;/artifactId&gt;
-		&lt;version&gt;1.0.14-SNAPSHOT&lt;/version&gt;
+		&lt;version&gt;1.0.14&lt;/version&gt;
 		&lt;type&gt;jar&lt;/type&gt;
 	&lt;/dependency&gt;
 	&lt;dependency&gt;
