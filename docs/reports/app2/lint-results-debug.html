@@ -18,10 +18,14 @@ document.getElementById(id+'Link').style.display = 'none';
 <body>
 <h1>Lint Report</h1>
 <div class="titleSeparator"></div>
-Check performed at Tue Sep 06 20:12:13 EDT 2016.<br/>
-0 errors and 6 warnings found:<br/><br/>
+Check performed at Sun Oct 02 10:36:13 EDT 2016.<br/>
+1 errors and 6 warnings found:<br/><br/>
 <table class="overview">
 <tr><td></td><td class="categoryColumn"><a href="#Correctness">Correctness</a>
+</td></tr>
+<tr>
+<td class="countColumn">1</td><td class="issueColumn"><img border="0" align="top" src="lint-results-debug_files/lint-error.png" alt="Error" />
+<a href="#InvalidPackage">InvalidPackage: Package not included in Android</a>
 </td></tr>
 <tr>
 <td class="countColumn">1</td><td class="issueColumn"><img border="0" align="top" src="lint-results-debug_files/lint-warning.png" alt="Warning" />
@@ -59,6 +63,26 @@ Check performed at Tue Sep 06 20:12:13 EDT 2016.<br/>
 <a name="Correctness"></a>
 <div class="category"><a href="#" title="Return to top">Correctness</a><div class="categorySeparator"></div>
 </div>
+<a name="InvalidPackage"></a>
+<div class="issue">
+<div class="id"><a href="#" title="Return to top">InvalidPackage: Package not included in Android</a><div class="issueSeparator"></div>
+</div>
+<div class="warningslist">
+<span class="location"><a href="../../../../../../../.gradle/caches/modules-2/files-2.1/junit/junit/4.12/2973d150c0dc1fefe998f834810d68f278ea58ec/junit-4.12.jar">../../../../../../../.gradle/caches/modules-2/files-2.1/junit/junit/4.12/2973d150c0dc1fefe998f834810d68f278ea58ec/junit-4.12.jar</a></span>: <span class="message">Invalid package reference in library; not included in Android: <code>java.lang.management</code>. Referenced from <code>org.junit.internal.runners.statements.FailOnTimeout</code>.</span><br />
+</div>
+<div class="metadata">Priority: 6 / 10<br/>
+Category: Correctness</div>
+Severity: <span class="error">Error</span><div class="summary">
+Explanation: Package not included in Android.</div>
+<div class="explanation">
+This check scans through libraries looking for calls to APIs that are not included in Android.<br/>
+<br/>
+When you create Android projects, the classpath is set up such that you can only access classes in the API packages that are included in Android. However, if you add other projects to your libs/ folder, there is no guarantee that those .jar files were built with an Android specific classpath, and in particular, they could be accessing unsupported APIs such as java.applet.<br/>
+<br/>
+This check scans through library jars and looks for references to API packages that are not included in Android and flags these. This is only an error if your code calls one of the library classes which wind up referencing the unsupported package.
+</div>
+<br/><div class="moreinfo">More info: </div><br/>To suppress this error, use the issue id "InvalidPackage" as explained in the <a href="#SuppressInfo">Suppressing Warnings and Errors</a> section.<br/>
+</div>
 <a name="OldTargetApi"></a>
 <div class="issue">
 <div class="id"><a href="#" title="Return to top">OldTargetApi: Target SDK attribute is not targeting latest version</a><div class="issueSeparator"></div>
@@ -92,13 +116,13 @@ To fix this issue, set the <code>targetSdkVersion</code> to the highest availabl
 <div class="id"><a href="#" title="Return to top">GradleDependency: Obsolete Gradle Dependency</a><div class="issueSeparator"></div>
 </div>
 <div class="warningslist">
-<span class="location"><a href="../../build.gradle">../../build.gradle</a>:23</span>: <span class="message">A newer version of com.android.support:appcompat-v7 than 23.+ is available: 24.2.0</span><br /><pre class="errorlines">
-<span class="lineno">  20</span> }
-<span class="lineno">  21</span> 
-<span class="lineno">  22</span> dependencies {
-<span class="lineno">  23</span>     <span class="errorspan">compile 'com.android.support:appcompat-v7:23.+'</span>
-<span class="lineno">  24</span>     //note, the following line is updated by the gradle-fury ci scripts to have the correct
-<span class="lineno">  25</span>     //version information applied, if you change it, also change the ci scripts
+<span class="location"><a href="../../build.gradle">../../build.gradle</a>:26</span>: <span class="message">A newer version of com.android.support:appcompat-v7 than 23.+ is available: 24.2.0</span><br /><pre class="errorlines">
+<span class="lineno">  23</span> }
+<span class="lineno">  24</span> 
+<span class="lineno">  25</span> dependencies {
+<span class="lineno">  26</span>     <span class="errorspan">compile 'com.android.support:appcompat-v7:23.+'</span>
+<span class="lineno">  27</span>     //note, the following line is updated by the gradle-fury ci scripts to have the correct
+<span class="lineno">  28</span>     //version information applied, if you change it, also change the ci scripts
 </pre>
 </div>
 <div class="metadata">Note: This issue has an associated quickfix operation in Android Studio/IntelliJ&nbsp;<img alt="Fix" border="0" align="top" src="lint-results-debug_files/lint-run.png" />
@@ -117,13 +141,13 @@ This detector looks for usages of libraries where the version you are using is n
 <div class="id"><a href="#" title="Return to top">GradleDynamicVersion: Gradle Dynamic Version</a><div class="issueSeparator"></div>
 </div>
 <div class="warningslist">
-<span class="location"><a href="../../build.gradle">../../build.gradle</a>:23</span>: <span class="message">Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:23.+)</span><br /><pre class="errorlines">
-<span class="lineno">  20</span> }
-<span class="lineno">  21</span> 
-<span class="lineno">  22</span> dependencies {
-<span class="lineno">  23</span>     <span class="errorspan">compile 'com.android.support:appcompat-v7:23.+'</span>
-<span class="lineno">  24</span>     //note, the following line is updated by the gradle-fury ci scripts to have the correct
-<span class="lineno">  25</span>     //version information applied, if you change it, also change the ci scripts
+<span class="location"><a href="../../build.gradle">../../build.gradle</a>:26</span>: <span class="message">Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:23.+)</span><br /><pre class="errorlines">
+<span class="lineno">  23</span> }
+<span class="lineno">  24</span> 
+<span class="lineno">  25</span> dependencies {
+<span class="lineno">  26</span>     <span class="errorspan">compile 'com.android.support:appcompat-v7:23.+'</span>
+<span class="lineno">  27</span>     //note, the following line is updated by the gradle-fury ci scripts to have the correct
+<span class="lineno">  28</span>     //version information applied, if you change it, also change the ci scripts
 </pre>
 </div>
 <div class="metadata">Note: This issue has an associated quickfix operation in Android Studio/IntelliJ&nbsp;<img alt="Fix" border="0" align="top" src="lint-results-debug_files/lint-run.png" />
