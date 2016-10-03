@@ -66,6 +66,7 @@ before_script:
  - gpg --list-keys
 
  - chmod 755 ci/*.sh
+ - ci/matrix_switcher.sh
 
  #setup the maven android sdk stuff
  #- mkdir temp
@@ -141,7 +142,7 @@ script:
   - cd ..
 
 
-
+  //- ci/configureIt.sh
   # by this point, we've verified everything gradle related is working
   # now let's build some it projects to confirm stuff is working and dependencies are resolved
   - cd it
