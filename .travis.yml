@@ -142,7 +142,7 @@ script:
   - cd ..
 
 
-  //- ci/configureIt.sh
+  #- ci/configureIt.sh
   # by this point, we've verified everything gradle related is working
   # now let's build some it projects to confirm stuff is working and dependencies are resolved
   - cd it
