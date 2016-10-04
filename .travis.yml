@@ -1,7 +1,6 @@
 language: android
 jdk:
   - openjdk7
-  - oraclejdk8
 android:
   components:
     # The BuildTools version used by your project
@@ -51,7 +50,6 @@ sudo: required
 
 
 before_script:
- - if [ "$JDK" = "8" ] then jdk_switcher use oraclejdk8; else jdk_switcher use openjdk7; fi
  - sudo apt-get install gnupg2
  - sudo apt-get install rng-tools gnupg-agent pinentry-curses
  #- sudo echo EXTRAOPTIONS=\"-r /dev/random\" >> /etc/conf.d/rngd
