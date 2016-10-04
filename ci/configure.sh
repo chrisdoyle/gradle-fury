@@ -23,6 +23,6 @@ rm gradle.properties
 mv gradle2.properties gradle.properties
 
 
-if [ "$JDK" = "8" ]; then
-    jdk_switcher use oraclejdk8
-fi
+#if [ "$JDK" = "8" ]; then
+#    jdk_switcher use oraclejdk8
+#fi
