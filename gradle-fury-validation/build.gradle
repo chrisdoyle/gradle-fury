@@ -2,6 +2,7 @@ description = '[ c h r i s d o y l e ] :: Gradle Fury :: Validation and Test Sui
 
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'distribution'    //needed to produce zip on gradle 2.2.1 and older
 
 compileJava {
     sourceCompatibility = "${project.property('compileJava.sourceCompatibility')}"
