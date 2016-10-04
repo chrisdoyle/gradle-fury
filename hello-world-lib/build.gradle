@@ -12,7 +12,7 @@ dependencies {
 
     //since gradle 2.12, similar to maven "provided"
     //compileOnly "commons-io:commons-io:${project.property('commons-io.version')}"
-    compile "commons-io:commons-io:${project.property('commons-io.version')}"
+    compile "commons-logging:commons-logging:${project.property('commons-io.version')}"
 
 
     testCompile "junit:junit:${project.property('junit.version')}"
