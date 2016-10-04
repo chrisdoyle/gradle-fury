@@ -34,9 +34,9 @@ env:
     - GRADLE_VERSION='2.2.1' GRADLE_PLUGIN_VERSION='1.3.0'
     exclude:
       # exclude jdk7 with the 3.0 build because it requires jdk8
-      - jdk: openjdk7
-        env: GRADLE_VERSION='3.0'
-        env: GRADLE_PLUGIN_VERSION='2.2.0'
+    - jdk: openjdk7
+      env: GRADLE_VERSION='3.0'
+      env: GRADLE_PLUGIN_VERSION='2.2.0'
 
 
 
@@ -110,7 +110,7 @@ script:
   - rm -rf ~/.m2/
   # build again with signatures, then verify the signatures and all the reporting stuff
   - ./gradlew clean
-  - ./gradlew install -Pprofile=ci
+  - ./gradlew distZip install -Pprofile=ci
   - ci/verify.sh
 
 
