@@ -447,6 +447,8 @@ Then execute with `gradelw build -Pprofile=ci`
 
 ## Maven Site Plugin
 
+### [Here's what it looks like][http://chrisdoyle.github.io/gradle-fury]
+
 Well it's not exactly the Maven Site Plugin, but it's our version of it. It's pretty darn close.
 It uses theming inspired by [Apache Fluido](http://maven.apache.org/skins/maven-fluido-skin/) and is loosely based
 on the work Paul Speed-2 @ filament did over [here](https://sourceforge.net/p/filament/code/HEAD/tree/trunk/site/build.gradle).
