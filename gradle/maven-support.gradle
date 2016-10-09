@@ -1014,62 +1014,193 @@ def modifyGeneratedPom(pom) {
                         configurations[configurationName].allDependencies.each { dependency ->
                             if (dependency.group != null && dependency.name != null) {
 
-                                addedDependencies++;
-                                def dependencyNode = dependenciesNode.appendNode('dependency')
-                                dependencyNode.appendNode('groupId', dependency.group)
-                                dependencyNode.appendNode('artifactId', dependency.name)
-                                if ("default".equalsIgnoreCase(configurationName) ||
-                                        "compile".equalsIgnoreCase(configurationName) ||
-                                        "releaseCompile".equalsIgnoreCase(configurationName))
-                                    dependencyNode.appendNode('scope', "compile");
-                                else if ("testCompile".equalsIgnoreCase(configurationName) ||
-                                        "androidTestCompile".equalsIgnoreCase(configurationName))
-                                    dependencyNode.appendNode('scope', "test");
-                                else if ("compileOnly".equalsIgnoreCase(configurationName) ||
-                                        "provided".equalsIgnoreCase(configurationName))
-                                    dependencyNode.appendNode('scope', "provided");
-                                else if ("runtime".equalsIgnoreCase(configurationName))
-                                    dependencyNode.appendNode('scope', "runtime");
 
+                                String version;
                                 if (dependency.version.endsWith("+")) {
                                     //a gradle wildcard
                                     if ("+".equals(dependency.version)) {
-                                        dependencyNode.appendNode('version', "LATEST")
+                                        version= "LATEST"
                                     } else if (dependency.version.endsWith(".+")) {
                                         //the version is something.+
-                                        dependencyNode.appendNode('version', "[" + dependency.version.replace(".+", ",)"))
+                                        version= "[" + dependency.version.replace(".+", ",)");
                                     } else if (dependency.version.endsWith("+")) {
-                                        dependencyNode.appendNode('version', "[" + dependency.version.replace("+", ",)"))
+                                        version="[" + dependency.version.replace("+", ",)")
                                     } else {
+                                        version = dependency.version;
                                         logger.warn("WARN - unhandled case for dependency version mediation for " +
                                                 dependency.group + ":" + dependency.name + ":" + dependency.version);
                                     }
                                     //TODO there may be other cases here
 
                                 } else {
-                                    dependencyNode.appendNode('version', dependency.version)
+                                    version = dependency.version;
                                 }
+
+                                String scope = "";
+                                if ("default".equalsIgnoreCase(configurationName) ||
+                                        "compile".equalsIgnoreCase(configurationName) ||
+                                        "releaseCompile".equalsIgnoreCase(configurationName))
+                                    scope="compile";
+                                else if ("testCompile".equalsIgnoreCase(configurationName) ||
+                                        "androidTestCompile".equalsIgnoreCase(configurationName))
+                                    scope="test";
+                                else if ("compileOnly".equalsIgnoreCase(configurationName) ||
+                                        "provided".equalsIgnoreCase(configurationName))
+                                    scope="provided";
+                                else if ("runtime".equalsIgnoreCase(configurationName))
+                                    scope="runtime";
+
+
+                                System.out.println("dupchecker1" + scope)
+                                addedDependencies++;
+                                //duplicate check
+                                boolean dupFound=false;
+                                //reflect(dependenciesNode)
+                                try {
+                                    dependenciesNode.each{ item ->
+
+                                        //reflect(item);
+                                        /*System.out.println("dupchecker2 comparing " + item);
+                                        System.out.println(" vs "+ dependency)
+                                        System.out.println("3"+item.group.value);
+                                        System.out.println("4"+item.group);
+                                        System.out.println("5"+item.group['value']);
+
+                                        item.attributes.each { attr->
+                                            System.out.println("6"+ attr);
+                                        };
+                                        item.values.each { attr->
+                                            System.out.println("7"+ attr);
+                                        };
+                                        System.out.println("8"+item['group']);
+                                        //System.out.println("9"+item.getProperty('group'));
+                                        */
+                                        System.out.println("9"+item.getProperties().directChildren);
+                                        //produces the following
+                                        //9[groupId[attributes={}; value=org.apache.commons], artifactId[attributes={}; value=commons-lang3], version[attributes={}; value=3.4], scope[attributes={}; value=compile]]
+
+                                        String itemscope="compile";
+                                        String itemgroup;
+                                        String itemversion;
+                                        String itemid;
+
+                                        String crap= item.getProperties().directChildren;   //gross
+                                        int index =crap.indexOf("value=", crap.indexOf("groupId[["));
+                                        if (index>0)
+                                        {
+                                            index+=5
+                                            itemgroup=crap.substring(index+1, crap.indexOf("]",index ));
+                                        }
+
+                                        index =crap.indexOf("value=", crap.indexOf("scope["));
+                                        if (index>0)
+                                        {
+                                            index+=5
+                                            itemscope=crap.substring(index+1, crap.indexOf("]",index ));
+                                        }
+                                        index =crap.indexOf("value=", crap.indexOf("artifactId["));
+                                        if (index>0)
+                                        {
+                                            index+=5
+                                            itemid=crap.substring(index+1, crap.indexOf("]",index ));
+                                        }
+                                        index =crap.indexOf("value=", crap.indexOf("version["));
+                                        if (index>0)
+                                        {
+                                            index+=5
+                                            itemversion=crap.substring(index+1, crap.indexOf("]",index ));
+                                        }
+
+
+                                        //System.out.println("10"+item.getProperties().directChildren.getProperties()['groupId']);
+                                        //reflect(item.getProperties().directChildren);
+
+                                        //null System.out.println("91"+item.getProperties().directChildren.hasProperty('groupId'));
+
+                                        //nopeSystem.out.println("10"+item.getProperties().directChildren.groupId);
+                                        //10[]
+
+
+                                        //nope System.out.println("11"+item.getProperties().directChildren.getProperty('groupId'));
+
+                                        //nope System.out.println("12"+item.getProperties().directChildren['groupId']);
+                                        //12[]
+
+                                        //nope System.out.println("13"+item.getProperties().directChildren.getProperties());
+                                        //13[class:class groovy.util.NodeList, empty:false]
+
+                                        //System.out.println("5"+item.getName());
+                                        //System.out.println("5"+item.getVersion());
+                                        //item.group.each {->val
+                                        //    System.out.println("6"+val);
+                                        //};
+                                        //System.out.println("7"+item.group.value());
+                                        //System.out.println("8"+item.group.value.value());
+
+
+                                        if (itemgroup.equalsIgnoreCase(dependency.group) &&
+                                                itemid.equalsIgnoreCase(dependency.name) &&
+                                                itemversion.equalsIgnoreCase(version)) {
+                                            //probable duplicate need to
+                                            System.out.println("\t\tFOUND dupchecker2" + item)
+                                            dupFound = true;
+                                            if (itemscope.equalsIgnoreCase("compile")) {
+                                                //do nothing
+                                                //existing item is already compile, don't change it or add a dup
+                                                System.out.println("skip");
+                                            } else if (itemscope.equals("test") && !scope.equals("test")) {
+                                                //item.scope = scope;
+                                                System.out.println("scope replaced");
+                                                dupFound=false;
+                                                System.out.println("Before" + dependenciesNode.size());
+                                                dependenciesNode.remove(item);
+                                                        System.out.println("after" + dependenciesNode.size());
+                                            } else {
+                                                //possible that the scopes are equal or greater than for the new node
+
+                                                //dependenciesNode.remove(item);
+                                            }
+
+                                        }
+                                    }
+                                }catch (Throwable t){
+                                    t.printStackTrace()
+                                }
+
+                                if (!dupFound) {
+                                    System.out.println("adding dependency " + dependency + ":" + scope)
+
+
+                                    def dependencyNode = dependenciesNode.appendNode('dependency')
+                                    dependencyNode.appendNode('groupId', dependency.group)
+                                    dependencyNode.appendNode('artifactId', dependency.name)
+
+                                    dependencyNode.appendNode('version', version)
+                                    dependencyNode.appendNode('scope', scope);
 
 // FIXME :: Issue #21: POM dependency generation shall support type and scope
 //                        dependencyNode.appendNode('type', ???)
 //                        dependencyNode.appendNode('scope', configurationName) // ???
 
-                                // if there are any exclusions in dependency
-                                if (dependency.excludeRules.size() > 0) {
-                                    def exclusionsNode = dependencyNode.appendNode('exclusions')
-                                    dependency.excludeRules.each { rule ->
-                                        def exclusionNode = exclusionsNode.appendNode('exclusion')
-                                        exclusionNode.appendNode('groupId', rule.group)
-                                        exclusionNode.appendNode('artifactId', rule.module)
+                                    // if there are any exclusions in dependency
+                                    if (dependency.excludeRules.size() > 0) {
+                                        def exclusionsNode = dependencyNode.appendNode('exclusions')
+                                        dependency.excludeRules.each { rule ->
+                                            def exclusionNode = exclusionsNode.appendNode('exclusion')
+                                            exclusionNode.appendNode('groupId', rule.group)
+                                            exclusionNode.appendNode('artifactId', rule.module)
+                                        }
                                     }
+                                } else {
+                                    System.out.println("addition skipped: dependency " + dependency + ":" + scope)
                                 }
                             }
                         }
                     }catch (Exception ex){
-                        logger.debug("Isseu 119, swallowed exception requesting the config name " + configurationName, ex);
+                        logger.warn("Issue 119, swallowed exception requesting the config name " + configurationName, ex);
                         //fix for issue 119
                         //always possible that the requested configuration does not exist on this project,
-                        //no skip it
+                        //so skip it
                     }
                 }
                 logger.info("added " + addedDependencies + " dependencies")
@@ -1596,11 +1727,15 @@ gradle.taskGraph.whenReady { taskGraph ->
 def reflect(object) {
     Method[] bits = object.class.methods
     for (int k =0; k < bits.length; k++){
-        System.out.println(bits[k].name);
+        System.out.println("REFLECT " + bits[k].name);
         for (int x= 0; x < bits[k].parameterTypes.length; x++) {
             System.out.println("\t" + bits[k].parameterTypes[x].name);
         }
     }
+
+    //println "REFLECT groovy methods" + object.metaClass.methods*.name.sort().unique()
+    object.metaClass.properties.each {println "REFLECT groovy properties"+ it.name }
+
 }
 
 
