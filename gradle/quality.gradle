@@ -59,7 +59,7 @@ buildscript{
     dependencies {
         classpath 'org.apache.commons:commons-lang3:3.4'
         classpath 'commons-io:commons-io:2.5'
-        classpath 'com.github.spyhunter99:dex-method-counts:2.+'
+        classpath 'com.github.spyhunter99:dex-method-counts-lib:2.1'
     }
 }
 
@@ -76,7 +76,7 @@ task dexCountReport() << {
 
 
         //List<String> apks = new ArrayList<>();
-        String[] list = new File(buildDir.absolutePath + "/outputs/apk/").list(new FilenameFilter() {
+        File[] list = new File(buildDir.absolutePath + "/outputs/apk/").listFiles(new FilenameFilter() {
             @Override
             boolean accept(File dir, String name) {
                 if (name.endsWith(".apk") && !name.contains("-unaligned"))
@@ -84,13 +84,18 @@ task dexCountReport() << {
                 return false;
             }
         });
+        if (list!=null && list.length > 0) {
+            String[] files = new String[list.length];
+            for (int i = 0; i < list.length; i++) {
+                files[i] = list[i].absolutePath;
+            }
 
-//FIXME
-        /*def dexcount = new info.persistent.dex.Main();
-        dexcount.enableStdOut(false)
-        dexcount.enableFileOutput(true)
-        dexcount.setOutputDirectory(outdir)
-        dexcount.run(list.join(" "));*/
+            def dexcount = new com.github.spyhunter99.dex.Main();
+            dexcount.enableStdOut(false)
+            dexcount.enableFileOutput(true)
+            dexcount.setOutputDirectory(outdir)
+            dexcount.run(files);
+        }
     }
 
 }
