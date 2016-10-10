@@ -1045,13 +1045,13 @@ def modifyGeneratedPom(pom) {
                         configurationNames.each { configurationName ->
                         try {
 
-                            System.out.println("@@@@@@@ processing dependencies for " + configurationName)
+                            logger.info("@@@@@@@ processing dependencies for " + configurationName)
                             //configuration.allDependencies.each { dependency ->
                             configurations[configurationName].allDependencies.each { dependency ->
                                 if (dependency.group != null && dependency.name != null) {
 
 
-                                    logger.debug(dependency)
+                                    //logger.debug(dependency.to)
                                     String version;
                                     if (dependency.version.endsWith("+")) {
                                         //a gradle wildcard
@@ -1338,7 +1338,7 @@ def modifyGeneratedPom(pom) {
                                 }
                             }
                         } catch (Exception ex) {
-                            logger.info("Issue 119, swallowed exception requesting the config name " + configurationName, ex);
+                            logger.warn("Issue 119, swallowed exception requesting the config name " + configurationName, ex);
                             //fix for issue 119
                             //always possible that the requested configuration does not exist on this project,
                             //so skip it
