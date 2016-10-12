@@ -76,70 +76,70 @@ public class Main {
 
     public final static String[] allSignedArtifacts = new String[]{
             "./hello-world-aar/build/outputs/aar/hello-world-aar-$version-debug.aar" ,
-            "./hello-world-aar/build/outputs/aar/hello-world-aar-$version-release.aar" ,
+            "./hello-world-aar/build/outputs/aar/hello-world-aar-$version.aar" ,
             "./hello-world-aar/build/libs/hello-world-aar-$version-debug-javadoc.jar" ,
             "./hello-world-aar/build/libs/hello-world-aar-$version-debug-sources.jar" ,
-            "./hello-world-aar/build/libs/hello-world-aar-$version-release-javadoc.jar" ,
-            "./hello-world-aar/build/libs/hello-world-aar-$version-release-sources.jar" ,
+            "./hello-world-aar/build/libs/hello-world-aar-$version-javadoc.jar" ,
+            "./hello-world-aar/build/libs/hello-world-aar-$version-sources.jar" ,
             "./hello-world-aar/build/publications/androidArtifacts/pom-default.xml" ,
 
 
 
             "./hello-world-gmaps/build/outputs/apk/hello-world-gmaps-$version-debug.apk" ,
-            "./hello-world-gmaps/build/outputs/apk/hello-world-gmaps-$version-release.apk" ,
+            "./hello-world-gmaps/build/outputs/apk/hello-world-gmaps-$version.apk" ,
             "./hello-world-gmaps/build/libs/hello-world-gmaps-$version-debug-javadoc.jar" ,
             "./hello-world-gmaps/build/libs/hello-world-gmaps-$version-debug-sources.jar" ,
-            "./hello-world-gmaps/build/libs/hello-world-gmaps-$version-release-javadoc.jar" ,
-            "./hello-world-gmaps/build/libs/hello-world-gmaps-$version-release-sources.jar" ,
+            "./hello-world-gmaps/build/libs/hello-world-gmaps-$version-javadoc.jar" ,
+            "./hello-world-gmaps/build/libs/hello-world-gmaps-$version-sources.jar" ,
             "./hello-world-gmaps/build/publications/androidArtifacts/pom-default.xml" ,
 
 
             "./hello-world-apk/build/outputs/apk/hello-world-apk-$version-barDebug.apk" ,
-            "./hello-world-apk/build/outputs/apk/hello-world-apk-$version-barRelease.apk" ,
+            "./hello-world-apk/build/outputs/apk/hello-world-apk-$version-bar.apk" ,
             "./hello-world-apk/build/outputs/apk/hello-world-apk-$version-bazDebug.apk" ,
-            "./hello-world-apk/build/outputs/apk/hello-world-apk-$version-bazRelease.apk" ,
+            "./hello-world-apk/build/outputs/apk/hello-world-apk-$version-baz.apk" ,
             "./hello-world-apk/build/outputs/apk/hello-world-apk-$version-fooDebug.apk" ,
-            "./hello-world-apk/build/outputs/apk/hello-world-apk-$version-fooRelease.apk" ,
+            "./hello-world-apk/build/outputs/apk/hello-world-apk-$version-foo.apk" ,
 
             "./hello-world-apk/build/libs/hello-world-apk-$version-barDebug-javadoc.jar" ,
             "./hello-world-apk/build/libs/hello-world-apk-$version-barDebug-sources.jar" ,
-            "./hello-world-apk/build/libs/hello-world-apk-$version-barRelease-javadoc.jar" ,
-            "./hello-world-apk/build/libs/hello-world-apk-$version-barRelease-sources.jar" ,
+            "./hello-world-apk/build/libs/hello-world-apk-$version-bar-javadoc.jar" ,
+            "./hello-world-apk/build/libs/hello-world-apk-$version-bar-sources.jar" ,
 
             "./hello-world-apk/build/libs/hello-world-apk-$version-bazDebug-javadoc.jar" ,
             "./hello-world-apk/build/libs/hello-world-apk-$version-bazDebug-sources.jar" ,
-            "./hello-world-apk/build/libs/hello-world-apk-$version-bazRelease-javadoc.jar" ,
-            "./hello-world-apk/build/libs/hello-world-apk-$version-bazRelease-sources.jar" ,
+            "./hello-world-apk/build/libs/hello-world-apk-$version-baz-javadoc.jar" ,
+            "./hello-world-apk/build/libs/hello-world-apk-$version-baz-sources.jar" ,
 
             "./hello-world-apk/build/libs/hello-world-apk-$version-fooDebug-javadoc.jar" ,
             "./hello-world-apk/build/libs/hello-world-apk-$version-fooDebug-sources.jar" ,
-            "./hello-world-apk/build/libs/hello-world-apk-$version-fooRelease-javadoc.jar" ,
-            "./hello-world-apk/build/libs/hello-world-apk-$version-fooRelease-sources.jar" ,
+            "./hello-world-apk/build/libs/hello-world-apk-$version-foo-javadoc.jar" ,
+            "./hello-world-apk/build/libs/hello-world-apk-$version-foo-sources.jar" ,
             "./hello-world-apk/build/publications/androidArtifacts/pom-default.xml" ,
 
 
 
             "./hello-world-apk-overrides/build/outputs/apk/hello-world-apk-overrides-$version-barDebug.apk" ,
-            "./hello-world-apk-overrides/build/outputs/apk/hello-world-apk-overrides-$version-barRelease.apk" ,
+            "./hello-world-apk-overrides/build/outputs/apk/hello-world-apk-overrides-$version-bar.apk" ,
             "./hello-world-apk-overrides/build/outputs/apk/hello-world-apk-overrides-$version-bazDebug.apk" ,
-            "./hello-world-apk-overrides/build/outputs/apk/hello-world-apk-overrides-$version-bazRelease.apk" ,
+            "./hello-world-apk-overrides/build/outputs/apk/hello-world-apk-overrides-$version-baz.apk" ,
             "./hello-world-apk-overrides/build/outputs/apk/hello-world-apk-overrides-$version-fooDebug.apk" ,
-            "./hello-world-apk-overrides/build/outputs/apk/hello-world-apk-overrides-$version-fooRelease.apk" ,
+            "./hello-world-apk-overrides/build/outputs/apk/hello-world-apk-overrides-$version-foo.apk" ,
 
             "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-barDebug-javadoc.jar" ,
             "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-barDebug-sources.jar" ,
-            "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-barRelease-javadoc.jar" ,
-            "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-barRelease-sources.jar" ,
+            "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-bar-javadoc.jar" ,
+            "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-bar-sources.jar" ,
 
             "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-bazDebug-javadoc.jar" ,
             "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-bazDebug-sources.jar" ,
-            "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-bazRelease-javadoc.jar" ,
-            "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-bazRelease-sources.jar" ,
+            "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-baz-javadoc.jar" ,
+            "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-baz-sources.jar" ,
 
             "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-fooDebug-javadoc.jar" ,
             "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-fooDebug-sources.jar" ,
-            "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-fooRelease-javadoc.jar" ,
-            "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-fooRelease-sources.jar" ,
+            "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-foo-javadoc.jar" ,
+            "./hello-world-apk-overrides/build/libs/hello-world-apk-overrides-$version-foo-sources.jar" ,
             "./hello-world-apk-overrides/build/publications/androidArtifacts/pom-default.xml" ,
 
 

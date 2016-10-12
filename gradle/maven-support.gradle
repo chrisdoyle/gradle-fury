@@ -2140,6 +2140,8 @@ task publishArtifacts( description: 'Attempts to publish all artifacts to mavenC
         //an artifact was added to the list that is a signature, we'll skip it since we sign everything anyhow
         if (uploadedFileName.toLowerCase().endsWith(".asc"))
             continue;
+        uploadedFileName=uploadedFileName.replace("-release","");
+        uploadedFileName=uploadedFileName.replace("Release","");
 
         //upload the primart artifact
         if (uploadedFileName.endsWith(".pom"))
