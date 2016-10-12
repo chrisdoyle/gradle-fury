@@ -160,8 +160,7 @@ script:
   # now let's build some it projects to confirm stuff is working and dependencies are resolved
   - cd it
   - cd GradleConsumers
-  - ./gradlew install -Pprofile=ci
-  - ./gradlew site -Pprofile=ci
+  - ./gradlew build
   - cd ..
   - cd MavenConsumers
   - cd ..
