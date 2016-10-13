@@ -485,6 +485,15 @@ afterEvaluate { project ->
 
         build.mustRunAfter clean
         publishToMavenLocal.dependsOn build
+    } else if (project.ext.isDistribution && !project.ext.isJavaProject){
+        task install() {
+
+        }
+
+        distZip.mustRunAfter clean
+        publishToMavenLocal.dependsOn distZip
+        install.dependsOn publishToMavenLocal
+        install {}.finalizedBy installDistZipPom
     }
 
     if (project.hasProperty('profile')) {
@@ -1441,46 +1450,47 @@ project.plugins.withType(MavenPublishPlugin) {
             new org.gradle.api.internal.ClosureBackedAction({
 
                 publications {
-                    if (project.isDistribution){
+                    //System.out.println(project.isDistribution.toString() + " " + project.isJavaProject.toString() + " " +project.isWarProject.toString() + " " + project.isAndroidProject.toString())
+                    if (project.isDistribution && !project.isJavaProject) {
+                        //System.out.println("prcocessing as zip" + project.name)
                         project.pom.packaging = 'zip'
 
                         //System.out.println("processing dist zip")
-                        zip(MavenPublication) {
+                        distributions(MavenPublication) {
                             groupId project.group
                             artifactId project.name
                             version project.version
 
-                            modifyGeneratedPom(pom)
+
 
                             //System.out.println("processing dist zip pom")
                             def artifactName = project.name + "-" + project.version + "." + project.pom.packaging;
                             def artifactRoot = "${buildDir}/distributions/"
 
 
-                            //fun fact, gradle does not generate poms for dist only packages. thanks for that.
+                            //fun fact, gradle does generate poms for dist only packages except our
+                            //modifyPom method just doesn't work. not sure why. gradle could be overridding it
+                            //no idea why it would behavior differently than anything else
+
                             //here we manually reparse rootDir/gradle.properties for all the pom settings
                             //then create a pom on the fly and write it to disk
-                            if (project.isDistribution && !project.isJavaProject) {
-                                //System.out.println("processing dist only package generating pom")
-                                createPom("${artifactRoot}", "pom-default.xml")
-                                //the pom
-                                Container c = new Container();
-                                c.buildDir = "${buildDir}";
-                                c.fileName = artifactName;
-                                c.fileNameAndPath = "$buildDir/distributions/pom-default.xml";
-                                c.type = "pom";
-                                project.ext.artifacts.add(c);
-                                logger.debug("Adding " + "$buildDir/distributions/pom-default.xml" + " to artifact list");
+                            createPom("$buildDir/distributions/", "pom-default.xml")
+                            //the pom
+                            Container c = new Container();
+                            c.buildDir = "${buildDir}";
+                            c.fileName = artifactName;
+                            c.fileNameAndPath = "$buildDir/distributions/pom-default.xml";
+                            c.type = "pom";
+                            project.ext.artifacts.add(c);
+                            logger.debug("Adding " + "$buildDir/distributions/pom-default.xml" + " to artifact list");
 
-                                //needed for local pom publishing
-                                artifact(c.fileNameAndPath) {
-                                    extension 'pom'
-                                }
-
-                            }
+                            //needed for local pom publishing
+                            //artifact(c.fileNameAndPath) {
+                              //  extension 'pom'
+                            //}
 
                             //primary out
-                            Container c;
+
                             c = new Container();
                             c.buildDir = "${buildDir}";
                             c.fileName = artifactName;
@@ -1497,10 +1507,137 @@ project.plugins.withType(MavenPublishPlugin) {
 
 
                         }
-
-
-
+                        //modifyGeneratedPom(pom)
+                        //createPom("$buildDir/distributions/", "pom-default.xml")
                     }
+
+
+                    if (project.isDistribution && project.isJavaProject) {
+                        System.out.println("prcocessing as jar AND zip " + project.name)
+                        project.pom.packaging = 'jar'
+
+                        //System.out.println("processing dist zip")
+                        distributions(MavenPublication) {
+                            groupId project.group
+                            artifactId project.name
+                            version project.version
+
+
+                            //modifyGeneratedPom(pom)
+                            //System.out.println("processing dist zip pom")
+                            def artifactName = project.name + "-" + project.version + ".zip";
+                            def artifactRoot = "${buildDir}/distributions/"
+
+
+                            Container c ;
+
+
+
+                            //primary out
+
+                            c = new Container();
+                            c.buildDir = "${buildDir}";
+                            c.fileName = artifactName;
+                            c.fileNameAndPath = "${artifactRoot}${artifactName}";
+                            c.type = "zip";
+                            project.ext.artifacts.add(c);
+                            logger.debug("Adding " + "${artifactRoot}${artifactName}" + " to artifact list");
+
+
+                            //needed for local publishing
+                            artifact("${artifactRoot}/${artifactName}") {
+
+                            }
+
+
+                        }
+
+                        //System.out.println("prcocessing as jar" + project.name)
+                        project.pom.packaging = 'jar'
+                        def artifactName = project.name + "-" + project.version + "." + project.pom.packaging;
+                        def artifactRoot = "${buildDir}/libs/"
+
+                        javaArtifacts(MavenPublication) {
+                            from components.java
+
+                            groupId project.group
+                            artifactId project.name
+                            version project.version
+
+                            modifyGeneratedPom(pom)
+
+                            //the jar
+                            Container c;
+                            c = new Container();
+                            c.buildDir = "${buildDir}";
+                            c.fileName = artifactName;
+                            c.fileNameAndPath = "${artifactRoot}${artifactName}";
+                            c.type = "jar";
+                            project.ext.artifacts.add(c);
+                            logger.debug("Adding " + "${artifactRoot}${artifactName}" + " to artifact list");
+
+
+                            //the pom
+                            c = new Container();
+                            c.buildDir = "${buildDir}";
+                            c.fileName = artifactName;
+                            c.fileNameAndPath = "$buildDir/publications/javaArtifacts/pom-default.xml";
+                            c.type = "jar";
+                            project.ext.artifacts.add(c);
+                            logger.debug("Adding " + "$buildDir/publications/javaArtifacts/pom-default.xml" + " to artifact list");
+
+                        }
+
+                        if (project.javadocProfileEnabled) {
+                            javadocArtifacts(MavenPublication) {
+                                from components.java
+
+                                groupId project.group
+                                artifactId project.name
+                                version project.version
+
+                                modifyGeneratedPom(pom)
+
+                                artifact javadocJar
+
+
+                                Container c;
+                                c = new Container();
+                                c.buildDir = "${buildDir}";
+                                c.fileName = artifactName;
+                                c.fileNameAndPath = "${buildDir}" + "/libs/" + project.name + "-" + project.version + "-javadoc.jar";
+                                c.type = "jar";
+                                project.ext.artifacts.add(c);
+                                logger.debug("Adding " + "${buildDir}" + "/libs/" + project.name + "-" + project.version + "-javadoc.jar" + " to artifact list");
+
+                            }
+                        }
+
+                        if (project.sourcesProfileEnabled) {
+                            sourceJarArtifacts(MavenPublication) {
+                                from components.java
+
+                                groupId project.group
+                                artifactId project.name
+                                version project.version
+
+                                modifyGeneratedPom(pom)
+
+                                artifact sourcesJar
+
+                                Container c;
+                                c = new Container();
+                                c.buildDir = "${buildDir}";
+                                c.fileName = artifactName;
+                                c.fileNameAndPath = "${buildDir}" + "/libs/" + project.name + "-" + project.version + "-sources.jar";
+                                c.type = "jar";
+                                project.ext.artifacts.add(c);
+                                logger.debug("Adding " + "${buildDir}" + "/libs/" + project.name + "-" + project.version + "-sources.jar" + " to artifact list");
+
+                            }
+                        }
+                    }   //jave and distribution
+
                     if (project.isWarProject) {
                         project.pom.packaging = 'war'
 
@@ -1593,8 +1730,9 @@ project.plugins.withType(MavenPublishPlugin) {
                             }
                         }
 
-                    } else if (project.isJavaProject) {
+                    } else if (project.isJavaProject && !project.isDistribution) {
 
+                        System.out.println("prcocessing as jar" + project.name)
                         project.pom.packaging = 'jar'
                         def artifactName = project.name + "-" + project.version + "." + project.pom.packaging;
                         def artifactRoot = "${buildDir}/libs/"
@@ -1817,6 +1955,68 @@ project.plugins.withType(MavenPublishPlugin) {
                 }
             })
 }
+
+
+
+//because distribution only generates and installs a crap pom, this injects our rectified one
+//into maven local
+task installDistZipPom << {
+    if (project.isDistribution && !project.isJavaProject){
+        //dist only
+        String groupId = project.group;
+        groupId = groupId.replace(".","/");
+        copy{
+            from buildDir.absolutePath + "/distributions/"
+            include 'pom-default.xml'
+            into System.getProperty("user.home") + "/.m2/repository/" + groupId + "/" + project.name + "/" + project.version + "/"
+            rename ('pom-default.xml', project.name + "-" + project.version + ".pom")
+        }
+
+
+    }
+}
+
+/*
+task installDistZipLocal() <<{
+    System.out.println("ugh gradle...")
+    if (project.isDistribution && project.isJavaProject){
+        System.out.println("local publish");
+        //TODO copy to ~/.m2/repositority/pom.group/module/version/
+        //TODO generate the pom and copy the pom over too
+        String groupId = project.group;
+        groupId = groupId.replace(".","/");
+        copy{
+            from buildDir.absolutePath + "/distributions/"
+            into System.getProperty("user.home") + "/.m2/repository/" + groupId + "/" + project.name + "/" + project.version + "/"
+        }
+
+    }
+    if (project.isDistribution && !project.isJavaProject){
+        //dist only
+        String groupId = project.group;
+        groupId = groupId.replace(".","/");
+        copy{
+            from buildDir.absolutePath + "/distributions/"
+            into System.getProperty("user.home") + "/.m2/repository/" + groupId + "/" + project.name + "/" + project.version + "/"
+            rename ('pom-default.xml', project.name + "-" + project.version + ".pom")
+        }
+
+
+    }
+}
+
+try {
+    publishToMavenLocal.dependsOn assembleDist
+}catch (Exception ex){
+}
+try{
+    publishZipPublicationToMavenLocal
+    installDistZipLocal.dependsOn build
+    installDistZipLocal.mustRunAfter clean
+    installDistZipLocal.dependsOn distZip
+    publishToMavenLocal.finalizedBy installDistZipLocal
+}catch (Exception ex){
+}*/
 
 /**
  * Signs a file via gpg
@@ -2439,6 +2639,7 @@ def createPom(String outdir, String filename) {
         root.appendChild(group);
     }
 
+    //TODO dependencies and repositories
 
     //finally write out the xml
     // Use a Transformer for output
