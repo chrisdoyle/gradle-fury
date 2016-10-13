@@ -180,8 +180,8 @@ public class Main {
             "./hello-world-app/build/publications/javaArtifacts/pom-default.xml" ,
             "./hello-world-app/build/distributions/hello-world-app-$version.zip",
 
-            "./hello-world-dist/build/distributions/hello-world-app-$version.zip" ,
-            "./hello-world-app/build/publications/distributions/pom-default.xml" ,
+            "./hello-world-dist/build/distributions/hello-world-dist-$version.zip" ,
+            "./hello-world-dist/build/publications/distributions/pom-default.xml" ,
 
     };
 
