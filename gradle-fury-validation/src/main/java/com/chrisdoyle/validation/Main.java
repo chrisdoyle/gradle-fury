@@ -176,7 +176,7 @@ public class Main {
 
             "./hello-world-app/build/libs/hello-world-app-$version.jar" ,
             "./hello-world-app/build/libs/hello-world-app-$version-sources.jar" ,
-            "./hello-world-app/build/libs/hello-world-app-$version-javadocs.jar" ,
+            "./hello-world-app/build/libs/hello-world-app-$version-javadoc.jar" ,
             "./hello-world-app/build/publications/javaArtifacts/pom-default.xml" ,
             "./hello-world-app/build/distributions/hello-world-app-$version.zip",
 

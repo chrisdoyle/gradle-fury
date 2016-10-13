@@ -1960,7 +1960,8 @@ project.plugins.withType(MavenPublishPlugin) {
 
 //because distribution only generates and installs a crap pom, this injects our rectified one
 //into maven local
-task installDistZipPom << {
+task installDistZipPom(description: 'Installed a correct and valid pom for distribution only modules to maven local',
+group: 'Publishing') << {
     if (project.isDistribution && !project.isJavaProject){
         //dist only
         String groupId = project.group;
@@ -1976,47 +1977,6 @@ task installDistZipPom << {
     }
 }
 
-/*
-task installDistZipLocal() <<{
-    System.out.println("ugh gradle...")
-    if (project.isDistribution && project.isJavaProject){
-        System.out.println("local publish");
-        //TODO copy to ~/.m2/repositority/pom.group/module/version/
-        //TODO generate the pom and copy the pom over too
-        String groupId = project.group;
-        groupId = groupId.replace(".","/");
-        copy{
-            from buildDir.absolutePath + "/distributions/"
-            into System.getProperty("user.home") + "/.m2/repository/" + groupId + "/" + project.name + "/" + project.version + "/"
-        }
-
-    }
-    if (project.isDistribution && !project.isJavaProject){
-        //dist only
-        String groupId = project.group;
-        groupId = groupId.replace(".","/");
-        copy{
-            from buildDir.absolutePath + "/distributions/"
-            into System.getProperty("user.home") + "/.m2/repository/" + groupId + "/" + project.name + "/" + project.version + "/"
-            rename ('pom-default.xml', project.name + "-" + project.version + ".pom")
-        }
-
-
-    }
-}
-
-try {
-    publishToMavenLocal.dependsOn assembleDist
-}catch (Exception ex){
-}
-try{
-    publishZipPublicationToMavenLocal
-    installDistZipLocal.dependsOn build
-    installDistZipLocal.mustRunAfter clean
-    installDistZipLocal.dependsOn distZip
-    publishToMavenLocal.finalizedBy installDistZipLocal
-}catch (Exception ex){
-}*/
 
 /**
  * Signs a file via gpg
