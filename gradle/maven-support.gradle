@@ -1967,6 +1967,7 @@ task installDistZipPom(description: 'Install a correct and valid pom for distrib
 group: 'Publishing') << {
     if (project.isDistribution && !project.isJavaProject){
         //dist only
+        createPom("$buildDir/distributions/", "pom-default.xml")
         String groupId = project.group;
         groupId = groupId.replace(".","/");
         File target = new File(System.getProperty("user.home") + "/.m2/repository/" + groupId + "/" + project.name + "/" + project.version + "/" + project.name + "-" + project.version + ".pom");
