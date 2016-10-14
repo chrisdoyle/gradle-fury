@@ -488,6 +488,7 @@ afterEvaluate { project ->
         build.mustRunAfter clean
         publishToMavenLocal.dependsOn build
     } else if (project.ext.isDistribution && !project.ext.isJavaProject){
+        //distro only project
         task install() {
 
         }

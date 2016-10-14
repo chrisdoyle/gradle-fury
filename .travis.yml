@@ -105,7 +105,7 @@ script:
 
   #build using gradle
   - ./gradlew -version
-  - ./gradlew clean install -Pprofile=ci
+  - ./gradlew clean distZip install -Pprofile=ci
   #verify publish
   - ci/verify.sh
   #make sure the installed jar is executable
