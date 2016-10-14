@@ -1969,6 +1969,13 @@ group: 'Publishing') << {
         groupId = groupId.replace(".","/");
         File t = new File(System.getProperty("user.home") + "/.m2/repository/" + groupId + "/" + project.name + "/" + project.version + "/");
         System.out.println("copying from " + project.buildDir.absolutePath + "/distributions/" + " to " + t.absolutePath + " ? exists:" + t.exists());
+
+        String[] files = t.list();
+        for (int i=0; i < files.length; i++){
+            System.out.println("DIR DUMP " + files[i]);
+        }
+
+
         copy{
             //fun fact buildDir vs project.buildDir can be different on multimodule projects!
             from project.buildDir.absolutePath + "/distributions/"
