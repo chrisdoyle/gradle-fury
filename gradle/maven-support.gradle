@@ -493,6 +493,7 @@ afterEvaluate { project ->
         distZip.mustRunAfter clean
         publishToMavenLocal.dependsOn distZip
         install.dependsOn publishToMavenLocal
+        install.mustRunAfter distZip
         install.finalizedBy installDistZipPom
     }
 
