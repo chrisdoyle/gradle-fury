@@ -493,7 +493,7 @@ afterEvaluate { project ->
         distZip.mustRunAfter clean
         publishToMavenLocal.dependsOn distZip
         install.dependsOn publishToMavenLocal
-        install {}.finalizedBy installDistZipPom
+        install.finalizedBy installDistZipPom
     }
 
     if (project.hasProperty('profile')) {
@@ -1960,12 +1960,14 @@ project.plugins.withType(MavenPublishPlugin) {
 
 //because distribution only generates and installs a crap pom, this injects our rectified one
 //into maven local
-task installDistZipPom(description: 'Installed a correct and valid pom for distribution only modules to maven local',
+task installDistZipPom(description: 'Install a correct and valid pom for distribution only modules to maven local',
 group: 'Publishing') << {
     if (project.isDistribution && !project.isJavaProject){
         //dist only
         String groupId = project.group;
         groupId = groupId.replace(".","/");
+        File t = new File(System.getProperty("user.home") + "/.m2/repository/" + groupId + "/" + project.name + "/" + project.version + "/");
+        System.out.println("copying to " + t.absolutePath + " ? exists:" + t.exists());
         copy{
             from buildDir.absolutePath + "/distributions/"
             include 'pom-default.xml'
