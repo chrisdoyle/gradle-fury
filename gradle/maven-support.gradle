@@ -1970,10 +1970,14 @@ group: 'Publishing') << {
         File t = new File(System.getProperty("user.home") + "/.m2/repository/" + groupId + "/" + project.name + "/" + project.version + "/");
         System.out.println("copying to " + t.absolutePath + " ? exists:" + t.exists());
         copy{
-            from buildDir.absolutePath + "/distributions/"
+            //fun fact buildDir vs project.buildDir can be different on multimodule projects!
+            from project.buildDir.absolutePath + "/distributions/"
             include 'pom-default.xml'
             into System.getProperty("user.home") + "/.m2/repository/" + groupId + "/" + project.name + "/" + project.version + "/"
             rename ('pom-default.xml', project.name + "-" + project.version + ".pom")
+            //eachFile{
+            //    System.out.println("Copying...." + it.getPath())
+            //}
         }
 
 

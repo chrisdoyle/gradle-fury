@@ -105,7 +105,7 @@ script:
 
   #build using gradle
   - ./gradlew -version
-  - ./gradlew clean distZip install -Pprofile=sources,javadoc
+  - ./gradlew clean install -Pprofile=sources,javadoc
   #verify publish
   - ci/verify.sh
 
