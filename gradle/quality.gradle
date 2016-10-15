@@ -47,6 +47,14 @@ apply plugin: 'pmd'
 apply plugin: 'jdepend'
 
 
+//our MOTD
+if (!rootProject.hasProperty('codeQuality')) {
+    rootProject.ext.codeQuality = true
+    println "== Quality plugin active. Hold on to your butts...";
+}
+
+
+
 buildscript {
     repositories {
         jcenter()
@@ -66,13 +74,12 @@ ext.checkStyleEnable = (
                 ? Boolean.parseBoolean(project.property("quality.checkStyle.enable"))
                 : true
 );
-//toolVersion
-//ignoreFailures
 ext.checkStyleIgnoreFailures = (
         hasProperty('quality.checkStyle.ignoreFailures')
                 ? Boolean.parseBoolean(project.property("quality.checkStyle.ignoreFailures"))
                 : true
 );
+
 
 ext.findbugsEnable = (
         hasProperty('quality.findbugs.enable')
@@ -94,9 +101,12 @@ ext.findbugsReportLevel = (
                 ? project.property("quality.findbugs.reportLevel")
                 : "high"
 );
+
+//TODO
 //filter
 //excludes
 //ignoreFailures
+//excludeFilter
 
 
 ext.pmdEnable = (
@@ -109,31 +119,53 @@ ext.pmdIgnoreFailures = (
                 ? Boolean.parseBoolean(project.property("quality.pmd.ignoreFailures"))
                 : true
 );
-//ignoreFailures
 //rulePriority
+
+
 ext.jdependEnable = (
         hasProperty('quality.jdepend.enable')
                 ? Boolean.parseBoolean(project.property("quality.jdepend.enable"))
                 : true
 );
-//ignoreFailures
-//toolVersion
+ext.jdependIgnoreFailures = (
+        hasProperty('quality.jdepend.ignoreFailures')
+                ? Boolean.parseBoolean(project.property("quality.jdepend.ignoreFailures"))
+                : true
+);
+
+
+
 
 ext.dexcountEnable = (
         hasProperty('quality.dexcount.enable')
                 ? Boolean.parseBoolean(project.property("quality.dexcount.enable"))
                 : true
 );
+//no options to configure
+
 ext.javancssEnable = (
         hasProperty('quality.javancss.enable')
                 ? Boolean.parseBoolean(project.property("quality.javancss.enable"))
                 : true
 );
+//"$rootDir/config/javancss/javancss2html.xsl"
+//javancess version 33.54
+//javancss
 
 
 
 
 
+
+/*
+######                    #####
+#     # ###### #    #    #     #  ####  #    # #    # #####
+#     # #       #  #     #       #    # #    # ##   #   #
+#     # #####    ##      #       #    # #    # # #  #   #
+#     # #        ##      #       #    # #    # #  # #   #
+#     # #       #  #     #     # #    # #    # #   ##   #
+######  ###### #    #     #####   ####   ####  #    #   #
+ */
 
 //dex count report APKs only for now
 task dexCountReport() << {
@@ -186,12 +218,22 @@ task dexCountReport() << {
 
 //dex count report APKs only for now
 
+/*
+######
+#     # ###### #####  ###### #    # #####  ###### #    #  ####  #   #
+#     # #      #    # #      ##   # #    # #      ##   # #    #  # #
+#     # #####  #    # #####  # #  # #    # #####  # #  # #        #
+#     # #      #####  #      #  # # #    # #      #  # # #        #
+#     # #      #      #      #   ## #    # #      #   ## #    #   #
+######  ###### #      ###### #    # #####  ###### #    #  ####    #
+ */
 //produce a dependency report
 import java.nio.file.StandardCopyOption
 
 task dependencyReportGradlePre() << {
     new File("${buildDir}/reports/dependencies/").mkdirs();
 }
+
 task dependencyReportGradle(type: DependencyReportTask, dependsOn: dependencyReportGradlePre) {
     projects = [project]
     outputFile = new File("${buildDir}/reports/dependencies/index.txt");
@@ -224,6 +266,21 @@ static String readFile(String path, Charset encoding)
     return new String(encoded, encoding);
 }
 
+
+
+
+
+/*
+      #                      #     #  #####   #####   #####
+      #   ##   #    #   ##   ##    # #     # #     # #     #
+      #  #  #  #    #  #  #  # #   # #       #       #
+      # #    # #    # #    # #  #  # #        #####   #####
+#     # ###### #    # ###### #   # # #             #       #
+#     # #    #  #  #  #    # #    ## #     # #     # #     #
+ #####  #    #   ##   #    # #     #  #####   #####   #####
+
+ */
+//<editor-fold desc="JavaNCSS">
 // setup for java ncss
 configurations {
     javancss
@@ -237,8 +294,6 @@ task javancss << {
     ant {
         taskdef name: 'javancss', classname: 'javancss.JavancssAntTask', classpath: configurations.javancss.asPath
 
-        //${buildDir}/
-        //javancss srcdir:'src', includes:'**/*.java', packageMetrics:'true', classMetrics:'true', functionMetrics:'true',abortOnFail:false, generateReport:true, outputfile:"${buildDir}/reports/javancss/main.txt", format:'plain'
         javancss srcdir: 'src', includes: '**/*.java', packageMetrics: 'true', classMetrics: 'true', functionMetrics: 'true', abortOnFail: false, generateReport: true, outputfile: "${buildDir}/reports/javancss/main.xml", format: 'xml'
     }
 
@@ -255,16 +310,26 @@ try {
     logger.debug("failed to attach check on project" + project.name, t);
 }
 // END setup for java ncss
+//</editor-fold>
 
 
-if (!rootProject.hasProperty('codeQuality')) {
-    rootProject.ext.codeQuality = true
-    println "== Quality plugin active. Hold on to your butts...";
-}
 
+
+
+
+//       ######
+//     # #     # ###### #####  ###### #    # #####
+//     # #     # #      #    # #      ##   # #    #
+//     # #     # #####  #    # #####  # #  # #    #
+//     # #     # #      #####  #      #  # # #    #
+//#    # #     # #      #      #      #   ## #    #
+// ####  ######  ###### #      ###### #    # #####
+
+
+//<editor-fold desc="jDepend">
 //configure jdepend for 'normal' projects
 jdepend {
-    ignoreFailures = true
+    ignoreFailures = project.ext.jdependIgnoreFailures
 }
 
 task jdependReport(group: 'verification', description: 'Generates a HTML report after executing jdepend checks.') << {
@@ -305,14 +370,22 @@ task jdependAndroid(type: JDepend, dependsOn: 'compileDebugSources') {
 }
 
 jdependAndroidReport.dependsOn jdependAndroid
+//</editor-fold>
 
 
 
 
 
+//#####                               #####
+//#     # #    # ######  ####  #    # #     # ##### #   # #      ######
+//#       #    # #      #    # #   #  #         #    # #  #      #
+//#       ###### #####  #      ####    #####    #     #   #      #####
+//#       #    # #      #      #  #         #   #     #   #      #
+//#     # #    # #      #    # #   #  #     #   #     #   #      #
+//#####  #    # ######  ####  #    #  #####    #     #   ###### ######
 
 
-
+//<editor-fold desc="Checkstyle">
 if (project.ext.checkStyleEnable) {
 //configure checkstyle for 'normal' projects
     checkstyle {
@@ -333,6 +406,8 @@ task checkstyleAndroid(type: Checkstyle) {
 
     classpath = files()
 }
+
+//ignore failures is really "ignore errors when running checkstyle", not problems with your code
 tasks.withType(Checkstyle).each { checkstyleTask ->
 
     checkstyleTask.doLast {
@@ -345,14 +420,21 @@ tasks.withType(Checkstyle).each { checkstyleTask ->
         }
     }
 }
+//</editor-fold>
 
 
 
 
 
+//######  #     # ######
+//#     # ##   ## #     #
+//#     # # # # # #     #
+//######  #  #  # #     #
+//#       #     # #     #
+//#       #     # #     #
+//#       #     # ######
 
-
-
+//<editor-fold desc="PMD">
 
 if (project.ext.pmdEnable) {
 
@@ -379,6 +461,30 @@ task pmdAndroid(type: Pmd) {
     }
 }
 
+//NOTE to post analysis is necessary, ignore failures does it job and fails the build if something
+//is wrong
+
+
+//</editor-fold>
+
+
+
+
+
+
+
+
+/*
+#######                 ######
+#       # #    # #####  #     # #    #  ####   ####
+#       # ##   # #    # #     # #    # #    # #
+#####   # # #  # #    # ######  #    # #       ####
+#       # #  # # #    # #     # #    # #  ###      #
+#       # #   ## #    # #     # #    # #    # #    #
+#       # #    # #####  ######   ####   ####   ####
+
+ */
+//<editor-fold desc="findbugs">
 //configure findbugs for 'normal' projects
 if (project.ext.findbugsEnable) {
     findbugs {
@@ -413,8 +519,9 @@ task findbugsAndroid(type: FindBugs) {
     }
     classpath = files()
 }
-
-
+//NOTE to post analysis is necessary, ignore failures does it job and fails the build if something
+//is wrong
+//</editor-fold>
 
 
 
