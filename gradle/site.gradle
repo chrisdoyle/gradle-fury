@@ -90,6 +90,16 @@ ext.webBootstrapUrl = "https://raw.githubusercontent.com/chrisdoyle/gradle-fury/
 if (!hasProperty("site.name"))
     ext.setProperty("site.name", rootDir.getName());
 
+
+configurations {
+    umljavadocsite
+}
+
+dependencies {
+    umljavadocsite 'org.umlgraph:umlgraph:5.6.6'
+}
+
+
 /**
  * bootstraps the site, only ran during the first AND /src/site/template.html doesn't exist
  */
@@ -1675,15 +1685,16 @@ task javadocAggregate(type: Javadoc)  {
     if (!hasProperty("buildWebsiteDir")){
         ext.buildWebsiteDir = "${rootDir}/build/site/"
     }
-    System.out.println("javadocAggregate output to " + project.ext.buildWebsiteDir)
+    destinationDir = new File(project.ext.buildWebsiteDir + "/javadocAll/");
+    destinationDir.mkdirs()
+    //System.out.println("javadocAggregate output to " + project.ext.buildWebsiteDir)
 
     outputs.upToDateWhen { false }
     subprojects.each { p ->
-        System.out.println("javadocAggregate " + p.name)
+        //System.out.println("javadocAggregate " + p.name)
         if (p.hasProperty("sourceSets")) {
-            System.out.println("javadocAggregate " + p.name + " adding source sets")
-            //source += p.sourceSets.main.allJava
 
+            //source sets aren't available at this phase of the build cycle. damnit.
             source += p.sourceSets.main.allJava
             source += p.sourceSets.test.allJava
             System.out.println(p.sourceSets.main.allJava)
@@ -1695,19 +1706,18 @@ task javadocAggregate(type: Javadoc)  {
                 ex.printStackTrace()
             }
         } else {
-            //System.out.println("javadocAggregate " + p.name + " NO SOURCES!")
-            if (!p.name.equalsIgnoreCase("hello-world-aar") &&
-                !p.name.equalsIgnoreCase("hello-universe-lib")) {
-                File srcmain = new File(p.projectDir.absolutePath + "/src/main/java")
-                if (srcmain.exists())
-                    source += srcmain.absolutePath
-                srcmain = new File(p.projectDir.absolutePath + "/src/androidTest/java")
-                if (srcmain.exists())
-                    source += srcmain.absolutePath
-                srcmain = new File(p.projectDir.absolutePath + "/src/test/java")
-                if (srcmain.exists())
-                    source += srcmain.absolutePath
-            }
+            FileTree tree = fileTree(dir: p.projectDir.absolutePath + "/src/main/java")
+            tree.include '**/*.java'
+            source+=tree;
+
+            tree = fileTree(dir: p.projectDir.absolutePath + "/src/androidTest/java")
+            tree.include '**/*.java'
+            source+=tree;
+
+            tree = fileTree(dir: p.projectDir.absolutePath + "/src/test/java")
+            tree.include '**/*.java'
+            source+=tree;
+
             try{
                 classpath += p.configurations.compile
             }catch (Exception ex){}
@@ -1725,8 +1735,7 @@ task javadocAggregate(type: Javadoc)  {
     }
 
 
-    destinationDir = new File(project.ext.buildWebsiteDir + "/javadocAll/");
-    destinationDir.mkdirs()
+
     String compileSdk = getProperty("android.compileSdkVersion");
     String jar=""
     try {
@@ -1739,7 +1748,7 @@ task javadocAggregate(type: Javadoc)  {
         }
 
         jar = System.getenv().get("ANDROID_HOME") +
-                "/platforms/" + csdk + "/android.jar"
+                "/platforms/android-" + csdk + "/android.jar"
 
     } catch (Exception ex) {
         ex.printStackTrace()
@@ -1747,7 +1756,7 @@ task javadocAggregate(type: Javadoc)  {
 
     File j = new File(jar);
     if (j.exists())
-        classpath+= project.files(f);
+        classpath+= project.files(j);
 
 
     compileSdk = 'Google Inc.:Google APIs:23';
@@ -1762,15 +1771,18 @@ task javadocAggregate(type: Javadoc)  {
         }
 
         jar = System.getenv().get("ANDROID_HOME") +
-                "/platforms/" + csdk + "/android.jar"
+                "/platforms/android-" + csdk + "/android.jar"
 
     } catch (Exception ex) {
         ex.printStackTrace()
     }
 
     j = new File(jar);
-    if (j.exists())
-    classpath+= project.files(f);
+    if (j.exists()) {
+        classpath += project.files(j);
+    }
+
+    System.out.println("classpath for javadoc is now " + classpath);
 
     options.charSet 'UTF-8'
     options.docEncoding 'UTF-8'
@@ -1778,7 +1790,7 @@ task javadocAggregate(type: Javadoc)  {
     options {
         try {
             linksOffline("http://d.android.com/reference",
-                    getProperty("android.targetSdkVersion") + "/docs/reference")
+                    System.getenv().get("ANDROID_HOME") + "/docs/reference")
         } catch (Exception ex) {
         }
         setMemberLevel(JavadocMemberLevel.PACKAGE)
@@ -1809,48 +1821,27 @@ task javadocAggregate(type: Javadoc)  {
 
         options {
             doclet = 'org.umlgraph.doclet.UmlGraphDoc'
-            options.docletpath = configurations.umljavadoc.files.asType(List)
-            addStringOption('-inferrel')
-            addStringOption('-inferdep')
-            addStringOption('-qualify')
-            addStringOption('-postfixpackage')
-            addStringOption('-hide=java.*')
-            addStringOption('-collpackages=java.util.*')
-            addStringOption('-nodefontsize=9')
-            addStringOption('-nodefontpackagesize=7')
-            if (hasProperty('compileJava.sourceCompatibility') &&
-                    project.property("compileJava.sourceCompatibility").equals("1.5")) {
-                addStringOption('-link=http://java.sun.com/j2se/1.5.0/docs/guide/javadoc/doclet/spec')
-                addStringOption('-link=http://java.sun.com/j2se/1.5/docs/api')
-            } else if (hasProperty('compileJava.sourceCompatibility') &&
-                    project.property("compileJava.sourceCompatibility").equals("1.6")) {
-                addStringOption('-link=http://docs.oracle.com/javase/6/docs/api/')
-            } else if (hasProperty('compileJava.sourceCompatibility') &&
-                    project.property("compileJava.sourceCompatibility").equals("1.7")) {
-                addStringOption('-link=http://docs.oracle.com/javase/7/docs/api/')
-            } else if (hasProperty('compileJava.sourceCompatibility') &&
-                    project.property("compileJava.sourceCompatibility").equals("1.8")) {
-                addStringOption('-link=http://docs.oracle.com/javase/8/docs/api/')
-            }
-            addStringOption('-link=http://developer.android.com/reference/')
+            options.docletpath = rootProject.configurations.umljavadocsite.files.asType(List)
+            addStringOption('inferrel')
+            addStringOption('inferdep')
+            addStringOption('qualify')
+            addStringOption('postfixpackage')
+            addStringOption('hide=java.*')
+            addStringOption('collpackages=java.util.*')
+            addStringOption('nodefontsize=9')
+            addStringOption('nodefontpackagesize','7')
+
         }
-        exclude '**/BuildConfig.java'
-        exclude '**/R.java'
+
     }
+    exclude '**/BuildConfig.java'
+    exclude '**/R.java'
     options {
         setMemberLevel(JavadocMemberLevel.PACKAGE)
     }
 }
 
 
-
-configurations {
-    umljavadoc
-}
-
-dependencies {
-    umljavadoc 'org.umlgraph:umlgraph:5.6.6'
-}
 
 def isGraphvizDotAvailable() {
 
@@ -1899,6 +1890,27 @@ def isGraphvizDotAvailable() {
     return false;
 }
 
+task copyJavaDocExtra() << {
+
+    File destinationDir = new File(project.ext.buildWebsiteDir + "/javadocAll/");
+    destinationDir.mkdirs()
+
+    subprojects.each { p ->
+        File f = new File(p.buildDir.absolutePath + "/../src/main/java");
+        if (f.exists()){
+            System.out.println(f.absolutePath)
+            copy {
+                from f.absolutePath
+                into destinationDir
+                include "**/doc-files/*"
+            }
+        }
+
+
+    }
+
+}
 
 site.dependsOn dependencyReportMd
 site.dependsOn javadocAggregate
+javadocAggregate.finalizedBy copyJavaDocExtra

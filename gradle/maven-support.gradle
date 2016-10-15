@@ -641,7 +641,7 @@ afterEvaluate { project ->
                     }
 
                     ext.androidJar =
-                            "${project.android.sdkDirectory}/platforms/" + csdk + "/android.jar"
+                            "${project.android.sdkDirectory}/platforms/android-" + csdk + "/android.jar"
 
                     classpath = project.files(variant.javaCompile.classpath.files)
                     classpath += project.files(ext.androidJar)
@@ -685,21 +685,7 @@ afterEvaluate { project ->
                             addStringOption('-collpackages=java.util.*')
                             addStringOption('-nodefontsize=9')
                             addStringOption('-nodefontpackagesize=7')
-                            if (hasProperty('compileJava.sourceCompatibility') &&
-                                 project.property("compileJava.sourceCompatibility").equals("1.5")) {
-                                addStringOption('-link=http://java.sun.com/j2se/1.5.0/docs/guide/javadoc/doclet/spec')
-                                addStringOption('-link=http://java.sun.com/j2se/1.5/docs/api')
-                            } else if (hasProperty('compileJava.sourceCompatibility') &&
-                                    project.property("compileJava.sourceCompatibility").equals("1.6")) {
-                                addStringOption('-link=http://docs.oracle.com/javase/6/docs/api/')
-                            } else if (hasProperty('compileJava.sourceCompatibility') &&
-                                    project.property("compileJava.sourceCompatibility").equals("1.7")) {
-                                addStringOption('-link=http://docs.oracle.com/javase/7/docs/api/')
-                            } else if (hasProperty('compileJava.sourceCompatibility') &&
-                                project.property("compileJava.sourceCompatibility").equals("1.8")) {
-                                addStringOption('-link=http://docs.oracle.com/javase/8/docs/api/')
-                            }
-                            addStringOption('-link=http://developer.android.com/reference/')
+
                         }
                     }
 
