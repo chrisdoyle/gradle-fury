@@ -64,7 +64,7 @@ buildscript {
     dependencies {
         classpath 'org.apache.commons:commons-lang3:3.4'
         classpath 'commons-io:commons-io:2.5'
-        classpath 'com.github.spyhunter99:dex-method-counts-lib:2.1'
+        classpath 'com.github.spyhunter99:dex-method-counts-lib:2.1.1'
     }
 }
 
@@ -119,7 +119,7 @@ ext.pmdIgnoreFailures = (
                 ? Boolean.parseBoolean(project.property("quality.pmd.ignoreFailures"))
                 : true
 );
-//rulePriority
+//TODO rulePriority
 
 
 ext.jdependEnable = (
@@ -149,7 +149,7 @@ ext.javancssEnable = (
                 : true
 );
 //"$rootDir/config/javancss/javancss2html.xsl"
-//javancess version 33.54
+//TODO javancess version 33.54
 //javancss
 
 
@@ -227,6 +227,7 @@ task dexCountReport() << {
 #     # #      #      #      #   ## #    # #      #   ## #    #   #
 ######  ###### #      ###### #    # #####  ###### #    #  ####    #
  */
+//<editor-fold desc="gradle dependency report">
 //produce a dependency report
 import java.nio.file.StandardCopyOption
 
@@ -266,7 +267,7 @@ static String readFile(String path, Charset encoding)
     return new String(encoded, encoding);
 }
 
-
+//</editor-fold>
 
 
 
