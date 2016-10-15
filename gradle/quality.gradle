@@ -63,8 +63,71 @@ buildscript{
     }
 }
 
+
+ext.checkStyleEnable = (
+        hasProperty('quaility.checkStyle.enable')
+                ? Boolean.parseBoolean(project.property("quaility.checkStyle.enable"))
+                : true
+);
+//toolVersion
+//ignoreFailures
+ext.checkStyleIgnoreFailures = (
+        hasProperty('quaility.checkStyle.ignoreFailures')
+                ? Boolean.parseBoolean(project.property("quaility.checkStyle.ignoreFailures"))
+                : true
+);
+
+ext.findbugsEnable = (
+        hasProperty('quaility.findbugs.enable')
+                ? Boolean.parseBoolean(project.property("quaility.findbugs.enable"))
+                : true
+);
+ext.findbugsEffort = (
+        hasProperty('quaility.findbugs.effort')
+                ? project.property("quaility.findbugs.effort")
+                : "max"
+);
+ext.findbugsReportLevel = (
+        hasProperty('quaility.findbugs.reportLevel')
+                ? project.property("quaility.findbugs.reportLevel")
+                : "high"
+);
+//filter
+//excludes
+//ignoreFailures
+
+
+ext.pmdEnable = (
+        hasProperty('quaility.pmd.enable')
+                ? Boolean.parseBoolean(project.property("quaility.pmd.enable"))
+                : true
+);
+//ignoreFailures
+//rulePriority
+ext.jdependEnable = (
+        hasProperty('quaility.jdepend.enable')
+                ? Boolean.parseBoolean(project.property("quaility.jdepend.enable"))
+                : true
+);
+//ignoreFailures
+//toolVersion
+
+ext.dexcountEnable = (
+        hasProperty('quaility.dexcount.enable')
+                ? Boolean.parseBoolean(project.property("quaility.dexcount.enable"))
+                : true
+);
+ext.javancssEnable  = (
+        hasProperty('quaility.javancss.enable')
+                ? Boolean.parseBoolean(project.property("quaility.javancss.enable"))
+                : true
+);
+
+
+
+
 //dex count report APKs only for now
-//import info.persistent.dex.*;
+import com.github.spyhunter99.dex.model.*;
 
 task dexCountReport() << {
 
@@ -95,6 +158,15 @@ task dexCountReport() << {
             dexcount.enableFileOutput(true)
             dexcount.setOutputDirectory(outdir)
             dexcount.run(files);
+            List<CountData> results = dexcount.getData()
+            for (int k=0; k <results.size(); k++){
+                if (results.get(k).overallMetrics.methodCount >60000 && 65536 < results.get(k).overallMetrics.methodCount){
+                    logger.warn(results.get(k).fileName + ": Method count is near the limit: " + results.get(k).overallMetrics.methodCount)
+                }
+                if (results.get(k).overallMetrics.fieldCount >60000 && 65536 < results.get(k).overallMetrics.fieldCount){
+                    logger.warn(results.get(k).fileName + ": Field count is near the limit: " + results.get(k).overallMetrics.fieldCount)
+                }
+            }
         }
         if (list!=null && list.length==1){
             //need to rename the singular output file to index.html
@@ -107,6 +179,9 @@ task dexCountReport() << {
 }
 
 //dex count report APKs only for now
+
+
+
 
 
 
@@ -150,6 +225,11 @@ static String readFile(String path, Charset encoding)
 }
 
 
+
+
+
+
+
 // setup for java ncss
 configurations {
     javancss
@@ -187,6 +267,11 @@ if (!rootProject.hasProperty('codeQuality')) {
     rootProject.ext.codeQuality = true
     println "== Quality plugin active. Hold on to your butts...";
 }
+
+
+
+
+
 
 //configure jdepend for 'normal' projects
 jdepend {
@@ -235,15 +320,23 @@ jdependAndroidReport.dependsOn jdependAndroid
 
 
 
-//configure checkstyle for 'normal' projects
-checkstyle {
-    ignoreFailures = true
-    configFile new File("${project.rootDir}/config/checkstyle/checkstyle.xml")
-}
 
+
+
+
+
+if (project.ext.checkStyleEnable) {
+//configure checkstyle for 'normal' projects
+    checkstyle {
+        ignoreFailures = project.ext.checkStyleIgnoreFailures
+        configFile new File("${project.rootDir}/config/checkstyle/checkstyle.xml")
+    }
+
+
+}
 //configure checkstyle for 'android' projects
 task checkstyleAndroid(type: Checkstyle) {
-    ignoreFailures = true
+    ignoreFailures = project.ext.checkStyleIgnoreFailures
     configFile new File("${project.rootDir}/config/checkstyle/checkstyle.xml")
 
     source 'src'
@@ -252,12 +345,11 @@ task checkstyleAndroid(type: Checkstyle) {
 
     classpath = files()
 }
-
-
 tasks.withType(Checkstyle).each { checkstyleTask ->
 
     checkstyleTask.doLast {
         reports.all { report ->
+            System.out.println(report.destination.absolutePath + " checking report for warnings")
             def outputFile = report.destination
             if (outputFile.exists() && outputFile.text.contains("<error ") && !checkstyleTask.ignoreFailures) {
                 throw new GradleException("There were checkstyle warnings! For more info check $outputFile")
@@ -266,39 +358,52 @@ tasks.withType(Checkstyle).each { checkstyleTask ->
     }
 }
 
+
+
+
+
+
+
+
+
+if (project.ext.pmdEnable) {
+
 //configure pmd for 'normal' projects
-pmd {
-    ignoreFailures = true
-    ruleSetFiles = files("${project.rootDir}/config/pmd/pmd-ruleset.xml")
-    ruleSets = []
-}
-
-
-//configure pmd for 'android' projects
-task pmdAndroid(type: Pmd) {
-    ignoreFailures = true
-    ruleSetFiles = files("${project.rootDir}/config/pmd/pmd-ruleset.xml")
-    ruleSets = []
-
-    source 'src'
-    include '**/*.java'
-    exclude '**/gen/**'
-
-    reports {
-        xml.enabled = false
-        html.enabled = true
+    pmd {
+        ignoreFailures = true
+        ruleSetFiles = files("${project.rootDir}/config/pmd/pmd-ruleset.xml")
+        ruleSets = []
     }
 }
+//configure pmd for 'android' projects
+    task pmdAndroid(type: Pmd) {
+        ignoreFailures = true
+        ruleSetFiles = files("${project.rootDir}/config/pmd/pmd-ruleset.xml")
+        ruleSets = []
+
+        source 'src'
+        include '**/*.java'
+        exclude '**/gen/**'
+
+        reports {
+            xml.enabled = false
+            html.enabled = true
+        }
+    }
+
+
+
 
 
 //configure findbugs for 'normal' projects
-findbugs {
-    ignoreFailures = true
-    excludeFilter = new File("${project.rootDir}/config/findbugs/findbugs-filter.xml")
-    effort = "max"
-    reportLevel = "high"
+if (project.ext.findbugsEnable) {
+    findbugs {
+        ignoreFailures = true
+        excludeFilter = new File("${project.rootDir}/config/findbugs/findbugs-filter.xml")
+        effort = "max"
+        reportLevel = "high"
+    }
 }
-
 //configure findbugs for 'android' projects...seriously?
 task findbugsAndroid(type: FindBugs) {
     ignoreFailures = true
@@ -333,9 +438,12 @@ afterEvaluate {
                 if (project.plugins.hasPlugin("com.android.library") || project.plugins.hasPlugin("com.android.application")) {
                     //dumpTasks(project.tasks)
                     //tasks.add(findbugsAndroid);
-                    tasks.findByName("findbugsAndroid").execute()
-                    tasks.findByName('pmdAndroid').execute();
-                    tasks.findByName('checkstyleAndroid').execute();
+                    if (project.ext.findbugsEnable)
+                        tasks.findByName("findbugsAndroid").execute()
+                    if (project.ext.pmdEnable)
+                        tasks.findByName('pmdAndroid').execute();
+                    if (project.ext.checkStyleEnable)
+                        tasks.findByName('checkstyleAndroid').execute();
                     tasks.findByName('jdependAndroid').execute();
                     tasks.findByName('jdependAndroidReport').execute();
                 }
