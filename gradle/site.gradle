@@ -1700,9 +1700,9 @@ task javadocAggregate(type: Javadoc)  {
             System.out.println(p.sourceSets.main.allJava)
             if (p.plugins.hasPlugin('com.android.library') ||p.plugins.hasPlugin('com.android.application') )
             try {
-                classpath += p.files(variant.javaCompile.classpath.files)
+                classpath.plus(p.files(variant.javaCompile.classpath.files))
                 //classpath += p.files(ext.androidJar)
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
                 ex.printStackTrace()
             }
         } else {
