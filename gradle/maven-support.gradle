@@ -247,8 +247,8 @@ void printMOTD(){
                 "== Gradle Fury: ProTip: Use 'gradle generateMasterKey' to make an encryption key",
                 "== Gradle Fury: ProTip: Use 'gradle encryptPassword -PstoreField=NEXUS_PASSWORD' to encrypt your nexus password",
                 "== Gradle Fury: ProTip: Use 'gradle install -Pprofile=ci' to build with all the code quality and analysis plugins",
-                "== Gradle Fury: ProTip: Use 'gradle site' to build a maven style set that wraps up all your stuff with one bow",
-                "== Gradle Fury: ProTip: Use 'gradle siteWar' to build a maven style set as a WAR file",
+                "== Gradle Fury: ProTip: Use 'gradle site' to build a maven style site that wraps up all your stuff with one bow",
+                "== Gradle Fury: ProTip: Use 'gradle siteWar' to build a maven style site as a WAR file",
                 "== Gradle Fury: ProTip: When using gradle 2.2.1 or older, include distZip when running install",
                 "== Gradle Tip: Use 'gradle build -x test' to build and skip tests"
         ]
@@ -1518,7 +1518,7 @@ project.plugins.withType(MavenPublishPlugin) {
 
 
                     if (project.isDistribution && project.isJavaProject) {
-                        System.out.println("prcocessing as jar AND zip " + project.name)
+                        //System.out.println("prcocessing as jar AND zip " + project.name)
                         project.pom.packaging = 'jar'
 
                         //System.out.println("processing dist zip")
@@ -1737,7 +1737,7 @@ project.plugins.withType(MavenPublishPlugin) {
 
                     } else if (project.isJavaProject && !project.isDistribution) {
 
-                        System.out.println("prcocessing as jar" + project.name)
+                       // System.out.println("prcocessing as jar" + project.name)
                         project.pom.packaging = 'jar'
                         def artifactName = project.name + "-" + project.version + "." + project.pom.packaging;
                         def artifactRoot = "${buildDir}/libs/"
@@ -2307,7 +2307,7 @@ task publishArtifacts( description: 'Attempts to publish all artifacts to mavenC
 
         String groupurl = project.group.replace(".", "/");
         Container item = myiterator.next();
-        logger.warn(item.fileNameAndPath + " " + item.fileName + " " + item.type + " " + project.name);
+        //logger.warn(item.fileNameAndPath + " " + item.fileName + " " + item.type + " " + project.name);
         File f = new File(item.fileNameAndPath);
 
         String uploadedFileName = f.getName();
