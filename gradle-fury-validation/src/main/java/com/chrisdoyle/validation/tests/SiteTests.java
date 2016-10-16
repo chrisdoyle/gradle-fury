@@ -1,10 +1,11 @@
 package com.chrisdoyle.validation.tests;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.List;
+
 
 /**
  * Created by alex on 10/15/16.
@@ -30,7 +31,7 @@ public class SiteTests {
             "hello-world-apk",
             "hello-world-apk-overrides",
     };
-    
+
 
     @Test
     public void confirmJavadocsExist() throws Exception {
@@ -59,6 +60,10 @@ public class SiteTests {
 
     @Test
     public void confirmDependenciesReportsExist() throws Exception {
+        if (System.getenv().containsKey("GRADLE_VERSION")){
+            Assume.assumeFalse("Skip, dependency plugin wasn't until after gradle 2.2.1", System.getenv().get("GRADLE_VERSION").contains("2.2.1"));
+        }
+
         test("dependencies", "index.html","index.html");
     }
 
@@ -69,8 +74,15 @@ public class SiteTests {
 
     @Test
     public void confirmJavancssReportsExist() throws Exception {
+        if (System.getenv().containsKey("GRADLE_VERSION")){
+            Assume.assumeFalse("Skip, dependency plugin wasn't until after gradle 2.2.1", System.getenv().get("GRADLE_VERSION").contains("2.2.1"));
+        }
+
         test("javancss", "index.html","index.html");
     }
+
+    //jdepend?
+    //dex-count
 
     @Test
     public void confirmPmdReportsExist() throws Exception {
