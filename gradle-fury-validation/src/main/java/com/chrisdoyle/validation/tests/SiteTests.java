@@ -55,9 +55,9 @@ public class SiteTests {
 
     @Test
     public void confirmCheckStyleReportsExist() throws Exception {
-        if (System.getenv().containsKey("GRADLE_VERSION")){
-            Assume.assumeFalse("Skip, dependency plugin wasn't until after gradle 2.2.1", System.getenv().get("GRADLE_VERSION").contains("2.2.1"));
-        }
+        //if (System.getenv().containsKey("GRADLE_VERSION")){
+          //  Assume.assumeFalse("Skip, dependency plugin wasn't until after gradle 2.2.1", System.getenv().get("GRADLE_VERSION").contains("2.2.1"));
+        //}
 
         test("checkstyle", "main.html","android.html");
     }
