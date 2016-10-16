@@ -305,11 +305,15 @@ task javancss << {
 }
 
 javancss.onlyIf { file('src').exists() }
-try {
-    check.dependsOn javancss
-} catch (Throwable t) {
-    logger.debug("failed to attach check on project" + project.name, t);
+
+afterEvaluate {
+    try {
+        check.dependsOn javancss
+    } catch (Throwable t) {
+        logger.debug("failed to attach check on project" + project.name, t);
+    }
 }
+
 // END setup for java ncss
 //</editor-fold>
 
@@ -342,12 +346,15 @@ task jdependReport(group: 'verification', description: 'Generates a HTML report 
                 out: "$reporting.baseDir/jdepend/index.html")
     }
 }
-try {
-    check {
-        dependsOn += ['jdependReport']
+
+afterEvaluate {
+    try {
+        check {
+            dependsOn += ['jdependReport']
+        }
+    } catch (Throwable t) {
+        logger.debug("failed to attach check on project" + project.name, t);
     }
-} catch (Throwable t) {
-    logger.debug("failed to attach check on project" + project.name, t);
 }
 
 //configure jdepend for 'android' projects
@@ -431,6 +438,7 @@ task generateCheckstyleHtml() <<{
     }
 
 }
+
 afterEvaluate {
     try {
         check.finalizedBy generateCheckstyleHtml

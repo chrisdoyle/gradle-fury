@@ -78,9 +78,6 @@ public class SiteTests {
 
     @Test
     public void confirmJDependReportsExist() throws Exception {
-        if (System.getenv().containsKey("GRADLE_VERSION")){
-            Assume.assumeFalse("Skip, dependency plugin wasn't until after gradle 2.2.1", System.getenv().get("GRADLE_VERSION").contains("2.2.1"));
-        }
         test("jdepend", "main.html","index.html");
     }
 
