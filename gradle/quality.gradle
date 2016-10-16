@@ -228,7 +228,7 @@ task dexCountReport() << {
 ######  ###### #      ###### #    # #####  ###### #    #  ####    #
  */
 //<editor-fold desc="gradle dependency report">
-//produce a dependency report
+//produce a gradle provided dependency report
 import java.nio.file.StandardCopyOption
 
 task dependencyReportGradlePre() << {
@@ -255,10 +255,12 @@ task dependencyReportTransform(dependsOn: dependencyReportGradle) << {
     out.println(contents);
     out.close()
 }
-try {
-    check.dependsOn dependencyReportTransform
-} catch (Throwable t) {
-    logger.debug("failed to attach check on project" + project.name, t);
+afterEvaluate {
+    try {
+        check.dependsOn dependencyReportTransform
+    } catch (Throwable t) {
+        logger.debug("failed to attach check on project" + project.name, t);
+    }
 }
 
 static String readFile(String path, Charset encoding)
