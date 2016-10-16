@@ -1700,6 +1700,7 @@ task javadocAggregate(type: Javadoc)  {
             System.out.println(p.sourceSets.main.allJava)
             if (p.plugins.hasPlugin('com.android.library') ||p.plugins.hasPlugin('com.android.application') )
             try {
+                classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
                 classpath.plus(p.files(variant.javaCompile.classpath.files))
                 //classpath += p.files(ext.androidJar)
             } catch (Throwable ex) {
@@ -1726,6 +1727,9 @@ task javadocAggregate(type: Javadoc)  {
             }catch (Exception ex){}
             try{
                 classpath += p.configurations.all
+            }catch (Exception ex){}
+            try {
+                classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
             }catch (Exception ex){}
 
         }
